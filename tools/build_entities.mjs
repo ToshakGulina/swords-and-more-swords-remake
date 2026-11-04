@@ -573,6 +573,12 @@ for (const grp of Object.values(SWORD_PLAYER_GROUPS)) {
   }
 }
 
+// 2.8.8 declared 49 groups here and drove every passive from
+// `minecraft:environment_sensor` triggers (62 of them: equip + unequip per sword).
+// The remake only needs the groups that change *components* (hitboxes, movement,
+// families, damage immunity); the per-sword behaviour is evaluated in
+// `passiveEngine.ts`, which can read both hands and clean up after a despawn.
+// `tools/test_player_passives.mjs` pins all 29 passives to a script branch.
 Object.assign(pEnt.component_groups, SWORD_PLAYER_GROUPS);
 
 const ALL_CUSTOM_GROUP_NAMES = Object.keys(SWORD_PLAYER_GROUPS).filter((g) => g !== 'effect:default_stats');
