@@ -22,9 +22,16 @@ const VALID_ORE_MINING_TOOLS = new Set([
   'effect:bedrock_sword',
 ]);
 
+export const BRIGHT_LIGHT_SWORDS = new Set([
+  'effect:glowstone_sword',
+  'effect:fire_sword',
+  'effect:ultra_instinct_sword',
+]);
+
 export const LIGHT_EMITTING_SWORDS = new Set([
   'effect:glowstone_sword',
   'effect:fire_sword',
+  'effect:ultra_instinct_sword',
   'effect:blaze_sword',
   'effect:time_sword',
   'effect:lightning_sword',
@@ -42,8 +49,9 @@ export function registerBlockComponents(registry: BlockComponentRegistry): void 
         if (stage < 3) {
           block.setPermutation(block.permutation.withState('effect99:crack_stage' as never, (stage + 1) as never));
         } else {
+          const fromWater = Boolean(block.permutation.getState('effect99:from_water' as never));
           dimension.playSound('random.glass', block.location, { volume: 0.7, pitch: 1.1 });
-          block.setType('minecraft:air');
+          block.setType(fromWater && dimension.id !== 'minecraft:nether' ? 'minecraft:water' : 'minecraft:air');
         }
       } catch {}
     },

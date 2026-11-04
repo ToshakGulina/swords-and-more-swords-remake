@@ -142,13 +142,32 @@ const customClientFiles = [
 for (const f of customClientFiles) {
   const c = jsonc.parse(fs.readFileSync(path.join(SRC_288_RP, 'entity', f), 'utf8'));
   if (f === 'alpha_wolf.entity.json') {
-    c['minecraft:client_entity'].description.spawn_egg = {
+    const desc = c['minecraft:client_entity'].description;
+    desc.spawn_egg = {
       base_color: '#3b3b42',
       overlay_color: '#a81c1c',
     };
+    // 1.26.60 compatibility: `controller.render.wolf` now requires 27 wolf-variant texture aliases (`pale_default` etc.),
+    // and `controller.animation.wolf.sitting` requires `wolf_baby_sitting`!
+    desc.animations.wolf_baby_sitting = 'animation.wolf.baby_sitting';
+    desc.animation_controllers = (desc.animation_controllers || []).filter(
+      (entry) => !Object.prototype.hasOwnProperty.call(entry, 'wolf_baby_scaling')
+    );
+    desc.render_controllers = ['controller.render.alpha_wolf'];
   }
   writeJson(path.join(RP, 'entity', f), c);
 }
+
+writeJson(path.join(RP, 'render_controllers/alpha_wolf.render_controllers.json'), {
+  format_version: '1.8.0',
+  render_controllers: {
+    'controller.render.alpha_wolf': {
+      geometry: 'Geometry.default',
+      materials: [{ '*': 'Material.default' }],
+      textures: ['query.is_angry ? Texture.angry : (query.is_tamed ? Texture.tame : Texture.default)'],
+    },
+  },
+});
 
 // Add `minicreeper` client entity so `entity:minicreeper` renders as a cute 0.3x Creeper without overriding vanilla creepers if summoned directly
 const creeperClient = readVanillaRP('creeper.entity.json');
@@ -276,34 +295,38 @@ const SWORD_PLAYER_GROUPS = {
 
   'effect:ultra_instinct_sword': {
     'minecraft:type_family': { family: ['player', 'ultra_instinct_sword'] },
-    'minecraft:movement': { value: 0.13 },
+    'minecraft:movement': { value: 0.14 },
     'minecraft:knockback_resistance': { value: 1.0 },
-    'minecraft:hurt_on_condition': { damage_conditions: [] },
     'minecraft:damage_sensor': {
       triggers: [
         {
           on_damage: {
             filters: {
-              any_of: [
-                { test: 'has_damage', value: 'attack' },
-                { test: 'has_damage', value: 'projectile' },
+              all_of: [
+                { test: 'has_damage', operator: '!=', value: 'lava' },
+                { test: 'has_damage', operator: '!=', value: 'drowning' },
+                { test: 'has_damage', operator: '!=', value: 'void' },
+                { test: 'has_damage', operator: '!=', value: 'thorns' },
+                { test: 'has_damage', operator: '!=', value: 'suicide' },
+                { test: 'has_damage', operator: '!=', value: 'starve' },
+                { test: 'has_damage', operator: '!=', value: 'fire' },
+                { test: 'has_damage', operator: '!=', value: 'fire_tick' },
+                { test: 'has_damage', operator: '!=', value: 'fall' },
+                { test: 'has_damage', operator: '!=', value: 'block_explosion' },
+                { test: 'has_damage', operator: '!=', value: 'entity_explosion' },
               ],
             },
             event: 'effect:ui_dodge',
           },
           deals_damage: false,
         },
-        { cause: 'entity_attack', deals_damage: false },
-        { cause: 'projectile', deals_damage: false },
         { cause: 'entity_explosion', deals_damage: false },
         { cause: 'block_explosion', deals_damage: false },
         { cause: 'fire', deals_damage: false },
         { cause: 'fire_tick', deals_damage: false },
-        { cause: 'lava', deals_damage: false },
         { cause: 'hot_floor', deals_damage: false },
         { cause: 'fall', deals_damage: false },
         { cause: 'wither', deals_damage: false },
-        { cause: 'magic', deals_damage: false },
       ],
     },
   },
@@ -374,7 +397,15 @@ const SWORD_PLAYER_GROUPS = {
 
   'effect:blaze_sword': {
     'minecraft:type_family': { family: ['player', 'blaze_sword'] },
-    'minecraft:hurt_on_condition': { damage_conditions: [] },
+    'minecraft:hurt_on_condition': {
+      damage_conditions: [
+        {
+          cause: 'drowning',
+          damage_per_tick: 1,
+          filters: { test: 'in_water_or_rain', subject: 'self', operator: '==', value: true },
+        },
+      ],
+    },
     'minecraft:damage_sensor': {
       triggers: [
         { cause: 'fire', deals_damage: false },
@@ -552,13 +583,22 @@ pEnt.events['effect:ender_dodge'] = {
   },
 };
 pEnt.events['effect:ender_melee_dodge'] = {
-  randomize: [
-    { weight: 50 },
+  sequence: [
     {
-      weight: 50,
       queue_command: {
-        command: ['scriptevent effect:dodge ender_melee'],
+        command: ['playsound mob.endermen.hit @a[r=8] ~ ~ ~'],
       },
+    },
+    {
+      randomize: [
+        { weight: 50 },
+        {
+          weight: 50,
+          queue_command: {
+            command: ['scriptevent effect:dodge ender_melee'],
+          },
+        },
+      ],
     },
   ],
 };
@@ -686,10 +726,19 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
   writeJson(path.join(BP, 'entities/spider.json'), data);
 }
 
-// C.4 `ender_crystal.json` — Overhead Spectral Sword crystal + scale recharge + 2% Spectral Sword drop in Nether
+// C.4 `ender_crystal.json` — Overhead Spectral Sword crystal + 18s scale recharge + 2% Spectral Sword drop in Nether (post-blast!)
 {
   const data = readVanillaBP('ender_crystal.json');
   const ent = data['minecraft:entity'];
+  const origOnHurt = ent.components['minecraft:on_hurt'] || {
+    event: 'minecraft:crystal_explode',
+    target: 'self',
+  };
+  delete ent.components['minecraft:on_hurt'];
+
+  ent.component_groups['effect:default_crystal'] = {
+    'minecraft:on_hurt': origOnHurt,
+  };
   ent.component_groups['effect:spectral_rider'] = {
     'minecraft:type_family': { family: ['ender_crystal', 'spectral_sword', 'effect99_entities'] },
     'minecraft:scale': { value: 0.55 },
@@ -699,26 +748,56 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
     },
   };
   ent.component_groups['effect:ender_crystal_scale'] = {
-    'minecraft:type_family': { family: ['ender_crystal', 'spectral_sword', 'effect99_entities'] },
+    'minecraft:type_family': {
+      family: ['ender_crystal', 'spectral_sword', 'ender_crystal_scale', 'effect99_entities'],
+    },
     'minecraft:scale': { value: 0.2 },
     'minecraft:collision_box': { width: 0.0, height: 0.0 },
     'minecraft:damage_sensor': {
       triggers: [{ cause: 'all', deals_damage: 'no' }],
     },
     'minecraft:timer': {
-      time: 3.0,
+      time: 18.0,
       looping: false,
-      time_down_event: { event: 'effect:spectral_rider', target: 'self' },
+      time_down_event: { event: 'effect:end_scale', target: 'self' },
     },
   };
   ent.component_groups['effect:instant_despawn'] = {
     'minecraft:instant_despawn': {},
   };
+
+  ent.events['minecraft:entity_spawned'] = {
+    add: { component_groups: ['effect:default_crystal'] },
+  };
+  ent.events['minecraft:crystal_explode'] = {
+    sequence: [
+      {
+        filters: { test: 'is_family', subject: 'self', operator: '!=', value: 'spectral_sword' },
+        queue_command: {
+          command: ['scriptevent effect:ender_crystal_exploded ~'],
+        },
+      },
+      {
+        add: { component_groups: ['crystal_exploding'] },
+      },
+    ],
+  };
   ent.events['effect:spectral_rider'] = {
-    remove: { component_groups: ['effect:ender_crystal_scale'] },
+    remove: { component_groups: ['effect:default_crystal', 'effect:ender_crystal_scale'] },
     add: { component_groups: ['effect:spectral_rider'] },
   };
+  ent.events['effect:end_scale'] = {
+    remove: { component_groups: ['effect:default_crystal', 'effect:ender_crystal_scale'] },
+    add: { component_groups: ['effect:spectral_rider'] },
+    queue_command: {
+      command: [
+        'playsound portal.travel @a[r=16] ~ ~ ~ 0.6 7',
+        'particle minecraft:example_flipbook ~ ~0.8 ~',
+      ],
+    },
+  };
   ent.events['effect:ender_crystal_scale'] = {
+    remove: { component_groups: ['effect:default_crystal', 'effect:spectral_rider'] },
     add: { component_groups: ['effect:ender_crystal_scale'] },
   };
   ent.events['effect:despawn'] = {
@@ -1125,6 +1204,17 @@ for (const f of customEntityFiles.sort()) {
         command: ['summon lightning_bolt ~ ~ ~'],
       },
     };
+  }
+  if (f === 'mountable_slime.json') {
+    ent.events.default_slime = {
+      remove: { component_groups: ['slime_random_direction', 'defense_mode_slime'] },
+      add: { component_groups: ['default_slime'] },
+    };
+    if (ent.events.slime_events?.run_command?.command) {
+      ent.events.slime_events.run_command.command = ent.events.slime_events.run_command.command.map((cmd) =>
+        cmd.replace('scores={slime_despawn=0}', 'scores={slime_despawn=..30}')
+      );
+    }
   }
 
   walkTransformCommands(ent);

@@ -37,7 +37,7 @@ writeJson(path.join(BP, 'manifest.json'), {
     name: '§6§lSwords and More Swords §r§a(1.26+ Remake)',
     description: '§eПолное восстановление всех 38 мечей, боссов, руд и способностей мода Effect99 для Minecraft Bedrock 1.26.60+ (Android & Windows) без экспериментальных режимов.',
     uuid: UUIDS.bp_header,
-    version: [3, 0, 2],
+    version: [3, 0, 3],
     min_engine_version: [1, 26, 20],
   },
   modules: [
@@ -45,21 +45,21 @@ writeJson(path.join(BP, 'manifest.json'), {
       description: 'Swords and More Swords Behavior Data',
       type: 'data',
       uuid: UUIDS.bp_data,
-      version: [3, 0, 2],
+      version: [3, 0, 3],
     },
     {
       description: 'Swords and More Swords Script Engine',
       type: 'script',
       language: 'javascript',
       uuid: UUIDS.bp_script,
-      version: [3, 0, 2],
+      version: [3, 0, 3],
       entry: 'scripts/main.js',
     },
   ],
   dependencies: [
     {
       uuid: UUIDS.rp_header,
-      version: [3, 0, 2],
+      version: [3, 0, 3],
     },
     {
       module_name: '@minecraft/server',
@@ -77,7 +77,7 @@ writeJson(path.join(RP, 'manifest.json'), {
     name: '§6§lSwords and More Swords §r§bResources (1.26+)',
     description: '§eРесурс-пак мода Swords and More Swords (текстуры, 3D-модели, анимации, звуки и встроенный справочник на русском и английском языках) для Minecraft Bedrock 1.26.60+.',
     uuid: UUIDS.rp_header,
-    version: [3, 0, 2],
+    version: [3, 0, 3],
     min_engine_version: [1, 26, 20],
   },
   modules: [
@@ -85,13 +85,13 @@ writeJson(path.join(RP, 'manifest.json'), {
       description: 'Swords and More Swords Resource Assets',
       type: 'resources',
       uuid: UUIDS.rp_res,
-      version: [3, 0, 2],
+      version: [3, 0, 3],
     },
   ],
   dependencies: [
     {
       uuid: UUIDS.bp_header,
-      version: [3, 0, 2],
+      version: [3, 0, 3],
     },
   ],
   metadata: {
@@ -350,6 +350,7 @@ writeJson(path.join(BP, 'blocks/fake_ice.json'), {
       menu_category: { category: 'none', is_hidden_in_commands: false },
       states: {
         'effect99:crack_stage': [0, 1, 2, 3],
+        'effect99:from_water': [false, true],
       },
     },
     components: {

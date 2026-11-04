@@ -546,5 +546,81 @@ for (const [k, enVal] of enMap.entries()) {
   }
 }
 
+for (const [k] of ruMap.entries()) {
+  if (!enMap.has(k)) {
+    err(`Key "${k}" exists in ru_RU.lang but is missing in en_US.lang!`);
+  }
+}
+
+for (const f of walk(path.join(BP, 'blocks'), '.json')) {
+  const bid = readJsonChecked(f, true)?.['minecraft:block']?.description?.identifier;
+  if (bid) {
+    const lk = `tile.${bid}.name`;
+    if (!enMap.has(lk)) err(`Block "${bid}" missing "${lk}" in en_US.lang!`);
+    if (!ruMap.has(lk)) err(`Block "${bid}" missing "${lk}" in ru_RU.lang!`);
+  }
+}
+
+// 14. Verify RP render_controllers & 1.8/1.10 animation_controllers alias bindings across all client_entity files
+const allRenderCtrls = {};
+for (const dir of [path.join(VANILLA_RP, 'render_controllers'), path.join(RP, 'render_controllers')]) {
+  for (const f of walk(dir, '.json')) {
+    const j = readJsonChecked(f, false);
+    for (const [k, v] of Object.entries(j?.render_controllers || {})) allRenderCtrls[k] = v;
+  }
+}
+const allAnimCtrls = {};
+for (const dir of [path.join(VANILLA_RP, 'animation_controllers'), path.join(RP, 'animation_controllers')]) {
+  for (const f of walk(dir, '.json')) {
+    const j = readJsonChecked(f, false);
+    for (const [k, v] of Object.entries(j?.animation_controllers || {})) allAnimCtrls[k] = v;
+  }
+}
+
+for (const f of walk(path.join(RP, 'entity'), '.json')) {
+  const desc = readJsonChecked(f, false)?.['minecraft:client_entity']?.description;
+  if (!desc) continue;
+  const gAliases = new Set(Object.keys(desc.geometry || {}));
+  const tAliases = new Set(Object.keys(desc.textures || {}));
+  const mAliases = new Set(Object.keys(desc.materials || {}));
+  const aAliases = new Set(Object.keys(desc.animations || {}));
+
+  for (const rcEntry of desc.render_controllers || []) {
+    const rcName = typeof rcEntry === 'string' ? rcEntry : Object.keys(rcEntry)[0];
+    const rc = allRenderCtrls[rcName];
+    if (!rc) {
+      err(`${f} references unknown render_controller "${rcName}"!`);
+      continue;
+    }
+    const rawRc = JSON.stringify(rc);
+    for (const m of rawRc.matchAll(/Geometry\.([a-zA-Z0-9_]+)/g)) {
+      if (!gAliases.has(m[1])) err(`${f} -> ${rcName} references unbound Geometry.${m[1]}!`);
+    }
+    for (const m of rawRc.matchAll(/Texture\.([a-zA-Z0-9_]+)/g)) {
+      if (!tAliases.has(m[1])) err(`${f} -> ${rcName} references unbound Texture.${m[1]}!`);
+    }
+    for (const m of rawRc.matchAll(/Material\.([a-zA-Z0-9_]+)/g)) {
+      if (!mAliases.has(m[1])) err(`${f} -> ${rcName} references unbound Material.${m[1]}!`);
+    }
+  }
+
+  const checkAnimCtrl = (ctrlName) => {
+    const ac = allAnimCtrls[ctrlName];
+    if (!ac) return;
+    for (const st of Object.values(ac.states || {})) {
+      for (const aItem of st.animations || []) {
+        const alias = typeof aItem === 'string' ? aItem : Object.keys(aItem)[0];
+        if (!aAliases.has(alias)) err(`${f} -> ${ctrlName} references unbound animation alias "${alias}"!`);
+      }
+    }
+  };
+  for (const item of desc.animation_controllers || []) {
+    for (const cv of Object.values(item)) checkAnimCtrl(cv);
+  }
+  for (const av of Object.values(desc.animations || {})) {
+    if (typeof av === 'string' && av.startsWith('controller.animation.')) checkAnimCtrl(av);
+  }
+}
+
 console.log(`\nValidation Summary: ${errors} errors, ${warnings} warnings.`);
 if (errors > 0) process.exit(1);

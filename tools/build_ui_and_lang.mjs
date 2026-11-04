@@ -104,7 +104,7 @@ for (const line of srcLangRaw.split('\n')) {
 }
 
 // Update obsolete 1.20 / Holiday Creator Features notice in en_US
-enMap.set('updates_changelog.header.title', '§l§6Changelog §r§fV3.0.2 (1.26.60+ Remake)');
+enMap.set('updates_changelog.header.title', '§l§6Changelog §r§fV3.0.3 (1.26.60+ Remake)');
 enMap.set('effect.updates_changelog.text_0', '• Full remake for Minecraft Bedrock 1.26.60+ (Android & Windows)');
 enMap.set('effect.updates_changelog.text_1', '• Works WITHOUT Holiday Creator Features or any experimental toggles!');
 enMap.set('effect.updates_changelog.text_2', '• Restored all 38 swords, bosses, custom ores (including Deepslate & End), Desert Well wishes, 3D animations & Inventory red-sword Encyclopedia button');
@@ -129,9 +129,14 @@ enMap.set('effect.fire_sword.text.13', '  By throwing the fire sword into water,
 enMap.set('effect.fire_sword.text.14', '  By throwing the fire sword out in the rain, it cools after a few seconds into an Obsidian Sword.');
 enMap.set('action.hint.exit.entity:shulker_shield', 'Tap sneak to exit the shulker shell');
 
-// Add `minicreeper` and `cursed_pumpkin_sword` encyclopedia entry
+// Add `minicreeper`, `centella`, `living_flame`, lightblocks, `sponge_sword.header.title`, and `cursed_pumpkin_sword` encyclopedia entry
 enMap.set('entity.entity:minicreeper.name', '§aMini Creeper');
+enMap.set('entity.entity:centella.name', '§eCentella');
+enMap.set('entity.entity:living_flame.name', '§6Living Flame');
+enMap.set('sponge_sword.header.title', '§l§eSponge Sword');
 enMap.set('tile.effect99:spectral_block.name', 'Spectral Block');
+enMap.set('tile.effect99:lightblock.name', 'Dynamic Light Block');
+enMap.set('tile.effect99:lightblock2.name', 'Moderate Light Block');
 enMap.set('howtoplay.cursed_pumpkin_sword.title', '§lSwords');
 enMap.set('howtoplay.cursed_pumpkin_sword', '§lCursed Pumpkin Sword');
 enMap.set('cursed_pumpkin_sword.header.title', '§l§6Cursed Pumpkin Sword');
@@ -172,6 +177,8 @@ const ruOverrides = {
   'tile.effect99:quartz_diamond_block.name': 'Кварцево-алмазный блок',
   'tile.effect99:fake_ice.name': 'Хрупкий лёд',
   'tile.effect99:spectral_block.name': 'Призрачный блок',
+  'tile.effect99:lightblock.name': 'Световой блок',
+  'tile.effect99:lightblock2.name': 'Тусклый световой блок',
 
   // Swords & Items
   'item.effect:blaze_sword': '§l§6Меч Ифрита',
@@ -237,7 +244,7 @@ const ruOverrides = {
   'action.hint.exit.spider': 'Нажмите красться, чтобы слезть с паука',
 
   // How-To-Play Headers & Categories
-  'updates_changelog.header.title': '§l§6Список изменений §r§fV3.0.2 (1.26.60+)',
+  'updates_changelog.header.title': '§l§6Список изменений §r§fV3.0.3 (1.26.60+)',
   'basic_information.header.title': '§l§6О моде Swords and More Swords',
   'howtoplay.updates_changelog.title': '§lИнформация',
   'howtoplay.basic_information.title': '§lИнформация',
@@ -264,7 +271,7 @@ const ruOverrides = {
   'effect.basic_information.text_4': '• Команда «/function give» выдаёт все мечи и материалы мода.',
   'effect.basic_information.text_5': '• Все мечи доступны во вкладке «Мечи» творческого инвентаря.',
   'effect.basic_information.text_7': '§7Оригинальный автор идеи и текстур: §bEffect99',
-  'effect.basic_information.text_8': '§7Адаптация под Minecraft Bedrock 1.26.60+ (Android и Windows): версия 3.0.2',
+  'effect.basic_information.text_8': '§7Адаптация под Minecraft Bedrock 1.26.60+ (Android и Windows): версия 3.0.3',
   'basic_information.header.title_1': '  §lСоздатель оригинала: Effect99',
 
   // Blocks & Items Guide

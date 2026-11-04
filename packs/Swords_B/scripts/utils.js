@@ -73,23 +73,46 @@ export function giveOrDropItem(player, itemStack) {
         catch { }
     }
 }
+const PROTECTED_UTILITY_TYPES = new Set([
+    'minecraft:item',
+    'minecraft:xp_orb',
+    'minecraft:npc',
+    'minecraft:armor_stand',
+    'minecraft:item_frame',
+    'minecraft:glow_item_frame',
+    'minecraft:painting',
+    'minecraft:leash_knot',
+    'minecraft:boat',
+    'minecraft:chest_boat',
+    'minecraft:minecart',
+    'minecraft:chest_minecart',
+    'minecraft:hopper_minecart',
+    'minecraft:tnt_minecart',
+    'minecraft:ender_crystal',
+    'minecraft:falling_block',
+    'minecraft:area_effect_cloud',
+    'minecraft:evocation_fang',
+    'entity:bee_sword',
+]);
 export function isProtectedEntity(entity, owner) {
     if (!entity.isValid)
         return true;
     if (owner && entity.id === owner.id)
         return true;
     const typeId = entity.typeId;
-    if (typeId === 'minecraft:item' ||
-        typeId === 'minecraft:xp_orb' ||
-        typeId === 'minecraft:npc' ||
-        typeId === 'minecraft:armor_stand' ||
-        typeId.startsWith('effect:')) {
+    if (PROTECTED_UTILITY_TYPES.has(typeId) || typeId.startsWith('effect:')) {
         return true;
     }
     try {
         // Protect tamed pets (wolves, cats, parrots, horses, etc.)
         if (entity.getComponent('minecraft:is_tamed'))
             return true;
+        // Allow AoE sword skills to hit hostile Centella & wild hostile Living Flames, while protecting all player helper entities!
+        if (typeId === 'entity:centella')
+            return false;
+        if (typeId === 'entity:living_flame') {
+            return entity.hasTag('player_summoned') || !entity.matches({ families: ['living_flame_hostile'] });
+        }
         if (entity.matches({ families: ['effect99_entities'] }))
             return true;
     }
@@ -148,8 +171,16 @@ export function safeRandomTeleport(entity, minRadius, maxRadius) {
                     !below.isLiquid &&
                     below.typeId !== 'minecraft:magma' &&
                     below.typeId !== 'minecraft:cactus' &&
-                    (foot.isAir || foot.typeId === 'minecraft:short_grass' || foot.typeId === 'minecraft:snow_layer') &&
-                    head.isAir) {
+                    below.typeId !== 'effect99:lightblock' &&
+                    below.typeId !== 'effect99:lightblock2' &&
+                    (foot.isAir ||
+                        foot.typeId === 'minecraft:short_grass' ||
+                        foot.typeId === 'minecraft:snow_layer' ||
+                        foot.typeId === 'effect99:lightblock' ||
+                        foot.typeId === 'effect99:lightblock2') &&
+                    (head.isAir ||
+                        head.typeId === 'effect99:lightblock' ||
+                        head.typeId === 'effect99:lightblock2')) {
                     dim.spawnParticle('minecraft:portal_directional', entity.location);
                     dim.playSound('mob.endermen.portal', entity.location, { volume: 1.0, pitch: 1.0 });
                     entity.teleport({ x: tx + 0.5, y, z: tz + 0.5 });

@@ -1,4 +1,5 @@
-import { EntityComponentTypes, EntityDamageCause, EntitySwingSource, EquipmentSlot, GameMode, ItemStack, Player, system, world, } from '@minecraft/server';
+import { BlockPermutation, EntityComponentTypes, EntityDamageCause, EntitySwingSource, EquipmentSlot, GameMode, ItemStack, Player, system, world, } from '@minecraft/server';
+import { isTimeSwordActive } from './passiveEngine.js';
 import { consumeMainhandDurability, getMainhandItem, growInstantJungleTree, isFullMoonNight, isProtectedEntity, safeRandomTeleport, shootCustomProjectile, } from './utils.js';
 function checkAndStartCooldown(player, category, seconds) {
     try {
@@ -61,6 +62,8 @@ export function tryConvertSpongeSword(player) {
         if (eq && current && current.typeId === 'effect:sponge_sword') {
             const wet = new ItemStack('effect:wet_sponge_sword', 1);
             eq.setEquipment(EquipmentSlot.Mainhand, wet);
+            player.onScreenDisplay.setActionBar('§l§gWet Sponge Sword');
+            player.dimension.spawnParticle('minecraft:cauldron_explosion_emitter', player.location);
             player.dimension.playSound('random.splash', player.location, { volume: 0.9, pitch: 1.2 });
             return true;
         }
@@ -111,6 +114,11 @@ const LIGHTNING_RING_OFFSETS = [
     [-38, 0, 38],
     [38, 0, -38],
 ];
+function explodeSpectralCrystal(player) {
+    const rideable = player.getComponent(EntityComponentTypes.Rideable);
+    const crystal = rideable?.getRiders().find((r) => r.typeId === 'minecraft:ender_crystal' && !r.matches({ families: ['ender_crystal_scale'] }));
+    crystal?.triggerEvent('minecraft:crystal_explode');
+}
 export function registerItemComponents(registry) {
     // Unified V2 Custom Component for all 38 Swords + 2 Special Sticks
     registry.registerCustomComponent('effect:sword', {
@@ -135,11 +143,48 @@ export function registerItemComponents(registry) {
             if (!itemStack || !(source instanceof Player))
                 return;
             markDirectAction(source);
-            if (itemStack.typeId === 'effect:bedrock_sword' || itemStack.typeId === 'effect:bedrock_stick') {
+            const id = itemStack.typeId;
+            if (id === 'effect:bedrock_sword' || id === 'effect:bedrock_stick') {
+                return;
+            }
+            if (id === 'effect:spectral_sword' && Math.random() < 0.01) {
+                explodeSpectralCrystal(source);
+                return;
+            }
+            if (id === 'effect:glass_sword') {
+                source.dimension.playSound('random.glass', source.location, { volume: 1.2, pitch: 0.9 });
+                consumeMainhandDurability(source, 10);
+                return;
+            }
+            if (id === 'effect:quartz_sword') {
+                source.dimension.spawnParticle('minecraft:knockback_roar_particle', {
+                    x: source.location.x,
+                    y: source.location.y + 1,
+                    z: source.location.z,
+                });
+                if (source.getGameMode() !== GameMode.Creative) {
+                    consumeMainhandDurability(source, 10);
+                    system.run(() => {
+                        try {
+                            source.kill();
+                        }
+                        catch { }
+                    });
+                }
                 return;
             }
             if (source.getGameMode() !== GameMode.Creative) {
-                consumeMainhandDurability(source, 1);
+                if (id === 'effect:time_sword') {
+                    const r = Math.random() * 100;
+                    consumeMainhandDurability(source, r < 90 ? 1 : r < 96 ? 16 : r < 99 ? 32 : 64);
+                }
+                else if (id === 'effect:obsidian_sword') {
+                    const r = Math.random() * 100;
+                    consumeMainhandDurability(source, r < 55 ? 1 : r < 85 ? 2 : 3);
+                }
+                else {
+                    consumeMainhandDurability(source, 1);
+                }
             }
         },
         onHitEntity(event) {
@@ -357,13 +402,8 @@ export function registerItemComponents(registry) {
                         break;
                     }
                     case 'effect:spectral_sword': {
-                        // Exact 2.8.8: 1% unstable explosion chance when attacking entities!
-                        if (Math.random() < 0.01) {
-                            dim.createExplosion(hitEntity.location, 3.0, {
-                                breaksBlocks: false,
-                                causesFire: false,
-                                source: attackingEntity,
-                            });
+                        if (Math.random() < 0.01 && attackingEntity instanceof Player) {
+                            explodeSpectralCrystal(attackingEntity);
                         }
                         break;
                     }
@@ -439,8 +479,11 @@ export function registerItemComponents(registry) {
                             maxDistance: 16,
                             type: 'entity:mountable_slime',
                         });
-                        const slime = existing[0] ?? dim.spawnEntity('entity:mountable_slime', player.location);
-                        slime.triggerEvent('minecraft:entity_spawned');
+                        const slime = existing[0] ??
+                            dim.spawnEntity('entity:mountable_slime', player.location, {
+                                spawnEvent: 'minecraft:entity_spawned',
+                            });
+                        slime.triggerEvent('default_slime');
                         const rideable = slime.getComponent(EntityComponentTypes.Rideable);
                         rideable?.addRider(player);
                         dim.playSound('mob.slime.big', player.location, { volume: 1.0, pitch: 1.0 });
@@ -461,10 +504,17 @@ export function registerItemComponents(registry) {
                             }
                         }
                         try {
-                            dim.runCommand('gamerule randomtickspeed 30');
+                            if (!isTimeSwordActive()) {
+                                dim.runCommand('gamerule randomtickspeed 30');
+                                world.setDynamicProperty('effect:random_tick_boosted', true);
+                            }
                             system.runTimeout(() => {
                                 try {
-                                    world.getDimension('overworld').runCommand('gamerule randomtickspeed 1');
+                                    const activeTime = isTimeSwordActive();
+                                    world
+                                        .getDimension('overworld')
+                                        .runCommand(`gamerule randomtickspeed ${activeTime ? 300 : 1}`);
+                                    world.setDynamicProperty('effect:random_tick_boosted', activeTime);
                                 }
                                 catch { }
                             }, 100);
@@ -535,7 +585,10 @@ export function registerItemComponents(registry) {
                                             continue;
                                         const b = dim.getBlock({ x: bx + dx, y: by + dy, z: bz + dz });
                                         if (b && (b.isAir || b.typeId === 'minecraft:snow_layer' || b.typeId === 'minecraft:short_grass')) {
-                                            b.setType('effect99:fake_ice');
+                                            b.setPermutation(BlockPermutation.resolve('effect99:fake_ice', {
+                                                'effect99:crack_stage': 0,
+                                                'effect99:from_water': false,
+                                            }));
                                         }
                                     }
                                 }
@@ -545,6 +598,10 @@ export function registerItemComponents(registry) {
                             const isTall = t.typeId === 'minecraft:enderman';
                             const isHuge = t.typeId === 'minecraft:ghast' || t.typeId === 'entity:slime_king';
                             buildIceCage(t.location.x, t.location.y, t.location.z, isHuge ? 3 : 1, isHuge ? 4 : isTall ? 3 : 2);
+                            try {
+                                t.addEffect('slowness', 120, { amplifier: 4, showParticles: true });
+                            }
+                            catch { }
                         }
                         player.onScreenDisplay.setActionBar('§l§bIce Skill');
                         dim.playSound('random.fizz', player.location, { volume: 1.0, pitch: 2.3 });
@@ -807,6 +864,11 @@ export function registerItemComponents(registry) {
 const lastAirSwingTick = new Map();
 // Exact 2.8.8 `on_not_hurt_entity` parity: swinging ranged swords into the air fires their projectiles at distant targets!
 export function registerAirSwingEvents() {
+    world.afterEvents.playerLeave.subscribe((ev) => {
+        spongeWaterTicks.delete(ev.playerId);
+        lastDirectActionTick.delete(ev.playerId);
+        lastAirSwingTick.delete(ev.playerId);
+    });
     world.afterEvents.playerSwingStart.subscribe((event) => {
         if (event.swingSource !== EntitySwingSource.Attack)
             return;
@@ -936,6 +998,51 @@ export function registerAirSwingEvents() {
                             shootCustomProjectile(player, 'minecraft:wither_skull', 1.4, 'effect:player_shot');
                             dim.playSound('mob.wither.shoot', player.location, { volume: 1.0, pitch: 1.0 });
                         }
+                        break;
+                    }
+                    case 'effect:ice_sword': {
+                        fired = true;
+                        if (Math.random() < 0.3) {
+                            shootCustomProjectile(player, 'minecraft:snowball', 1.4, 'effect:ice_sword_snowball');
+                            dim.playSound('random.bow', player.location, { volume: 1, pitch: 0.4 });
+                        }
+                        break;
+                    }
+                    case 'effect:glass_sword': {
+                        lastAirSwingTick.set(player.id, swingTick);
+                        dim.playSound('random.glass', player.location, { volume: 1.2, pitch: 0.9 });
+                        consumeMainhandDurability(player, 10);
+                        break;
+                    }
+                    case 'effect:quartz_sword': {
+                        lastAirSwingTick.set(player.id, swingTick);
+                        dim.spawnParticle('minecraft:knockback_roar_particle', { x: player.location.x, y: player.location.y + 1, z: player.location.z });
+                        if (player.getGameMode() !== GameMode.Creative) {
+                            consumeMainhandDurability(player, 10);
+                            player.kill();
+                        }
+                        break;
+                    }
+                    case 'effect:spectral_sword': {
+                        lastAirSwingTick.set(player.id, swingTick);
+                        if (Math.random() < 0.01) {
+                            explodeSpectralCrystal(player);
+                        }
+                        else {
+                            consumeMainhandDurability(player, 1);
+                        }
+                        break;
+                    }
+                    case 'effect:time_sword': {
+                        lastAirSwingTick.set(player.id, swingTick);
+                        const r = Math.random() * 100;
+                        consumeMainhandDurability(player, r < 90 ? 1 : r < 96 ? 16 : r < 99 ? 32 : 64);
+                        break;
+                    }
+                    case 'effect:clock_sword':
+                    case 'effect:emerald_sword':
+                    case 'effect:ghost_sword': {
+                        fired = true;
                         break;
                     }
                     case 'effect:quartz_diamond_stick': {

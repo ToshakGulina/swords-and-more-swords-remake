@@ -12,9 +12,15 @@ const VALID_ORE_MINING_TOOLS = new Set([
     'minecraft:netherite_pickaxe',
     'effect:bedrock_sword',
 ]);
+export const BRIGHT_LIGHT_SWORDS = new Set([
+    'effect:glowstone_sword',
+    'effect:fire_sword',
+    'effect:ultra_instinct_sword',
+]);
 export const LIGHT_EMITTING_SWORDS = new Set([
     'effect:glowstone_sword',
     'effect:fire_sword',
+    'effect:ultra_instinct_sword',
     'effect:blaze_sword',
     'effect:time_sword',
     'effect:lightning_sword',
@@ -32,8 +38,9 @@ export function registerBlockComponents(registry) {
                     block.setPermutation(block.permutation.withState('effect99:crack_stage', (stage + 1)));
                 }
                 else {
+                    const fromWater = Boolean(block.permutation.getState('effect99:from_water'));
                     dimension.playSound('random.glass', block.location, { volume: 0.7, pitch: 1.1 });
-                    block.setType('minecraft:air');
+                    block.setType(fromWater && dimension.id !== 'minecraft:nether' ? 'minecraft:water' : 'minecraft:air');
                 }
             }
             catch { }

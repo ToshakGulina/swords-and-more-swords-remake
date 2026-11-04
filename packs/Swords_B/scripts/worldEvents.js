@@ -6,6 +6,20 @@ let isRainingOverworld = false;
 let lastCentellaDeathTick = -1000;
 let lastCentellaDeathLoc;
 const manuallyDroppedBedrock = new Set();
+const fadingFireSwordTicks = new Map();
+function isNonRainingBiome(biomeId) {
+    const b = biomeId.toLowerCase();
+    return (b.includes('desert') ||
+        b.includes('savanna') ||
+        b.includes('mesa') ||
+        b.includes('badlands') ||
+        b.includes('snow') ||
+        b.includes('frozen') ||
+        b.includes('ice') ||
+        b.includes('cold') ||
+        b.includes('jagged_peaks') ||
+        b.includes('grove'));
+}
 function convertSurroundingSand(dim, center, targetBlockId) {
     const cx = Math.floor(center.x);
     const cy = Math.floor(center.y);
@@ -27,9 +41,19 @@ function convertSurroundingSand(dim, center, targetBlockId) {
 export function registerWorldEvents() {
     // Enable exact 2.8.8 `on_not_hurt_entity` ranged air-swing attacks for all 12 projectile swords!
     registerAirSwingEvents();
-    // Track Overworld rain/thunder for dropped Fire Sword & Sponge Sword outdoor reactions
+    // Restore persisted Overworld rain state across world reloads & track weather changes
+    try {
+        isRainingOverworld = Boolean(world.getDynamicProperty('effect:overworld_raining'));
+    }
+    catch { }
     world.afterEvents.weatherChange.subscribe((ev) => {
-        isRainingOverworld = ev.newWeather !== WeatherType.Clear;
+        if (!ev.dimension || ev.dimension === 'minecraft:overworld' || ev.dimension === 'overworld') {
+            isRainingOverworld = ev.newWeather !== WeatherType.Clear;
+            try {
+                world.setDynamicProperty('effect:overworld_raining', isRainingOverworld);
+            }
+            catch { }
+        }
     });
     // 1. Handle player.json pre-damage dodges & blast-safe Charged Creeper Sword drop
     system.afterEvents.scriptEventReceive.subscribe((ev) => {
@@ -53,13 +77,29 @@ export function registerWorldEvents() {
                 y: ev.sourceEntity.location.y + 0.6,
                 z: ev.sourceEntity.location.z,
             };
-            // Spawn 6 ticks later so the Charged Creeper's t=1.5s Power-6 blast has already finished!
             system.runTimeout(() => {
                 try {
                     dim.spawnItem(new ItemStack('effect:creeper_sword', 1), dropPos);
                 }
                 catch { }
             }, 6);
+        }
+        else if (ev.id === 'effect:ender_crystal_exploded' && ev.sourceEntity) {
+            const dim = ev.sourceEntity.dimension;
+            if (dim.id === 'minecraft:nether' && Math.random() < 0.02) {
+                const dropPos = {
+                    x: ev.sourceEntity.location.x,
+                    y: ev.sourceEntity.location.y + 0.6,
+                    z: ev.sourceEntity.location.z,
+                };
+                // Spawn 6 ticks later so the Ender Crystal's Power-6 explosion has already finished!
+                system.runTimeout(() => {
+                    try {
+                        dim.spawnItem(new ItemStack('effect:spectral_sword', 1), dropPos);
+                    }
+                    catch { }
+                }, 6);
+            }
         }
     });
     // 3. Bedrock Block Drop when shattered by Ultra Instinct Projectile or Nether Star Fire Explosion!
@@ -175,7 +215,7 @@ export function registerWorldEvents() {
                     return;
                 }
                 const nearbyHolder = dim
-                    .getPlayers({ location: loc, maxDistance: 45 })
+                    .getPlayers({ location: loc, maxDistance: 64 })
                     .some((p) => getMainhandItem(p)?.typeId === 'effect:lightning_sword');
                 if (!nearbyHolder && Math.random() < 0.2) {
                     dim.spawnEntity('entity:centella', loc);
@@ -272,18 +312,13 @@ export function registerWorldEvents() {
                     }
                     break;
                 }
-                case 'minecraft:ender_crystal': {
-                    if (dim.id === 'minecraft:nether' && Math.random() < 0.02) {
-                        dim.spawnItem(new ItemStack('effect:spectral_sword', 1), loc);
-                    }
-                    break;
-                }
             }
         }
         catch { }
     });
     // 8. Periodic Dropped-Item Elemental Reactions & Desert Well Fountain of Wishes (every 10 ticks)
     system.runInterval(() => {
+        const activeRainSwordIds = new Set();
         for (const dimName of ['overworld', 'nether', 'the_end']) {
             try {
                 const dim = world.getDimension(dimName);
@@ -306,20 +341,21 @@ export function registerWorldEvents() {
                         bType === 'minecraft:soul_fire' ||
                         bType === 'minecraft:lava' ||
                         bType === 'minecraft:flowing_lava';
-                    // Check outdoor rain exposure in Overworld
+                    // Check outdoor liquid rain exposure in Overworld (excluding arid & snowy biomes)
                     let inRain = false;
                     if (dimName === 'overworld' && isRainingOverworld && !inWater) {
                         const top = dim.getTopmostBlock({ x: Math.floor(loc.x), z: Math.floor(loc.z) });
                         if (!top || top.location.y <= Math.floor(loc.y)) {
                             const biomeId = dim.getBiome(loc).id;
-                            if (!biomeId.includes('desert') && !biomeId.includes('savanna') && !biomeId.includes('mesa')) {
+                            if (!isNonRainingBiome(biomeId)) {
                                 inRain = true;
                             }
                         }
                     }
-                    // A. Dropped Fire Sword elemental transformations (100% faithful to item.json!)
+                    // A. Dropped Fire Sword elemental transformations (100% faithful to 2.8.8 item.json!)
                     if (id === 'effect:fire_sword') {
                         if (inWater) {
+                            fadingFireSwordTicks.delete(itemEnt.id);
                             itemEnt.remove();
                             dim.spawnItem(new ItemStack('effect:glass_sword', 1), loc);
                             dim.playSound('random.fizz', loc, { volume: 0.8, pitch: 1.0 });
@@ -327,15 +363,43 @@ export function registerWorldEvents() {
                             continue;
                         }
                         if (inRain) {
-                            itemEnt.remove();
-                            dim.spawnItem(new ItemStack('effect:obsidian_sword', 1), loc);
-                            dim.playSound('random.fizz', loc, { volume: 1.0, pitch: 0.8 });
+                            // Exact 2.8.8 `fading_fire_sword`: 5s fizzing countdown in rain before turning into Obsidian Sword!
+                            activeRainSwordIds.add(itemEnt.id);
+                            const rainChecks = (fadingFireSwordTicks.get(itemEnt.id) ?? 0) + 1;
+                            fadingFireSwordTicks.set(itemEnt.id, rainChecks);
+                            dim.playSound('random.fizz', loc, { volume: 0.7, pitch: 1.1 });
                             dim.spawnParticle('minecraft:cauldron_explosion_emitter', loc);
+                            if (rainChecks >= 10) {
+                                fadingFireSwordTicks.delete(itemEnt.id);
+                                itemEnt.remove();
+                                dim.spawnItem(new ItemStack('effect:obsidian_sword', 1), loc);
+                                dim.playSound('random.fizz', loc, { volume: 1.0, pitch: 0.8 });
+                            }
                             continue;
+                        }
+                        else {
+                            fadingFireSwordTicks.delete(itemEnt.id);
                         }
                         if (bType === 'minecraft:fire' || bType === 'minecraft:soul_fire') {
                             itemEnt.remove();
                             block.setType('minecraft:air');
+                            for (const [ox, oz] of [
+                                [0, 0],
+                                [1, 1],
+                                [1, -1],
+                                [-1, 1],
+                                [-1, -1],
+                                [1, 0],
+                                [0, 1],
+                                [0, -1],
+                                [-1, 0],
+                            ]) {
+                                dim.spawnParticle('minecraft:mobflame_single', {
+                                    x: loc.x + ox,
+                                    y: loc.y + 0.5,
+                                    z: loc.z + oz,
+                                });
+                            }
                             for (let i = 0; i < 5; i++) {
                                 dim.spawnEntity('entity:living_flame', {
                                     x: loc.x + (Math.random() - 0.5) * 1.5,
@@ -463,6 +527,12 @@ export function registerWorldEvents() {
                 }
             }
             catch { }
+        }
+        // Prune picked-up or despawned Fire Sword entity IDs from rain countdown map
+        for (const oldId of fadingFireSwordTicks.keys()) {
+            if (!activeRainSwordIds.has(oldId)) {
+                fadingFireSwordTicks.delete(oldId);
+            }
         }
     }, 10);
 }

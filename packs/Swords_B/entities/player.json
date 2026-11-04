@@ -542,40 +542,76 @@
           ]
         },
         "minecraft:movement": {
-          "value": 0.13
+          "value": 0.14
         },
         "minecraft:knockback_resistance": {
           "value": 1
-        },
-        "minecraft:hurt_on_condition": {
-          "damage_conditions": []
         },
         "minecraft:damage_sensor": {
           "triggers": [
             {
               "on_damage": {
                 "filters": {
-                  "any_of": [
+                  "all_of": [
                     {
                       "test": "has_damage",
-                      "value": "attack"
+                      "operator": "!=",
+                      "value": "lava"
                     },
                     {
                       "test": "has_damage",
-                      "value": "projectile"
+                      "operator": "!=",
+                      "value": "drowning"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "void"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "thorns"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "suicide"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "starve"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "fire"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "fire_tick"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "fall"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "block_explosion"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "entity_explosion"
                     }
                   ]
                 },
                 "event": "effect:ui_dodge"
               },
-              "deals_damage": "no"
-            },
-            {
-              "cause": "entity_attack",
-              "deals_damage": "no"
-            },
-            {
-              "cause": "projectile",
               "deals_damage": "no"
             },
             {
@@ -595,10 +631,6 @@
               "deals_damage": "no"
             },
             {
-              "cause": "lava",
-              "deals_damage": "no"
-            },
-            {
               "cause": "hot_floor",
               "deals_damage": "no"
             },
@@ -608,10 +640,6 @@
             },
             {
               "cause": "wither",
-              "deals_damage": "no"
-            },
-            {
-              "cause": "magic",
               "deals_damage": "no"
             }
           ]
@@ -731,7 +759,18 @@
           ]
         },
         "minecraft:hurt_on_condition": {
-          "damage_conditions": []
+          "damage_conditions": [
+            {
+              "cause": "drowning",
+              "damage_per_tick": 1,
+              "filters": {
+                "test": "in_water_or_rain",
+                "subject": "self",
+                "operator": "==",
+                "value": true
+              }
+            }
+          ]
         },
         "minecraft:damage_sensor": {
           "triggers": [
@@ -1650,17 +1689,28 @@
         }
       },
       "effect:ender_melee_dodge": {
-        "randomize": [
+        "sequence": [
           {
-            "weight": 50
-          },
-          {
-            "weight": 50,
             "queue_command": {
               "command": [
-                "scriptevent effect:dodge ender_melee"
+                "playsound mob.endermen.hit @a[r=8] ~ ~ ~"
               ]
             }
+          },
+          {
+            "randomize": [
+              {
+                "weight": 50
+              },
+              {
+                "weight": 50,
+                "queue_command": {
+                  "command": [
+                    "scriptevent effect:dodge ender_melee"
+                  ]
+                }
+              }
+            ]
           }
         ]
       }
