@@ -82,29 +82,49 @@ const SMALL_FLOWERS = [
 ];
 const SMALL_FLOWER_SET = new Set([...SMALL_FLOWERS, 'minecraft:torchflower']);
 
+// Exact 2.8.8 `jungle_sword.mcfunction`: the surfaces it `detect`s next to the
+// player's head block, expanded from the legacy ids to modern block names.
+//   log 0..3 -> oak/spruce/birch/jungle, log2 0..1 -> acacia/dark_oak,
+//   planks 0..5, leaves 0..3 + 11, leaves2 0..1, stone 0/1/3/5 (granite,
+//   diorite, andesite), grass, dirt, sand, sandstone, snow, cobblestone,
+//   obsidian, end_stone, gravel, packed_ice, ice, glass, netherrack, nether_brick.
 const JUNGLE_VINE_SURFACES = new Set([
-  'minecraft:jungle_log',
   'minecraft:oak_log',
   'minecraft:spruce_log',
   'minecraft:birch_log',
+  'minecraft:jungle_log',
   'minecraft:acacia_log',
   'minecraft:dark_oak_log',
+  'minecraft:oak_planks',
+  'minecraft:spruce_planks',
+  'minecraft:birch_planks',
+  'minecraft:jungle_planks',
+  'minecraft:acacia_planks',
+  'minecraft:dark_oak_planks',
+  'minecraft:oak_leaves',
+  'minecraft:spruce_leaves',
+  'minecraft:birch_leaves',
+  'minecraft:jungle_leaves',
+  'minecraft:acacia_leaves',
+  'minecraft:dark_oak_leaves',
+  'minecraft:stone',
+  'minecraft:granite',
+  'minecraft:diorite',
+  'minecraft:andesite',
   'minecraft:grass_block',
   'minecraft:dirt',
   'minecraft:sand',
+  'minecraft:sandstone',
+  'minecraft:snow_layer',
   'minecraft:cobblestone',
-  'minecraft:stone',
   'minecraft:obsidian',
   'minecraft:end_stone',
   'minecraft:gravel',
+  'minecraft:packed_ice',
   'minecraft:ice',
+  'minecraft:glass',
   'minecraft:netherrack',
   'minecraft:nether_brick',
-  // `jungle_sword.mcfunction` also has `sandstone 0`, `packed_ice 0` and plain
-  // `glass 0` in its list.
-  'minecraft:sandstone',
-  'minecraft:packed_ice',
-  'minecraft:glass',
 ]);
 
 function cleanupHelperEntity(map: Map<string, Entity>, playerId: string, despawnEvent?: string): void {
@@ -244,6 +264,41 @@ export function startPassiveEngine(): void {
 
   // The 2.8.8 component timers are measured in game ticks, so the engine must
   // tick at 20 Hz; the default (every game tick) is exactly that.
+  // Exact 2.8.8 `minecraft:jungle_sword` event: fires once when the sword is held
+  // — `effect @s absorption 1 2 true` plus the `jungle_sword` mcfunction, which
+  // checks one random direction and grows a vine on the player's head block.
+  const runJungleSwordEvent = (player: Player) => {
+    try {
+      player.addEffect('absorption', 20, { amplifier: 1, showParticles: false });
+    } catch {}
+    const dim = player.dimension;
+    const dirs: ReadonlyArray<{ x: number; z: number; bit: number }> = [
+      { x: 1, z: 0, bit: 8 },
+      { x: -1, z: 0, bit: 2 },
+      { x: 0, z: 1, bit: 1 },
+      { x: 0, z: -1, bit: 4 },
+    ];
+    const px = Math.floor(player.location.x);
+    const py = Math.floor(player.location.y) + 1;
+    const pz = Math.floor(player.location.z);
+    // The mcfunction runs all four `detect`s in this order; each `fill ... replace
+    // air` stops as soon as the head block is no longer air, so the first matching
+    // side wins and only one vine is placed per equip.
+    try {
+      const center = dim.getBlock({ x: px, y: py, z: pz });
+      if (!center || !center.isAir) return;
+      for (const off of dirs) {
+        const wall = dim.getBlock({ x: px + off.x, y: py, z: pz + off.z });
+        if (wall && JUNGLE_VINE_SURFACES.has(wall.typeId)) {
+          center.setPermutation(
+            BlockPermutation.resolve('minecraft:vine', { vine_direction_bits: off.bit })
+          );
+          break;
+        }
+      }
+    } catch {}
+  };
+
   system.runInterval(() => {
     tick++;
     const players = world.getAllPlayers();
@@ -297,6 +352,10 @@ export function startPassiveEngine(): void {
         } catch {}
 
         if (prevMainId === 'effect:lapis_sword' && mainId !== prevMainId) nextLapisTick.delete(player.id);
+
+        if (mainId === 'effect:jungle_sword' && prevMainId !== 'effect:jungle_sword') {
+          runJungleSwordEvent(player);
+        }
 
         // Werewolf Full Moon transformation howl & particle FX!
         if (equipKey === 'wolf_transformation' && prevKey !== 'wolf_transformation') {
@@ -799,35 +858,6 @@ export function startPassiveEngine(): void {
             // fifteen seconds instead of over a minute.
             if (tick % 2 === 0) {
               tryConvertSpongeSword(player);
-            }
-            break;
-          }
-
-          case 'effect:jungle_sword': {
-            // Exact 2.8.8 `minecraft:jungle_sword` event: `effect @s absorption 1
-            // 2 true` — a one-second Absorption II refreshed by the equip event,
-            // plus the `jungle_sword` function that grows vines on the four
-            // blocks around the player (never on blocks that are not in its
-            // list: no planks/leaves extension, no parrots, no trees).
-            if (tick % 20 === 0) {
-              player.addEffect('absorption', 20, { amplifier: 1, showParticles: false });
-              const dirs: ReadonlyArray<{ x: number; z: number; bit: number }> = [
-                { x: 1, z: 0, bit: 8 },
-                { x: -1, z: 0, bit: 2 },
-                { x: 0, z: 1, bit: 1 },
-                { x: 0, z: -1, bit: 4 },
-              ];
-              const off = dirs[Math.floor(Math.random() * dirs.length)];
-              const px = Math.floor(player.location.x);
-              const py = Math.floor(player.location.y) + 1;
-              const pz = Math.floor(player.location.z);
-              const wall = dim.getBlock({ x: px + off.x, y: py, z: pz + off.z });
-              const centerAir = dim.getBlock({ x: px, y: py, z: pz });
-              // `jungle_sword.mcfunction` only checks the single block one step
-              // in the chosen direction and lists plain blocks only.
-              if (wall && JUNGLE_VINE_SURFACES.has(wall.typeId) && centerAir && centerAir.isAir) {
-                centerAir.setPermutation(BlockPermutation.resolve('minecraft:vine', { vine_direction_bits: off.bit }));
-              }
             }
             break;
           }
