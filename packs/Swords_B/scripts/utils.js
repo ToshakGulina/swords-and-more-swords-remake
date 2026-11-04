@@ -259,6 +259,22 @@ export function isDesertWellWater(dim, loc) {
         return false;
     }
 }
+// Exact 2.8.8 `effect99:sapling3` on_placed: `playsound dig.grass @a[r=12]` then
+// `fill ~ ~ ~ ~ ~ ~ sapling 3` — one vanilla jungle sapling where the sword was
+// used. `minecraft:jungle_sapling` is that block with data 3.
+export function plantJungleSapling(dim, loc) {
+    try {
+        const block = dim.getBlock(loc);
+        if (!block)
+            return;
+        const sound = { x: Math.floor(loc.x) + 0.5, y: Math.floor(loc.y) + 0.5, z: Math.floor(loc.z) + 0.5 };
+        dim.playSound('dig.grass', sound, { volume: 1.0, pitch: 1.0 });
+        if (block.isAir || block.typeId === 'effect99:sapling3') {
+            block.setType('minecraft:jungle_sapling');
+        }
+    }
+    catch { }
+}
 export function growInstantJungleTree(dim, baseLoc) {
     const bx = Math.floor(baseLoc.x);
     const by = Math.floor(baseLoc.y);

@@ -1,5 +1,5 @@
 import { EntityDamageCause, GameMode, ItemComponentTypes, ItemStack, } from '@minecraft/server';
-import { getMainhandItem, getOffhandItem, growInstantJungleTree } from './utils.js';
+import { getMainhandItem, getOffhandItem, plantJungleSapling } from './utils.js';
 const ORIGIN_MAP = {
     stone: 'minecraft:stone',
     deepslate: 'minecraft:deepslate',
@@ -76,12 +76,17 @@ export function registerBlockComponents(registry) {
         },
     });
     // 3. Instant Giant Jungle Sapling (Jungle Sword)
+    // Exact 2.8.8 `effect99:sapling3`: the block only exists for a couple of ticks
+    // and its event does `playsound dig.grass` + `fill ~ ~ ~ ~ ~ ~ sapling 3`, i.e.
+    // it plants a vanilla jungle sapling (data 3) and lets the game grow the tree.
+    // Do NOT hand-build a tree here — vanilla decides the shape, and a sapling that
+    // cannot grow on the target block simply stays a sapling, exactly as before.
     registry.registerCustomComponent('effect99:sapling3', {
         onPlace(event) {
-            growInstantJungleTree(event.dimension, event.block.location);
+            plantJungleSapling(event.dimension, event.block.location);
         },
         onTick(event) {
-            growInstantJungleTree(event.dimension, event.block.location);
+            plantJungleSapling(event.dimension, event.block.location);
         },
     });
     // 4. Stateful Spectral Block (Spectral Sword & Ghost Sword wall X-ray restoration)
