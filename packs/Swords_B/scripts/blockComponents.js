@@ -27,6 +27,21 @@ export const LIGHT_EMITTING_SWORDS = new Set([
     'effect:wither_sword',
     'effect:spectral_sword',
 ]);
+const TOP_LAYER_SWORDS = new Set(['effect:ultra_instinct_sword', 'effect:wither_sword']);
+export function lightVolumeForSword(mainId, offId) {
+    const lit = LIGHT_EMITTING_SWORDS.has(mainId) ||
+        offId === 'effect:glowstone_sword' ||
+        offId === 'effect:fire_sword';
+    if (!lit)
+        return undefined;
+    return { yOffset: TOP_LAYER_SWORDS.has(mainId) ? 2 : 1, topOnly: TOP_LAYER_SWORDS.has(mainId) };
+}
+// 2.8.8 `block_light_emission` was a 0-1 fraction: 1 for `lightblock` (Glowstone,
+// Fire, Ultra Instinct), 0.5 for `lightblock2` (every other lit sword). The modern
+// `minecraft:light_emission` component is an integer 0-15, so the matching values
+// are 15 and 7.
+export const BRIGHT_LIGHT_TYPE = 'effect99:lightblock';
+export const DIM_LIGHT_TYPE = 'effect99:lightblock2';
 export function registerBlockComponents(registry) {
     // 1. Fake Ice (cracking temporary ice cage / Frost Walker ice from Ice Sword, melts after ~8s)
     registry.registerCustomComponent('effect99:fake_ice', {

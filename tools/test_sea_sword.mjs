@@ -54,6 +54,8 @@ const ctx = vm.createContext({
   getOffhandItem: () => undefined,
   BRIGHT_LIGHT_SWORDS: new Set(),
   LIGHT_EMITTING_SWORDS: new Set(),
+  BRIGHT_LIGHT_TYPE: 'effect99:lightblock', DIM_LIGHT_TYPE: 'effect99:lightblock2',
+  lightVolumeForSword: () => undefined,
   EntityComponentTypes: { Rideable: 'rideable', Equippable: 'equippable' },
   EntityDamageCause: { magic: 'magic', drowning: 'drowning' },
   GameMode: { Creative: 'creative' },

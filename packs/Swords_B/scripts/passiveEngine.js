@@ -1,5 +1,5 @@
 import { BlockPermutation, EntityComponentTypes, EntityDamageCause, EquipmentSlot, GameMode, MoonPhase, system, world, } from '@minecraft/server';
-import { BRIGHT_LIGHT_SWORDS, LIGHT_EMITTING_SWORDS } from './blockComponents.js';
+import { BRIGHT_LIGHT_SWORDS, BRIGHT_LIGHT_TYPE, DIM_LIGHT_TYPE, lightVolumeForSword, } from './blockComponents.js';
 import { resetSpongeSwordState, tryConvertSpongeSword } from './swordSkills.js';
 import { recoverRandomTickSpeed, setTimeSwordActive } from './randomTickManager.js';
 import { getMainhandItem, getOffhandItem, isFullMoonNight, isInVillage, isProtectedEntity, } from './utils.js';
@@ -114,48 +114,69 @@ function clearTrackedLight(playerId) {
     if (!prev)
         return;
     lastLightBlock.delete(playerId);
-    try {
-        const b = prev.dim.getBlock(prev.loc);
-        if (b && (b.typeId === 'effect99:lightblock' || b.typeId === 'effect99:lightblock2')) {
-            b.setType('minecraft:air');
+    for (const loc of prev.locs) {
+        try {
+            const b = prev.dim.getBlock(loc);
+            if (b && (b.typeId === BRIGHT_LIGHT_TYPE || b.typeId === DIM_LIGHT_TYPE)) {
+                b.setType('minecraft:air');
+            }
         }
+        catch { }
     }
-    catch { }
 }
 function updateDynamicLight(player, mainId, offId) {
-    const isBright = BRIGHT_LIGHT_SWORDS.has(mainId) ||
-        offId === 'effect:glowstone_sword' ||
-        offId === 'effect:fire_sword';
-    const isLight = isBright || LIGHT_EMITTING_SWORDS.has(mainId);
-    if (!isLight) {
+    // 2.8.8 re-ran the two `fill` commands on every environment_sensor tick, so the
+    // volume tracked the player while the sword was held.
+    const volume = lightVolumeForSword(mainId, offId);
+    if (!volume) {
         clearTrackedLight(player.id);
         return;
     }
-    // Exact 2.8.8: Glowstone/Fire/Ultra Instinct use `lightblock` (level 15); Blaze/Lightning/Time/Wither/Spectral use `lightblock2` (level 11)
-    const targetType = isBright ? 'effect99:lightblock' : 'effect99:lightblock2';
-    const headLoc = {
+    // 2.8.8: `lightblock` (emission 1) for Glowstone/Fire/Ultra Instinct,
+    // `lightblock2` (emission 0.5) for Blaze/Lightning/Time/Wither/Spectral.
+    const isBright = BRIGHT_LIGHT_SWORDS.has(mainId) ||
+        offId === 'effect:glowstone_sword' || offId === 'effect:fire_sword';
+    const targetType = isBright ? BRIGHT_LIGHT_TYPE : DIM_LIGHT_TYPE;
+    const base = {
         x: Math.floor(player.location.x),
-        y: Math.floor(player.location.y + 1),
+        y: Math.floor(player.location.y) + volume.yOffset,
         z: Math.floor(player.location.z),
     };
+    const locs = [];
+    const levels = volume.topOnly ? [0] : [-1, 0, 1];
+    for (const dy of levels) {
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dz = -1; dz <= 1; dz++) {
+                locs.push({ x: base.x + dx, y: base.y + dy, z: base.z + dz });
+            }
+        }
+    }
+    // Only rewrite when the footprint actually moved; the placeholder blocks expire
+    // on their own after 0.2 s, so a skipped pass is harmless.
     const prev = lastLightBlock.get(player.id);
     if (prev &&
         prev.dim.id === player.dimension.id &&
-        prev.loc.x === headLoc.x &&
-        prev.loc.y === headLoc.y &&
-        prev.loc.z === headLoc.z &&
-        prev.typeId === targetType) {
+        prev.typeId === targetType &&
+        prev.locs.length === locs.length &&
+        prev.locs.every((p, i) => p.x === locs[i].x && p.y === locs[i].y && p.z === locs[i].z)) {
         return;
     }
     clearTrackedLight(player.id);
-    try {
-        const b = player.dimension.getBlock(headLoc);
-        if (b && b.isAir) {
-            b.setType(targetType);
-            lastLightBlock.set(player.id, { dim: player.dimension, loc: headLoc, typeId: targetType });
+    const placed = [];
+    for (const loc of locs) {
+        try {
+            const b = player.dimension.getBlock(loc);
+            // `replace air` / `replace effect99:lightblock` — never overwrite real blocks.
+            if (b && (b.isAir || b.typeId === BRIGHT_LIGHT_TYPE || b.typeId === DIM_LIGHT_TYPE)) {
+                b.setType(targetType);
+                placed.push(loc);
+            }
         }
+        catch { }
     }
-    catch { }
+    if (placed.length > 0) {
+        lastLightBlock.set(player.id, { dim: player.dimension, locs: placed, typeId: targetType });
+    }
 }
 export function getActiveShulkerShieldOwner(shieldId) {
     for (const [playerId, shield] of playerShulkerShield.entries()) {

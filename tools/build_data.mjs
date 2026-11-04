@@ -415,9 +415,14 @@ writeJson(path.join(BP, 'blocks/fake_ice.json'), {
 });
 
 // 4.2 `effect99:lightblock` & `effect99:lightblock2` (Dynamic sword light blocks)
+//
+// 2.8.8 used the legacy `minecraft:block_light_emission` values 1 and 0.5. That
+// component took a 0-1 fraction while the modern `minecraft:light_emission` takes
+// an integer 0-15, so 1 -> 15 and 0.5 -> 7.5 -> 7 (rounded) are the same light
+// levels, not brighter ones.
 for (const [id, lightVal, tex] of [
   ['effect99:lightblock', 15, 'lightblock'],
-  ['effect99:lightblock2', 11, 'lightblock2'],
+  ['effect99:lightblock2', 7, 'lightblock2'],
 ]) {
   const short = id.split(':')[1];
   writeJson(path.join(BP, `blocks/${short}.json`), {
@@ -480,7 +485,8 @@ writeJson(path.join(BP, 'blocks/quartz_diamond_block.json'), {
       },
       'minecraft:destructible_by_explosion': { explosion_resistance: 999.0 },
       'minecraft:light_dampening': 15,
-      'minecraft:light_emission': 4,
+      // 2.8.8 `minecraft:block_light_emission: 0` — the ore/block do not glow.
+      'minecraft:light_emission': 0,
       'minecraft:map_color': '#e8f4ff',
       'minecraft:loot': 'loot_tables/empty.json',
       'minecraft:material_instances': {
@@ -519,7 +525,8 @@ writeJson(path.join(BP, 'blocks/quartz_diamond_ore.json'), {
       },
       'minecraft:destructible_by_explosion': { explosion_resistance: 999.0 },
       'minecraft:light_dampening': 15,
-      'minecraft:light_emission': 3,
+      // 2.8.8 `minecraft:light_emission: 0`.
+      'minecraft:light_emission': 0,
       'minecraft:map_color': '#b8d8e8',
       'minecraft:loot': 'loot_tables/empty.json',
       'minecraft:material_instances': {

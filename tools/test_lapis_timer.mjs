@@ -16,6 +16,7 @@ const ctx = vm.createContext({Math:math, world, system:{runInterval(cb){tick=cb;
  recoverRandomTickSpeed(){}, setTimeSwordActive(){}, isFullMoonNight:()=>false,
  getMainhandItem: player => player.item ? {typeId: player.item} : undefined,
  getOffhandItem:()=>undefined, LIGHT_EMITTING_SWORDS:new Set(), BRIGHT_LIGHT_SWORDS:new Set(),
+ lightVolumeForSword:()=>undefined, BRIGHT_LIGHT_TYPE:'effect99:lightblock', DIM_LIGHT_TYPE:'effect99:lightblock2',
  EntityComponentTypes:{Riding:'riding'}, GameMode:{Creative:'creative'}, MoonPhase:{FullMoon:0}});
 vm.runInContext(`${code}\nthis.start = startPassiveEngine`,ctx); ctx.start();
 for(let i=0;i<50;i++) tick(); assert.equal(p.xp,0);

@@ -31,6 +31,8 @@ const ctx = vm.createContext({ Math: Object.create(Math), system: { currentTick:
   isFullMoonNight: () => false, isDesertWellWater: () => false, recoverRandomTickSpeed() {}, setTimeSwordActive() {},
   spawnSwordLightning() {}, getMainhandItem: () => ({ typeId: 'effect:grass_sword' }),
   getOffhandItem: () => undefined, BRIGHT_LIGHT_SWORDS: new Set(), LIGHT_EMITTING_SWORDS: new Set(),
+  BRIGHT_LIGHT_TYPE: 'effect99:lightblock', DIM_LIGHT_TYPE: 'effect99:lightblock2',
+  lightVolumeForSword: () => undefined,
   EntitySwingSource: {}, Player: class {}, Entity: class {} });
 vm.runInContext(`${code}\nthis.start=startPassiveEngine`, ctx); ctx.start();
 // The engine counts its own ticks: ten interval runs reach the tick%10 behaviour once.

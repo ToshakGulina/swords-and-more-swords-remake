@@ -34,7 +34,7 @@
         "explosion_resistance": 999
       },
       "minecraft:light_dampening": 15,
-      "minecraft:light_emission": 4,
+      "minecraft:light_emission": 0,
       "minecraft:map_color": "#e8f4ff",
       "minecraft:loot": "loot_tables/empty.json",
       "minecraft:material_instances": {

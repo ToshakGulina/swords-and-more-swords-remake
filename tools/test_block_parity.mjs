@@ -16,8 +16,11 @@ assert.deepEqual(comp('fake_ice', 'minecraft:tick'), { interval_range: [40, 40],
 assert.equal(ice.permutations.length, 3, 'four models total: base + three permutations');
 assert.deepEqual(ice.description.states['effect99:crack_stage'], [0, 1, 2, 3]);
 
-// lightblock / lightblock2: 0.2 s placeholder (4 ticks), level 15 and 11.
-for (const [name, level] of [['lightblock', 15], ['lightblock2', 11]]) {
+// lightblock / lightblock2: 0.2 s placeholder (4 ticks).
+// 2.8.8 `block_light_emission` was a 0-1 fraction (1 and 0.5). The modern
+// `minecraft:light_emission` is an integer 0-15, so the equivalent levels are
+// 15 and 7 — not 11, which would be a third of the original's 0.5.
+for (const [name, level] of [['lightblock', 15], ['lightblock2', 7]]) {
   assert.deepEqual(comp(name, 'minecraft:tick'), { interval_range: [4, 4], looping: true },
     `${name} is a 0.2 s placeholder in 2.8.8`);
   assert.equal(comp(name, 'minecraft:light_emission'), level);

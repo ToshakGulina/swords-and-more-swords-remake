@@ -6,7 +6,7 @@ const signal={subscribe(){}};const bolts=[];const dim={id:'minecraft:overworld',
 const player={id:'p',isValid:true,dimension:dim,location:{x:3,y:70,z:4},item:'effect:lightning_sword',triggerEvent(){},getGameMode(){return 'survival';},getComponent(){}};
 let tick;const ctx=vm.createContext({world:{afterEvents:{playerLeave:signal,playerSpawn:signal,playerDimensionChange:signal},getAllPlayers:()=>[player],getTimeOfDay:()=>6000,getMoonPhase:()=>0,getDimension:()=>dim},
  system:{runInterval(cb){tick=cb;}},recoverRandomTickSpeed(){},setTimeSwordActive(){},isFullMoonNight:()=>false,getMainhandItem:()=>({typeId:player.item}),getOffhandItem(){},
- BRIGHT_LIGHT_SWORDS:new Set(),LIGHT_EMITTING_SWORDS:new Set(),GameMode:{Creative:'creative'},MoonPhase:{FullMoon:0},
+ BRIGHT_LIGHT_SWORDS:new Set(),LIGHT_EMITTING_SWORDS:new Set(),lightVolumeForSword:()=>undefined,BRIGHT_LIGHT_TYPE:'effect99:lightblock',DIM_LIGHT_TYPE:'effect99:lightblock2',GameMode:{Creative:'creative'},MoonPhase:{FullMoon:0},
  });
 vm.runInContext(code+'\nthis.start=startPassiveEngine',ctx);ctx.start();tick();tick();
 // Exact 2.8.8: equipping summons exactly one `lightning_bolt` at y=255.

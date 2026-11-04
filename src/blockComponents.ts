@@ -40,6 +40,37 @@ export const LIGHT_EMITTING_SWORDS = new Set([
   'effect:spectral_sword',
 ]);
 
+// Exact 2.8.8 light footprint. Every sword that lit up ran two `fill` commands
+// from its `environment_sensor` trigger and kept re-running them while the sword
+// stayed in hand:
+//   fill ~1 ~1 ~1 ~-1 ~-1 ~-1 effect99:lightblock 0 replace air
+//   fill ~1 ~1 ~1 ~-1 ~-1 ~-1 effect99:lightblock 0 replace effect99:lightblock
+// i.e. a 3x3x3 cube around the player's feet, so `yOffset` is measured from
+// `player.location` (feet) exactly like the selector origin. Ultra Instinct and
+// Wither used `~1 ~2 ~1 ~-1 ~2 ~-1`: the same 3x3 footprint, one layer only, one
+// block above the player's feet.
+// Each placeholder deletes itself 0.2 s later (`minecraft:ticking` + `setblock air`),
+// so the volume is re-filled while the sword is held and clears on its own.
+export type LightVolume = { yOffset: number; topOnly: boolean };
+
+const TOP_LAYER_SWORDS = new Set(['effect:ultra_instinct_sword', 'effect:wither_sword']);
+
+export function lightVolumeForSword(mainId: string, offId: string): LightVolume | undefined {
+  const lit =
+    LIGHT_EMITTING_SWORDS.has(mainId) ||
+    offId === 'effect:glowstone_sword' ||
+    offId === 'effect:fire_sword';
+  if (!lit) return undefined;
+  return { yOffset: TOP_LAYER_SWORDS.has(mainId) ? 2 : 1, topOnly: TOP_LAYER_SWORDS.has(mainId) };
+}
+
+// 2.8.8 `block_light_emission` was a 0-1 fraction: 1 for `lightblock` (Glowstone,
+// Fire, Ultra Instinct), 0.5 for `lightblock2` (every other lit sword). The modern
+// `minecraft:light_emission` component is an integer 0-15, so the matching values
+// are 15 and 7.
+export const BRIGHT_LIGHT_TYPE = 'effect99:lightblock';
+export const DIM_LIGHT_TYPE = 'effect99:lightblock2';
+
 export function registerBlockComponents(registry: BlockComponentRegistry): void {
   // 1. Fake Ice (cracking temporary ice cage / Frost Walker ice from Ice Sword, melts after ~8s)
   registry.registerCustomComponent('effect99:fake_ice', {
