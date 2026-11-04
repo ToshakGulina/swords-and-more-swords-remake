@@ -1,0 +1,68 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.animation.despawn": {
+      "states": {
+        "default": {
+          "transitions": [
+            {
+              "despawn": "!q.has_rider"
+            }
+          ]
+        },
+        "despawn": {
+          "on_entry": [
+            "@s minecraft:despawn"
+          ],
+          "transitions": [
+            {
+              "default": "1.0"
+            }
+          ]
+        }
+      }
+    },
+    "controller.animation.despawn_wolf": {
+      "states": {
+        "default": {
+          "transitions": [
+            {
+              "despawn": "q.moon_phase != 0 || (q.time_of_day > 0.22 && q.time_of_day < 0.78)"
+            }
+          ]
+        },
+        "despawn": {
+          "on_entry": [
+            "@s despawn"
+          ],
+          "transitions": [
+            {
+              "default": "1.0"
+            }
+          ]
+        }
+      }
+    },
+    "controller.animation.despawn2": {
+      "states": {
+        "default": {
+          "transitions": [
+            {
+              "despawn2": "!q.is_riding"
+            }
+          ]
+        },
+        "despawn2": {
+          "on_entry": [
+            "@s minecraft:despawn"
+          ],
+          "transitions": [
+            {
+              "default": "1.0"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

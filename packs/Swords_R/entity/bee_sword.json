@@ -1,0 +1,28 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "entity:bee_sword",
+      "materials": {
+        "default": "bee"
+      },
+      "textures": {
+        "default": "textures/entity/bee/bee_angry"
+      },
+      "geometry": {
+        "default": "geometry.bee"
+      },
+      "animations": {
+        "flying": "animation.bee.flying"
+      },
+      "scripts": {
+        "animate": [
+          "flying"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
+    }
+  }
+}

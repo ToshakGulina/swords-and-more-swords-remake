@@ -1,0 +1,236 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "entity:ghost",
+      "runtime_identifier": "minecraft:chicken",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "despawn": {
+        "minecraft:instant_despawn": {}
+      },
+      "effect:instant_despawn": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "on_damage": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "player"
+              },
+              "event": "disturbed_ghost"
+            },
+            "deals_damage": false
+          },
+          {
+            "cause": "all",
+            "deals_damage": false
+          }
+        ]
+      },
+      "minecraft:behavior.look_at_entity": {
+        "priority": 3,
+        "look_distance": 6,
+        "probability": 1,
+        "angle_of_view_vertical": 135,
+        "angle_of_view_horizontal": 170,
+        "filters": {
+          "any_of": [
+            {
+              "test": "is_family",
+              "subject": "other",
+              "value": "mob"
+            },
+            {
+              "test": "is_family",
+              "subject": "other",
+              "value": "ghost_sword"
+            }
+          ]
+        }
+      },
+      "minecraft:type_family": {
+        "family": [
+          "ghost",
+          "mob",
+          "monster"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0.6,
+        "height": 1.8
+      },
+      "minecraft:health": {
+        "value": 666,
+        "max": 666
+      },
+      "minecraft:scale": {
+        "value": 1.05
+      },
+      "minecraft:movement": {
+        "value": 0.3
+      },
+      "minecraft:navigation.walk": {
+        "can_path_over_water": true,
+        "avoid_damage_blocks": true
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:jump.static": {},
+      "minecraft:can_climb": {},
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:behavior.flee_sun": {
+        "priority": 2,
+        "speed_multiplier": 1
+      },
+      "minecraft:behavior.random_stroll": {
+        "priority": 1,
+        "speed_multiplier": 1,
+        "xz_dist": 30
+      },
+      "minecraft:knockback_resistance": {
+        "value": 1
+      },
+      "minecraft:fire_immune": true,
+      "minecraft:physics": {},
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": false
+      },
+      "minecraft:environment_sensor": {
+        "triggers": [
+          {
+            "filters": {
+              "test": "is_brightness",
+              "operator": ">",
+              "value": 0.1
+            },
+            "event": "despawn"
+          },
+          {
+            "filters": {},
+            "event": "ghost_effects"
+          }
+        ]
+      }
+    },
+    "events": {
+      "minecraft:entity_spawned": {},
+      "disturbed_ghost": {
+        "randomize": [
+          {
+            "weight": 987
+          },
+          {
+            "weight": 10,
+            "queue_command": {
+              "command": [
+                "playsound mob.endermen.portal @a[r=17] ~~~",
+                "spreadplayers ~ ~ 0 16 @s"
+              ]
+            }
+          },
+          {
+            "weight": 3,
+            "add": {
+              "component_groups": [
+                "despawn"
+              ]
+            },
+            "queue_command": {
+              "command": [
+                "loot spawn ~~~ loot \"swords/ghost_sword\"",
+                "particle minecraft:ghost_spiral ~~~",
+                "playsound mob.wither.ambient @a[r=16] ~ ~1 ~ 2 0.3",
+                "particle minecraft:egg_destroy_emitter ~ ~ ~",
+                "particle minecraft:egg_destroy_emitter ~ ~0.3 ~",
+                "particle minecraft:egg_destroy_emitter ~ ~0.6 ~",
+                "particle minecraft:egg_destroy_emitter ~ ~0.9 ~",
+                "particle minecraft:egg_destroy_emitter ~ ~1.2 ~",
+                "particle minecraft:egg_destroy_emitter ~ ~1.5 ~"
+              ]
+            }
+          }
+        ]
+      },
+      "ghost_wailing": {
+        "randomize": [
+          {
+            "weight": 70
+          },
+          {
+            "weight": 30,
+            "randomize": [
+              {
+                "weight": 50,
+                "queue_command": {
+                  "command": [
+                    "playsound ghost_sword.wailing @a[rm=10,r=50]"
+                  ]
+                }
+              },
+              {
+                "weight": 50,
+                "queue_command": {
+                  "command": [
+                    "playsound ghost_sword.wailing @a[rm=10,r=50] ~~~ 1 7"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "ghost_effects": {
+        "randomize": [
+          {
+            "weight": 90
+          },
+          {
+            "weight": 10,
+            "queue_command": {
+              "command": [
+                "playsound mob.wither.spawn @a[r=16] ~ ~ ~ 0.15 0.2"
+              ]
+            }
+          }
+        ]
+      },
+      "despawn": {
+        "add": {
+          "component_groups": [
+            "despawn"
+          ]
+        },
+        "queue_command": {
+          "command": [
+            "particle minecraft:ghost_spiral ~~~",
+            "playsound mob.wither.ambient @a[r=16] ~ ~1 ~ 2 0.3",
+            "particle minecraft:egg_destroy_emitter ~ ~ ~",
+            "particle minecraft:egg_destroy_emitter ~ ~0.3 ~",
+            "particle minecraft:egg_destroy_emitter ~ ~0.6 ~",
+            "particle minecraft:egg_destroy_emitter ~ ~0.9 ~",
+            "particle minecraft:egg_destroy_emitter ~ ~1.2 ~",
+            "particle minecraft:egg_destroy_emitter ~ ~1.5 ~"
+          ]
+        }
+      },
+      "effect:instant_despawn": {
+        "add": {
+          "component_groups": [
+            "effect:instant_despawn"
+          ]
+        }
+      }
+    }
+  }
+}

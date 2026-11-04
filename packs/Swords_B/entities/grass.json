@@ -1,0 +1,138 @@
+{
+  "format_version": "1.11.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "entity:grass",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "despawn": {
+        "minecraft:instant_despawn": {}
+      },
+      "start_despawn": {
+        "minecraft:timer": {
+          "time": [
+            0.52,
+            0.52
+          ],
+          "looping": false,
+          "time_down_event": {
+            "event": "despawn",
+            "target": "self"
+          }
+        }
+      },
+      "grass_sword": {
+        "minecraft:timer": {
+          "time": [
+            1.08,
+            1.08
+          ],
+          "looping": false,
+          "time_down_event": {
+            "event": "grass_sword_skill",
+            "target": "self"
+          }
+        }
+      },
+      "effect:instant_despawn": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "effect99_entities"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0,
+        "height": 0
+      },
+      "minecraft:damage_sensor": {
+        "triggers": {
+          "cause": "all",
+          "deals_damage": false
+        }
+      },
+      "minecraft:physics": {
+        "has_gravity": false,
+        "has_collision": false
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": false
+      }
+    },
+    "events": {
+      "minecraft:entity_spawned": {
+        "sequence": [
+          {
+            "add": {
+              "component_groups": [
+                "grass_sword"
+              ]
+            },
+            "queue_command": {
+              "command": [
+                "playsound dig.grass @a[r=12]",
+                "effect @e[type=!entity:grass,r=1] slowness 2 15 true",
+                "tag @e[family=!grass_witch,family=!player,type=!entity:grass,type=!item,type=!xp_orb,type=!arrow,r=2,tag=!grass] add grass"
+              ]
+            }
+          }
+        ]
+      },
+      "grass_sword_skill": {
+        "add": {
+          "component_groups": [
+            "start_despawn"
+          ]
+        },
+        "queue_command": {
+          "command": [
+            "playsound dig.grass @a[r=12] ~ ~ ~ 1 0.4",
+            "execute as @e[type=!entity:grass,c=1,r=2,tag=grass] at @s if block ~ ~-1 ~ grass_block if block ~ ~ ~ air run tp @s ~ ~-0.85 ~",
+            "execute as @e[type=!entity:grass,c=1,r=2,tag=grass] at @s if block ~ ~-1 ~ grass_block if block ~ ~ ~ short_grass run tp @s ~ ~-0.85 ~",
+            "tag @e[tag=grass,r=2] remove grass"
+          ]
+        }
+      },
+      "despawn": {
+        "sequence": [
+          {
+            "add": {
+              "component_groups": [
+                "despawn"
+              ]
+            }
+          },
+          {
+            "randomize": [
+              {
+                "weight": 50,
+                "queue_command": {
+                  "command": [
+                    "fill ~ ~ ~ ~ ~ ~ short_grass [] replace air"
+                  ]
+                }
+              },
+              {
+                "weight": 50
+              }
+            ]
+          }
+        ]
+      },
+      "effect:instant_despawn": {
+        "add": {
+          "component_groups": [
+            "effect:instant_despawn"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "resource_pack_name": "swords",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "blaze_sword": {
+      "textures": "textures/items/blaze_sword"
+    },
+    "shulker_sword": {
+      "textures": "textures/items/shulker_sword"
+    },
+    "coal_sword": {
+      "textures": "textures/items/coal_sword"
+    },
+    "spider_sword": {
+      "textures": "textures/items/spider_sword"
+    },
+    "jungle_sword": {
+      "textures": "textures/items/jungle_sword"
+    },
+    "cactus_sword": {
+      "textures": "textures/items/cactus_sword"
+    },
+    "slime_sword": {
+      "textures": "textures/items/slime_sword"
+    },
+    "emerald_sword": {
+      "textures": "textures/items/emerald_sword"
+    },
+    "lapis_sword": {
+      "textures": "textures/items/lapis_sword"
+    },
+    "spectral_sword": {
+      "textures": "textures/items/spectral_sword"
+    },
+    "obsidian_sword": {
+      "textures": "textures/items/obsidian_sword"
+    },
+    "glowstone_sword": {
+      "textures": "textures/items/glowstone_sword"
+    },
+    "time_sword": {
+      "textures": "textures/items/time_sword"
+    },
+    "creeper_sword": {
+      "textures": "textures/items/creeper_sword"
+    },
+    "fire_sword": {
+      "textures": "textures/items/fire_sword"
+    },
+    "magma_sword": {
+      "textures": "textures/items/magma_sword"
+    },
+    "wither_sword": {
+      "textures": "textures/items/wither_sword"
+    },
+    "tnt_sword": {
+      "textures": "textures/items/tnt_sword"
+    },
+    "lightning_sword": {
+      "textures": "textures/items/lightning_sword"
+    },
+    "ender_sword": {
+      "textures": "textures/items/ender_sword"
+    },
+    "sponge_sword": {
+      "textures": "textures/items/sponge_sword"
+    },
+    "sea_sword": {
+      "textures": "textures/items/sea_sword"
+    },
+    "grass_sword": {
+      "textures": "textures/items/grass_sword"
+    },
+    "ice_sword": {
+      "textures": "textures/items/ice_sword"
+    },
+    "bone_sword": {
+      "textures": "textures/items/bone_sword"
+    },
+    "quartz_sword": {
+      "textures": "textures/items/quartz_sword"
+    },
+    "wither_skeleton_sword": {
+      "textures": "textures/items/wither_skeleton_sword"
+    },
+    "ultra_instinct_sword": {
+      "textures": "textures/items/ultra_instinct_sword"
+    },
+    "wolf_sword": {
+      "textures": "textures/items/wolf_sword"
+    },
+    "wet_sponge_sword": {
+      "textures": "textures/items/wet_sponge_sword"
+    },
+    "glass_sword": {
+      "textures": "textures/items/glass_sword"
+    },
+    "silver_sword": {
+      "textures": "textures/items/silver_sword"
+    },
+    "nether_star_sword": {
+      "textures": "textures/items/nether_star_sword"
+    },
+    "bedrock_sword": {
+      "textures": "textures/items/bedrock_sword"
+    },
+    "ghost_sword": {
+      "textures": "textures/items/ghost_sword"
+    },
+    "clock_sword": {
+      "textures": "textures/items/clock_sword"
+    },
+    "bee_sword": {
+      "textures": "textures/items/bee_sword"
+    },
+    "cursed_pumpkin_sword": {
+      "textures": "textures/items/cursed_pumpkin_sword"
+    },
+    "bedrock_stick": {
+      "textures": "textures/items/bedrock_stick"
+    },
+    "silver_ingot": {
+      "textures": "textures/items/silver_ingot"
+    },
+    "quartz_diamond": {
+      "textures": "textures/items/quartz_diamond"
+    },
+    "quartz_diamond_stick": {
+      "textures": "textures/items/quartz_diamond_stick"
+    },
+    "swords_guide": {
+      "textures": "textures/items/swords_guide"
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "effect:glowstone_sword",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.sword"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "glowstone_sword"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.effect:glowstone_sword"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": {
+        "value": true
+      },
+      "minecraft:allow_off_hand": {
+        "value": true
+      },
+      "minecraft:can_destroy_in_creative": {
+        "value": false
+      },
+      "minecraft:glint": {
+        "value": true
+      },
+      "minecraft:damage": {
+        "value": 4
+      },
+      "minecraft:durability": {
+        "max_durability": 128,
+        "damage_chance": {
+          "min": 100,
+          "max": 100
+        }
+      },
+      "minecraft:enchantable": {
+        "slot": "sword",
+        "value": 9
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "effect:glowstone_sword"
+            ],
+            "repair_amount": 128
+          },
+          {
+            "items": [
+              "minecraft:glowstone"
+            ],
+            "repair_amount": 64
+          },
+          {
+            "items": [
+              "minecraft:glowstone_dust"
+            ],
+            "repair_amount": 16
+          }
+        ]
+      },
+      "minecraft:digger": {
+        "use_efficiency": true,
+        "destroy_speeds": [
+          {
+            "block": "minecraft:web",
+            "speed": 15
+          },
+          {
+            "block": "minecraft:bamboo",
+            "speed": 10
+          }
+        ]
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_sword",
+          "minecraft:is_tool"
+        ]
+      },
+      "effect:sword": {
+        "id": "glowstone_sword"
+      }
+    }
+  }
+}

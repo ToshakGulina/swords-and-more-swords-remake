@@ -1,0 +1,32 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "effect:coal_sword"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "2",
+      "2",
+      "1"
+    ],
+    "key": {
+      "1": {
+        "item": "minecraft:stick"
+      },
+      "2": {
+        "item": "minecraft:coal_block"
+      }
+    },
+    "result": {
+      "item": "effect:coal_sword"
+    },
+    "unlock": [
+      {
+        "item": "minecraft:stick"
+      }
+    ]
+  }
+}

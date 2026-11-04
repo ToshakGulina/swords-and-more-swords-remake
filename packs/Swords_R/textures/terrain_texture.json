@@ -1,0 +1,15 @@
+{
+ "resource_pack_name": "swords",
+ "texture_name": "atlas.terrain",
+ "padding": 8,
+ "num_mip_levels": 4,
+   "texture_data": {
+     "spectral_block": { "textures": [ "textures/blocks/spectral_block"] },
+     "silver_ore": { "textures": [ "textures/blocks/silver_ore"] },
+     "quartz_diamond_ore": { "textures": [ "textures/blocks/quartz_diamond_ore"] },
+     "quartz_diamond_block": { "textures": [ "textures/blocks/quartz_diamond_block"] },
+     "lightblock": { "textures": [ "textures/blocks/lightblock"] },
+     "lightblock2": { "textures": [ "textures/blocks/lightblock2"] },
+     "fake_ice": { "textures": [ "textures/blocks/fake_ice"] }
+   }
+}

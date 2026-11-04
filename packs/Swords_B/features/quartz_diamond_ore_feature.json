@@ -1,0 +1,23 @@
+{
+  "format_version": "1.21.10",
+  "minecraft:ore_feature": {
+    "description": {
+      "identifier": "effect99:quartz_diamond_ore_feature"
+    },
+    "count": 4,
+    "replace_rules": [
+      {
+        "places_block": "effect99:quartz_diamond_ore",
+        "may_replace": [
+          "minecraft:stone",
+          "minecraft:deepslate",
+          "minecraft:tuff",
+          "minecraft:granite",
+          "minecraft:diorite",
+          "minecraft:andesite",
+          "minecraft:end_stone"
+        ]
+      }
+    ]
+  }
+}

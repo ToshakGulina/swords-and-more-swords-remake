@@ -1,0 +1,20 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "entity:living_flame",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/blocks/lightblock"
+      },
+      "geometry": {
+        "default": "geometry.null"
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
+    }
+  }
+}

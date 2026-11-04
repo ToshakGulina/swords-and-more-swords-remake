@@ -1,0 +1,19 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_furnace": {
+    "description": {
+      "identifier": "effect:silver_ingot"
+    },
+    "tags": [
+      "furnace",
+      "blast_furnace"
+    ],
+    "input": "effect99:silver_ore",
+    "output": "effect:silver_ingot",
+    "unlock": [
+      {
+        "item": "effect99:silver_ore"
+      }
+    ]
+  }
+}

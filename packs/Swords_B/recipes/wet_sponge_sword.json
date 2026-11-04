@@ -1,0 +1,19 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_furnace": {
+    "description": {
+      "identifier": "effect:wet_sponge_sword"
+    },
+    "tags": [
+      "furnace",
+      "blast_furnace"
+    ],
+    "input": "effect:wet_sponge_sword",
+    "output": "effect:sponge_sword",
+    "unlock": [
+      {
+        "item": "effect:wet_sponge_sword"
+      }
+    ]
+  }
+}

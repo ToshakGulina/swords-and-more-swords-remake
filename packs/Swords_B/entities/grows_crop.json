@@ -1,0 +1,107 @@
+{
+  "format_version": "1.11.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "entity:grows_crop",
+      "runtime_identifier": "minecraft:bee",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "despawn": {
+        "minecraft:instant_despawn": {}
+      },
+      "grows_crop_event": {
+        "minecraft:timer": {
+          "time": [
+            0.3,
+            0.3
+          ],
+          "looping": true,
+          "time_down_event": {
+            "event": "grows_crop",
+            "target": "self"
+          }
+        }
+      },
+      "effect:instant_despawn": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:damage_sensor": {
+        "triggers": {
+          "cause": "all",
+          "deals_damage": false
+        }
+      },
+      "minecraft:type_family": {
+        "family": [
+          "effect99_entities"
+        ]
+      },
+      "minecraft:ageable": {
+        "duration": 1,
+        "grow_up": {
+          "event": "despawn",
+          "target": "self"
+        }
+      },
+      "minecraft:grows_crop": {
+        "chance": 0.5,
+        "charges": 10
+      },
+      "minecraft:collision_box": {
+        "width": 0,
+        "height": 0
+      },
+      "minecraft:physics": {
+        "has_gravity": false,
+        "has_collision": false
+      }
+    },
+    "events": {
+      "grows_crop_event": {
+        "add": {
+          "component_groups": [
+            "grows_crop_event"
+          ]
+        }
+      },
+      "despawn": {
+        "add": {
+          "component_groups": [
+            "despawn"
+          ]
+        }
+      },
+      "grows_crop": {
+        "queue_command": {
+          "command": [
+            "summon entity:grows_crop ~ ~0.1 ~",
+            "summon entity:grows_crop ~ ~0.1 ~1",
+            "summon entity:grows_crop ~1 ~0.1 ~",
+            "summon entity:grows_crop ~-1 ~0.1 ~",
+            "summon entity:grows_crop ~ ~0.1 ~-1",
+            "summon entity:grows_crop ~1 ~0.1 ~1",
+            "summon entity:grows_crop ~-1 ~0.1 ~-1",
+            "summon entity:grows_crop ~1 ~0.1 ~-1",
+            "summon entity:grows_crop ~-1 ~0.1 ~1",
+            "summon entity:grows_crop ~ ~0.1 ~2",
+            "summon entity:grows_crop ~2 ~0.1 ~",
+            "summon entity:grows_crop ~-2 ~0.1 ~",
+            "summon entity:grows_crop ~ ~0.1 ~-2"
+          ]
+        }
+      },
+      "effect:instant_despawn": {
+        "add": {
+          "component_groups": [
+            "effect:instant_despawn"
+          ]
+        }
+      }
+    }
+  }
+}

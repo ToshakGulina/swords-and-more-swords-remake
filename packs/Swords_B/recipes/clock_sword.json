@@ -1,0 +1,38 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "effect:clock_sword"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "GGG",
+      "GCG",
+      "XSX"
+    ],
+    "key": {
+      "G": {
+        "item": "minecraft:gold_block"
+      },
+      "C": {
+        "item": "minecraft:clock"
+      },
+      "S": {
+        "item": "minecraft:golden_sword"
+      },
+      "X": {
+        "item": "minecraft:gold_ingot"
+      }
+    },
+    "result": {
+      "item": "effect:clock_sword"
+    },
+    "unlock": [
+      {
+        "item": "minecraft:gold_block"
+      }
+    ]
+  }
+}

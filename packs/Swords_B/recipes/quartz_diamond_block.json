@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "effect99:quartz_diamond_block"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "effect:quartz_diamond"
+      }
+    },
+    "result": {
+      "item": "effect99:quartz_diamond_block"
+    },
+    "unlock": [
+      {
+        "item": "effect:quartz_diamond"
+      }
+    ]
+  }
+}

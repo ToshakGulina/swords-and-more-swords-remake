@@ -1,0 +1,94 @@
+{
+  "format_version": "1.11.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "entity:wither_effect",
+      "runtime_identifier": "minecraft:snowball",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "despawn": {
+        "minecraft:instant_despawn": {}
+      },
+      "effect:instant_despawn": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:timer": {
+        "time": [
+          0.1,
+          0.1
+        ],
+        "looping": true,
+        "time_down_event": {
+          "event": "despawn",
+          "target": "self"
+        }
+      },
+      "minecraft:projectile": {
+        "on_hit": {
+          "mob_effect": {
+            "effect": "wither",
+            "durationeasy": 200,
+            "durationnormal": 200,
+            "durationhard": 200,
+            "amplifier": 0
+          },
+          "impact_damage": {
+            "damage": 0,
+            "knockback": true,
+            "destroy_on_hit": true
+          },
+          "particle_on_hit": {}
+        },
+        "power": 2,
+        "gravity": 0,
+        "angle_offset": 0
+      },
+      "minecraft:type_family": {
+        "family": [
+          "effect99_entities"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0,
+        "height": 0
+      },
+      "minecraft:physics": {},
+      "minecraft:environment_sensor": [
+        {
+          "on_environment": {
+            "filters": {
+              "all_of": [
+                {
+                  "test": "is_family",
+                  "value": "effect99_entities"
+                }
+              ]
+            },
+            "event": "particle"
+          }
+        }
+      ]
+    },
+    "events": {
+      "despawn": {
+        "add": {
+          "component_groups": [
+            "despawn"
+          ]
+        }
+      },
+      "effect:instant_despawn": {
+        "add": {
+          "component_groups": [
+            "effect:instant_despawn"
+          ]
+        }
+      }
+    }
+  }
+}

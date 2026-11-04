@@ -1,0 +1,94 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "effect:ender_sword",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.sword"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "ender_sword"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.effect:ender_sword"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": {
+        "value": true
+      },
+      "minecraft:can_destroy_in_creative": {
+        "value": false
+      },
+      "minecraft:glint": {
+        "value": true
+      },
+      "minecraft:damage": {
+        "value": 9
+      },
+      "minecraft:durability": {
+        "max_durability": 1256,
+        "damage_chance": {
+          "min": 100,
+          "max": 100
+        }
+      },
+      "minecraft:enchantable": {
+        "slot": "sword",
+        "value": 9
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "effect:ender_sword"
+            ],
+            "repair_amount": 1256
+          },
+          {
+            "items": [
+              "minecraft:ender_pearl"
+            ],
+            "repair_amount": 28
+          },
+          {
+            "items": [
+              "minecraft:ender_eye"
+            ],
+            "repair_amount": 32
+          }
+        ]
+      },
+      "minecraft:cooldown": {
+        "category": "ender_sword",
+        "duration": 2
+      },
+      "minecraft:digger": {
+        "use_efficiency": true,
+        "destroy_speeds": [
+          {
+            "block": "minecraft:web",
+            "speed": 15
+          },
+          {
+            "block": "minecraft:bamboo",
+            "speed": 10
+          }
+        ]
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_sword",
+          "minecraft:is_tool"
+        ]
+      },
+      "effect:sword": {
+        "id": "ender_sword"
+      }
+    }
+  }
+}

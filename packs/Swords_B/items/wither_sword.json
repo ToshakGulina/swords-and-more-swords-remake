@@ -1,0 +1,81 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "effect:wither_sword",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.sword"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "wither_sword"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.effect:wither_sword"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": {
+        "value": true
+      },
+      "minecraft:can_destroy_in_creative": {
+        "value": false
+      },
+      "minecraft:glint": {
+        "value": true
+      },
+      "minecraft:should_despawn": {
+        "value": false
+      },
+      "minecraft:damage": {
+        "value": 10
+      },
+      "minecraft:durability": {
+        "max_durability": 3856,
+        "damage_chance": {
+          "min": 100,
+          "max": 100
+        }
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "effect:wither_sword"
+            ],
+            "repair_amount": 3856
+          }
+        ]
+      },
+      "minecraft:cooldown": {
+        "category": "wither_sword",
+        "duration": 3
+      },
+      "minecraft:digger": {
+        "use_efficiency": true,
+        "destroy_speeds": [
+          {
+            "block": "minecraft:web",
+            "speed": 15
+          },
+          {
+            "block": "minecraft:bamboo",
+            "speed": 10
+          }
+        ]
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_sword",
+          "minecraft:is_tool"
+        ]
+      },
+      "effect:sword": {
+        "id": "wither_sword"
+      }
+    }
+  }
+}

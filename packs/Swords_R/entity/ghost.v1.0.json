@@ -1,0 +1,33 @@
+{
+  "format_version": "1.8.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "entity:ghost",
+      "materials": {
+        "ghost": "ghost"
+      },
+      "textures": {
+        "ghost": "textures/entity/ghost"
+      },
+      "geometry": {
+        "ghost": "geometry.ghost"
+      },
+      "animations": {
+        "look_at_target": "animation.ghost.look_at_target",
+        "move": "animation.ghost.move"
+      },
+      "animation_controllers": [
+        {
+          "move": "controller.animation.ghost.move"
+        }
+      ],
+      "render_controllers": [
+        "controller.render.ghost"
+      ],
+      "spawn_egg": {
+        "base_color": "#ffffff",
+        "overlay_color": "#ffffff"
+      }
+    }
+  }
+}

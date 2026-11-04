@@ -1,0 +1,108 @@
+{
+  "format_version": "1.11.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "entity:ender_crystal_projectile",
+      "runtime_identifier": "minecraft:snowball",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "crystal_exploding": {
+        "minecraft:explode": {
+          "fuse_length": 0,
+          "fuse_lit": true,
+          "power": 6,
+          "causes_fire": true,
+          "destroy_affected_by_griefing": true
+        }
+      },
+      "despawn": {
+        "minecraft:instant_despawn": {}
+      },
+      "effect:instant_despawn": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:despawn": {
+        "despawn_from_simulation_edge": true
+      },
+      "minecraft:type_family": {
+        "family": [
+          "ender_crystal"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0,
+        "height": 0
+      },
+      "minecraft:projectile": {
+        "on_hit": {
+          "definition_event": {
+            "affect_projectile": true,
+            "event_trigger": {
+              "event": "minecraft:crystal_explode",
+              "target": "self"
+            }
+          }
+        },
+        "power": 5,
+        "gravity": 0.001,
+        "inertia": 1,
+        "liquid_inertia": 1,
+        "uncertainty_base": 0,
+        "uncertainty_multiplier": 0,
+        "anchor": 1,
+        "offset": [
+          0,
+          0,
+          0
+        ],
+        "reflect_on_hurt": true,
+        "catch_fire": true
+      },
+      "minecraft:fire_immune": true,
+      "minecraft:physics": {},
+      "minecraft:environment_sensor": [
+        {
+          "on_environment": {
+            "filters": {
+              "all_of": [
+                {
+                  "test": "is_family",
+                  "value": "ender_crystal"
+                }
+              ]
+            },
+            "event": "projectile_particle"
+          }
+        }
+      ]
+    },
+    "events": {
+      "minecraft:crystal_explode": {
+        "add": {
+          "component_groups": [
+            "crystal_exploding"
+          ]
+        }
+      },
+      "projectile_particle": {
+        "queue_command": {
+          "command": [
+            "particle minecraft:example_flipbook ~ ~ ~"
+          ]
+        }
+      },
+      "effect:instant_despawn": {
+        "add": {
+          "component_groups": [
+            "effect:instant_despawn"
+          ]
+        }
+      }
+    }
+  }
+}

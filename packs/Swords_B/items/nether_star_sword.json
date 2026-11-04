@@ -1,0 +1,87 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "effect:nether_star_sword",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.sword"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "nether_star_sword"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.effect:nether_star_sword"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": {
+        "value": true
+      },
+      "minecraft:can_destroy_in_creative": {
+        "value": false
+      },
+      "minecraft:glint": {
+        "value": true
+      },
+      "minecraft:should_despawn": {
+        "value": false
+      },
+      "minecraft:damage": {
+        "value": 7
+      },
+      "minecraft:durability": {
+        "max_durability": 3256,
+        "damage_chance": {
+          "min": 100,
+          "max": 100
+        }
+      },
+      "minecraft:enchantable": {
+        "slot": "sword",
+        "value": 9
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "effect:nether_star_sword"
+            ],
+            "repair_amount": 3256
+          },
+          {
+            "items": [
+              "minecraft:nether_star"
+            ],
+            "repair_amount": 3000
+          }
+        ]
+      },
+      "minecraft:digger": {
+        "use_efficiency": true,
+        "destroy_speeds": [
+          {
+            "block": "minecraft:web",
+            "speed": 15
+          },
+          {
+            "block": "minecraft:bamboo",
+            "speed": 10
+          }
+        ]
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_sword",
+          "minecraft:is_tool"
+        ]
+      },
+      "effect:sword": {
+        "id": "nether_star_sword"
+      }
+    }
+  }
+}

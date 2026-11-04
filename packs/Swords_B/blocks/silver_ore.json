@@ -1,0 +1,41 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "effect99:silver_ore",
+      "menu_category": {
+        "category": "nature",
+        "group": "minecraft:itemGroup.name.ore"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.effect99:silver_ore.name",
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 4.5,
+        "item_specific_speeds": [
+          {
+            "item": {
+              "tags": "q.any_tag('minecraft:is_pickaxe', 'is_pickaxe')"
+            },
+            "destroy_speed": 1
+          }
+        ]
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 6
+      },
+      "minecraft:light_dampening": 15,
+      "minecraft:light_emission": 0,
+      "minecraft:map_color": "#c0c8d0",
+      "minecraft:loot": "loot_tables/blocks/silver_ore.json",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "silver_ore",
+          "render_method": "opaque",
+          "ambient_occlusion": 1,
+          "face_dimming": true
+        }
+      }
+    }
+  }
+}

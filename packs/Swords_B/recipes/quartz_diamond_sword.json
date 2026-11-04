@@ -1,0 +1,32 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "effect:quartz_sword"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "Q",
+      "Q",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "effect:quartz_diamond_stick"
+      },
+      "Q": {
+        "item": "effect99:quartz_diamond_block"
+      }
+    },
+    "result": {
+      "item": "effect:quartz_sword"
+    },
+    "unlock": [
+      {
+        "item": "effect:quartz_diamond_stick"
+      }
+    ]
+  }
+}

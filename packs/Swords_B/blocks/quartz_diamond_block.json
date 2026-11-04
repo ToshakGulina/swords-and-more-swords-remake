@@ -1,0 +1,40 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "effect99:quartz_diamond_block",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.effect99:quartz_diamond_block.name",
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 5,
+        "item_specific_speeds": [
+          {
+            "item": {
+              "tags": "q.any_tag('minecraft:is_pickaxe', 'is_pickaxe')"
+            },
+            "destroy_speed": 1.2
+          }
+        ]
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 12
+      },
+      "minecraft:light_dampening": 15,
+      "minecraft:light_emission": 4,
+      "minecraft:map_color": "#e8f4ff",
+      "minecraft:loot": "loot_tables/blocks/quartz_diamond_block.json",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "quartz_diamond_block",
+          "render_method": "opaque",
+          "ambient_occlusion": 1,
+          "face_dimming": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "minecraft:tnt",
+      "is_experimental": false,
+      "is_summonable": true,
+      "is_spawnable": false,
+      "spawn_category": "misc"
+    },
+    "components": {
+      "minecraft:collision_box": {
+        "height": 0.98,
+        "width": 0.98
+      },
+      "minecraft:conditional_bandwidth_optimization": {
+        "default_values": {
+          "max_dropped_ticks": 5,
+          "max_optimized_distance": 80,
+          "use_motion_prediction_hints": true
+        }
+      },
+      "minecraft:explode": {
+        "causes_fire": false,
+        "fuse_lit": true,
+        "power": 4,
+        "fuse_length": 4
+      },
+      "minecraft:physics": {},
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:type_family": {
+        "family": [
+          "tnt",
+          "inanimate"
+        ]
+      }
+    },
+    "component_groups": {
+      "from_explosion": {
+        "minecraft:explode": {
+          "causes_fire": false,
+          "fuse_lit": true,
+          "power": 4,
+          "fuse_length": {
+            "range_max": 2,
+            "range_min": 0.5
+          }
+        }
+      },
+      "giant_tnt": {
+        "minecraft:scale": {
+          "value": 2.5
+        },
+        "minecraft:explode": {
+          "fuse_length": 8,
+          "fuse_lit": true,
+          "power": 16,
+          "causes_fire": true,
+          "destroy_affected_by_griefing": true
+        },
+        "minecraft:timer": {
+          "time": [
+            7.9,
+            7.9
+          ],
+          "looping": false,
+          "time_down_event": {
+            "event": "effect:giant_tnt_fx",
+            "target": "self"
+          }
+        }
+      }
+    },
+    "events": {
+      "from_explosion": {
+        "add": {
+          "component_groups": [
+            "from_explosion"
+          ]
+        }
+      },
+      "giant_tnt": {
+        "add": {
+          "component_groups": [
+            "giant_tnt"
+          ]
+        }
+      },
+      "effect:giant_tnt_fx": {
+        "queue_command": {
+          "command": [
+            "camerashake add @a[r=32] 0.25 0.8 positional",
+            "playsound random.explode @a[r=32] ~ ~ ~ 2.0 0.4"
+          ]
+        }
+      }
+    }
+  }
+}

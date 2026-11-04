@@ -1,0 +1,41 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "effect99:lightblock",
+      "menu_category": {
+        "category": "none",
+        "is_hidden_in_commands": true
+      }
+    },
+    "components": {
+      "minecraft:collision_box": false,
+      "minecraft:selection_box": false,
+      "minecraft:replaceable": {},
+      "minecraft:destructible_by_mining": false,
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0
+      },
+      "minecraft:light_dampening": 0,
+      "minecraft:light_emission": 15,
+      "minecraft:loot": "loot_tables/empty.json",
+      "minecraft:geometry": "geometry.null",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lightblock",
+          "render_method": "alpha_test",
+          "ambient_occlusion": 0,
+          "face_dimming": false
+        }
+      },
+      "minecraft:tick": {
+        "interval_range": [
+          8,
+          12
+        ],
+        "looping": true
+      },
+      "effect99:lightblock": {}
+    }
+  }
+}

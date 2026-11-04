@@ -1,0 +1,88 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "effect:ice_sword",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.sword"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "ice_sword"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.effect:ice_sword"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": {
+        "value": true
+      },
+      "minecraft:can_destroy_in_creative": {
+        "value": false
+      },
+      "minecraft:glint": {
+        "value": true
+      },
+      "minecraft:damage": {
+        "value": 8
+      },
+      "minecraft:durability": {
+        "max_durability": 500,
+        "damage_chance": {
+          "min": 100,
+          "max": 100
+        }
+      },
+      "minecraft:enchantable": {
+        "slot": "sword",
+        "value": 9
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "effect:ice_sword"
+            ],
+            "repair_amount": 500
+          },
+          {
+            "items": [
+              "minecraft:ice"
+            ],
+            "repair_amount": 55
+          }
+        ]
+      },
+      "minecraft:cooldown": {
+        "category": "ice_sword",
+        "duration": 5
+      },
+      "minecraft:digger": {
+        "use_efficiency": true,
+        "destroy_speeds": [
+          {
+            "block": "minecraft:web",
+            "speed": 15
+          },
+          {
+            "block": "minecraft:bamboo",
+            "speed": 10
+          }
+        ]
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_sword",
+          "minecraft:is_tool"
+        ]
+      },
+      "effect:sword": {
+        "id": "ice_sword"
+      }
+    }
+  }
+}

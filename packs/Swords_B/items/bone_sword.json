@@ -1,0 +1,93 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "effect:bone_sword",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.sword"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "bone_sword"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.effect:bone_sword"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": {
+        "value": true
+      },
+      "minecraft:can_destroy_in_creative": {
+        "value": false
+      },
+      "minecraft:damage": {
+        "value": 5
+      },
+      "minecraft:durability": {
+        "max_durability": 820,
+        "damage_chance": {
+          "min": 100,
+          "max": 100
+        }
+      },
+      "minecraft:enchantable": {
+        "slot": "sword",
+        "value": 9
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "effect:bone_sword"
+            ],
+            "repair_amount": 820
+          },
+          {
+            "items": [
+              "minecraft:bone"
+            ],
+            "repair_amount": 70
+          },
+          {
+            "items": [
+              "minecraft:bone_block"
+            ],
+            "repair_amount": 300
+          },
+          {
+            "items": [
+              "minecraft:bone_meal"
+            ],
+            "repair_amount": 18
+          }
+        ]
+      },
+      "minecraft:digger": {
+        "use_efficiency": true,
+        "destroy_speeds": [
+          {
+            "block": "minecraft:web",
+            "speed": 15
+          },
+          {
+            "block": "minecraft:bamboo",
+            "speed": 10
+          }
+        ]
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_sword",
+          "minecraft:is_tool"
+        ]
+      },
+      "effect:sword": {
+        "id": "bone_sword"
+      }
+    }
+  }
+}

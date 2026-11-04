@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "effect:bedrock_stick"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:bedrock"
+      }
+    },
+    "result": {
+      "item": "effect:bedrock_stick"
+    },
+    "unlock": [
+      {
+        "item": "minecraft:bedrock"
+      }
+    ]
+  }
+}
