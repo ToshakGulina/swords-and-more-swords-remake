@@ -9,7 +9,11 @@ let lastCentellaDeathTick = -1000;
 let lastCentellaDeathLoc;
 let lastCentellaDeathDimension;
 const manuallyDroppedBedrock = new Set();
+// 2.8.8 `fire_sword` group uses a one-shot `minecraft:timer` of 5-6 s with
+// `randomInterval`, so the fizzing rain countdown is a random length in that
+// window rather than a flat 5 s. Store the rolled 10-tick checks per item.
 const fadingFireSwordTicks = new Map();
+const fadingFireSwordTargets = new Map();
 function convertSurroundingSand(dim, center, targetBlockId) {
     const cx = Math.floor(center.x);
     const cy = Math.floor(center.y);
@@ -374,6 +378,7 @@ export function registerWorldEvents() {
                         if (id === 'effect:fire_sword') {
                             if (inWater) {
                                 fadingFireSwordTicks.delete(itemEnt.id);
+                                fadingFireSwordTargets.delete(itemEnt.id);
                                 itemEnt.remove();
                                 dim.spawnItem(new ItemStack('effect:glass_sword', 1), loc);
                                 dim.playSound('random.fizz', loc, { volume: 0.8, pitch: 1.0 });
@@ -383,8 +388,14 @@ export function registerWorldEvents() {
                             if (inRain) {
                                 // Exact 2.8.8 `fading_fire_sword`: 5s fizzing countdown in rain before turning into Obsidian Sword!
                                 activeRainSwordIds.add(itemEnt.id);
+                                // Roll 5-6 s once per sword on the first wet tick: 5 s = 10 checks,
+                                // 6 s = 12, one check per 10-tick interval.
+                                if (!fadingFireSwordTargets.has(itemEnt.id)) {
+                                    fadingFireSwordTargets.set(itemEnt.id, 10 + Math.floor(Math.random() * 3));
+                                }
                                 const rainChecks = (fadingFireSwordTicks.get(itemEnt.id) ?? 0) + 1;
                                 fadingFireSwordTicks.set(itemEnt.id, rainChecks);
+                                const rainTarget = fadingFireSwordTargets.get(itemEnt.id) ?? 10;
                                 // A missing sound or particle must not prevent the transformation.
                                 try {
                                     dim.playSound('random.fizz', loc, { volume: 0.7, pitch: 1.1 });
@@ -394,8 +405,9 @@ export function registerWorldEvents() {
                                     dim.spawnParticle('minecraft:cauldron_explosion_emitter', loc);
                                 }
                                 catch { }
-                                if (rainChecks >= 10) {
+                                if (rainChecks >= rainTarget) {
                                     fadingFireSwordTicks.delete(itemEnt.id);
+                                    fadingFireSwordTargets.delete(itemEnt.id);
                                     itemEnt.remove();
                                     dim.spawnItem(new ItemStack('effect:obsidian_sword', 1), loc);
                                     dim.playSound('random.fizz', loc, { volume: 1.0, pitch: 0.8 });
@@ -404,6 +416,7 @@ export function registerWorldEvents() {
                             }
                             else {
                                 fadingFireSwordTicks.delete(itemEnt.id);
+                                fadingFireSwordTargets.delete(itemEnt.id);
                             }
                             if (bType === 'minecraft:fire' || bType === 'minecraft:soul_fire') {
                                 itemEnt.remove();
@@ -559,6 +572,7 @@ export function registerWorldEvents() {
         for (const oldId of fadingFireSwordTicks.keys()) {
             if (!activeRainSwordIds.has(oldId)) {
                 fadingFireSwordTicks.delete(oldId);
+                fadingFireSwordTargets.delete(oldId);
             }
         }
     }, 10);
