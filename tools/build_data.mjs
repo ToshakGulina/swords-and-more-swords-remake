@@ -2,17 +2,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const jsonc = require('/tmp/refs/node_modules/jsonc-parser');
+const jsonc = require('jsonc-parser');
 
-const ROOT = '/home/user/swords-and-more-swords-remake';
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BP = path.join(ROOT, 'packs/Swords_B');
 const RP = path.join(ROOT, 'packs/Swords_R');
-const SRC_288_BP = '/tmp/mcaddons/2.8.8/Swords_B';
-const SRC_288_RP = '/tmp/mcaddons/2.8.8/Swords_R';
-const VANILLA_BP = '/tmp/refs/bedrock-samples/behavior_pack';
-const VANILLA_RP = '/tmp/refs/bedrock-samples/resource_pack';
+const SRC_288_BP = path.join(process.env.SAMS_ORIGINAL ?? '/tmp/mcaddons/2.8.8', 'Swords_B');
+const SRC_288_RP = path.join(process.env.SAMS_ORIGINAL ?? '/tmp/mcaddons/2.8.8', 'Swords_R');
+const VANILLA_BP = path.join(process.env.SAMS_SAMPLES ?? '/tmp/refs/bedrock-samples', 'behavior_pack');
+const VANILLA_RP = path.join(process.env.SAMS_SAMPLES ?? '/tmp/refs/bedrock-samples', 'resource_pack');
 
 // Deterministic fresh UUIDs (v4 format) so Android & Windows never hit "Duplicate pack detected"
 const UUIDS = {
@@ -37,7 +38,7 @@ writeJson(path.join(BP, 'manifest.json'), {
     name: '§6§lSwords and More Swords §r§a(1.26+ Remake)',
     description: '§eПолное восстановление всех 38 мечей, боссов, руд и способностей мода Effect99 для Minecraft Bedrock 1.26.60+ (Android & Windows) без экспериментальных режимов.',
     uuid: UUIDS.bp_header,
-    version: [3, 0, 1],
+    version: [3, 0, 4],
     min_engine_version: [1, 26, 20],
   },
   modules: [
@@ -45,21 +46,21 @@ writeJson(path.join(BP, 'manifest.json'), {
       description: 'Swords and More Swords Behavior Data',
       type: 'data',
       uuid: UUIDS.bp_data,
-      version: [3, 0, 1],
+      version: [3, 0, 4],
     },
     {
       description: 'Swords and More Swords Script Engine',
       type: 'script',
       language: 'javascript',
       uuid: UUIDS.bp_script,
-      version: [3, 0, 1],
+      version: [3, 0, 4],
       entry: 'scripts/main.js',
     },
   ],
   dependencies: [
     {
       uuid: UUIDS.rp_header,
-      version: [3, 0, 1],
+      version: [3, 0, 4],
     },
     {
       module_name: '@minecraft/server',
@@ -77,7 +78,7 @@ writeJson(path.join(RP, 'manifest.json'), {
     name: '§6§lSwords and More Swords §r§bResources (1.26+)',
     description: '§eРесурс-пак мода Swords and More Swords (текстуры, 3D-модели, анимации, звуки и встроенный справочник на русском и английском языках) для Minecraft Bedrock 1.26.60+.',
     uuid: UUIDS.rp_header,
-    version: [3, 0, 1],
+    version: [3, 0, 4],
     min_engine_version: [1, 26, 20],
   },
   modules: [
@@ -85,13 +86,13 @@ writeJson(path.join(RP, 'manifest.json'), {
       description: 'Swords and More Swords Resource Assets',
       type: 'resources',
       uuid: UUIDS.rp_res,
-      version: [3, 0, 1],
+      version: [3, 0, 4],
     },
   ],
   dependencies: [
     {
       uuid: UUIDS.bp_header,
-      version: [3, 0, 1],
+      version: [3, 0, 4],
     },
   ],
   metadata: {
@@ -350,6 +351,7 @@ writeJson(path.join(BP, 'blocks/fake_ice.json'), {
       menu_category: { category: 'none', is_hidden_in_commands: false },
       states: {
         'effect99:crack_stage': [0, 1, 2, 3],
+        'effect99:from_water': [false, true],
       },
     },
     components: {
@@ -434,7 +436,7 @@ for (const [id, lightVal, tex] of [
   });
 }
 
-// 4.3 `effect99:quartz_diamond_block`
+// 4.3 `effect99:quartz_diamond_block` (Requires Iron/Diamond/Netherite Pickaxe or Bedrock Sword + arcane backlash on break, exact 2.8.8!)
 writeJson(path.join(BP, 'blocks/quartz_diamond_block.json'), {
   format_version: '1.26.0',
   'minecraft:block': {
@@ -447,19 +449,19 @@ writeJson(path.join(BP, 'blocks/quartz_diamond_block.json'), {
     components: {
       'minecraft:display_name': 'tile.effect99:quartz_diamond_block.name',
       'minecraft:destructible_by_mining': {
-        seconds_to_destroy: 5.0,
+        seconds_to_destroy: 18.0,
         item_specific_speeds: [
-          {
-            item: { tags: "q.any_tag('minecraft:is_pickaxe', 'is_pickaxe')" },
-            destroy_speed: 1.2,
-          },
+          { item: 'minecraft:iron_pickaxe', destroy_speed: 2.2 },
+          { item: 'minecraft:diamond_pickaxe', destroy_speed: 1.5 },
+          { item: 'minecraft:netherite_pickaxe', destroy_speed: 1.1 },
+          { item: 'effect:bedrock_sword', destroy_speed: 0.05 },
         ],
       },
-      'minecraft:destructible_by_explosion': { explosion_resistance: 12.0 },
+      'minecraft:destructible_by_explosion': { explosion_resistance: 999.0 },
       'minecraft:light_dampening': 15,
       'minecraft:light_emission': 4,
       'minecraft:map_color': '#e8f4ff',
-      'minecraft:loot': 'loot_tables/blocks/quartz_diamond_block.json',
+      'minecraft:loot': 'loot_tables/empty.json',
       'minecraft:material_instances': {
         '*': {
           texture: 'quartz_diamond_block',
@@ -472,7 +474,7 @@ writeJson(path.join(BP, 'blocks/quartz_diamond_block.json'), {
   },
 });
 
-// 4.4 `effect99:quartz_diamond_ore`
+// 4.4 `effect99:quartz_diamond_ore` (Requires Iron/Diamond/Netherite Pickaxe or Bedrock Sword + arcane backlash + XP, exact 2.8.8!)
 writeJson(path.join(BP, 'blocks/quartz_diamond_ore.json'), {
   format_version: '1.26.0',
   'minecraft:block': {
@@ -486,19 +488,19 @@ writeJson(path.join(BP, 'blocks/quartz_diamond_ore.json'), {
     components: {
       'minecraft:display_name': 'tile.effect99:quartz_diamond_ore.name',
       'minecraft:destructible_by_mining': {
-        seconds_to_destroy: 6.0,
+        seconds_to_destroy: 15.0,
         item_specific_speeds: [
-          {
-            item: { tags: "q.any_tag('minecraft:is_pickaxe', 'is_pickaxe')" },
-            destroy_speed: 1.5,
-          },
+          { item: 'minecraft:iron_pickaxe', destroy_speed: 1.8 },
+          { item: 'minecraft:diamond_pickaxe', destroy_speed: 1.3 },
+          { item: 'minecraft:netherite_pickaxe', destroy_speed: 1.0 },
+          { item: 'effect:bedrock_sword', destroy_speed: 0.05 },
         ],
       },
-      'minecraft:destructible_by_explosion': { explosion_resistance: 9.0 },
+      'minecraft:destructible_by_explosion': { explosion_resistance: 999.0 },
       'minecraft:light_dampening': 15,
       'minecraft:light_emission': 3,
       'minecraft:map_color': '#b8d8e8',
-      'minecraft:loot': 'loot_tables/blocks/quartz_diamond_ore.json',
+      'minecraft:loot': 'loot_tables/empty.json',
       'minecraft:material_instances': {
         '*': {
           texture: 'quartz_diamond_ore',
@@ -507,12 +509,11 @@ writeJson(path.join(BP, 'blocks/quartz_diamond_ore.json'), {
           face_dimming: true,
         },
       },
-      'effect99:quartz_diamond_ore': {},
     },
   },
 });
 
-// 4.5 `effect99:silver_ore`
+// 4.5 `effect99:silver_ore` (Requires Iron/Diamond/Netherite Pickaxe or Bedrock Sword, exact 2.8.8!)
 writeJson(path.join(BP, 'blocks/silver_ore.json'), {
   format_version: '1.26.0',
   'minecraft:block': {
@@ -526,19 +527,19 @@ writeJson(path.join(BP, 'blocks/silver_ore.json'), {
     components: {
       'minecraft:display_name': 'tile.effect99:silver_ore.name',
       'minecraft:destructible_by_mining': {
-        seconds_to_destroy: 4.5,
+        seconds_to_destroy: 12.0,
         item_specific_speeds: [
-          {
-            item: { tags: "q.any_tag('minecraft:is_pickaxe', 'is_pickaxe')" },
-            destroy_speed: 1.0,
-          },
+          { item: 'minecraft:iron_pickaxe', destroy_speed: 1.3 },
+          { item: 'minecraft:diamond_pickaxe', destroy_speed: 0.9 },
+          { item: 'minecraft:netherite_pickaxe', destroy_speed: 0.75 },
+          { item: 'effect:bedrock_sword', destroy_speed: 0.05 },
         ],
       },
       'minecraft:destructible_by_explosion': { explosion_resistance: 6.0 },
       'minecraft:light_dampening': 15,
       'minecraft:light_emission': 0,
       'minecraft:map_color': '#c0c8d0',
-      'minecraft:loot': 'loot_tables/blocks/silver_ore.json',
+      'minecraft:loot': 'loot_tables/empty.json',
       'minecraft:material_instances': {
         '*': {
           texture: 'silver_ore',
@@ -589,7 +590,7 @@ writeJson(path.join(BP, 'blocks/sapling3.json'), {
   },
 });
 
-// 4.7 `effect99:spectral_block` (Dimensional X-Ray block with exact original block restoration!)
+// 4.7 `effect99:spectral_block` (Dimensional X-Ray block with semi-transparent blend & exact original block restoration!)
 writeJson(path.join(BP, 'blocks/spectral_block.json'), {
   format_version: '1.26.0',
   'minecraft:block': {
@@ -601,16 +602,16 @@ writeJson(path.join(BP, 'blocks/spectral_block.json'), {
       },
     },
     components: {
-      'minecraft:destructible_by_mining': { seconds_to_destroy: 1.5 },
-      'minecraft:destructible_by_explosion': { explosion_resistance: 6.0 },
+      'minecraft:destructible_by_mining': false,
+      'minecraft:destructible_by_explosion': { explosion_resistance: 999.0 },
       'minecraft:light_dampening': 0,
-      'minecraft:light_emission': 2,
+      'minecraft:light_emission': 0,
       'minecraft:loot': 'loot_tables/empty.json',
       'minecraft:geometry': 'geometry.spectral_block',
       'minecraft:material_instances': {
         '*': {
           texture: 'spectral_block',
-          render_method: 'alpha_test',
+          render_method: 'blend',
           ambient_occlusion: 0.0,
           face_dimming: false,
         },
@@ -767,7 +768,8 @@ writeJson(path.join(BP, 'feature_rules/quartz_diamond_ore_end_rule.json'), {
     distribution: {
       iterations: 3,
       x: { distribution: 'uniform', extent: [0, 15] },
-      y: { distribution: 'uniform', extent: [4, 32] },
+      // End islands are typically around Y=60; the old 4..32 range mostly sampled void.
+      y: { distribution: 'uniform', extent: [30, 80] },
       z: { distribution: 'uniform', extent: [0, 15] },
     },
   },
@@ -908,7 +910,7 @@ if (fs.existsSync(staleTreasurePath)) {
 }
 {
   const jungleTreasure = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/gameplay/fishing/treasure.json'), 'utf8'));
-  jungleTreasure.pools[0].entries.push({ type: 'item', name: 'effect:jungle_sword', weight: 2 });
+  jungleTreasure.pools[0].entries.push({ type: 'item', name: 'effect:jungle_sword', weight: 5 });
   writeJson(path.join(BP, 'loot_tables/gameplay/fishing/jungle_treasure.json'), jungleTreasure);
 
   const jungleFishing = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/gameplay/jungle_fishing.json'), 'utf8'));
@@ -921,28 +923,24 @@ if (fs.existsSync(staleTreasurePath)) {
 }
 
 // 7.2 Rebase ONLY the modified vanilla chest loot tables onto Mojang v1.26.60!
-// This preserves 100% of 1.20–1.26 Armor Trims, Pottery Sherds, Bundles & Music Discs!
+// This preserves 100% of 1.20–1.26 Armor Trims, Pottery Sherds, Bundles, Heart of the Sea & Starter Tools!
 const chestInjections = [
-  ['chests/abandoned_mineshaft.json', 1, [{ type: 'item', name: 'effect:spider_sword', weight: 3 }]],
-  ['chests/buriedtreasure.json', 0, [{ type: 'item', name: 'effect:sea_sword', weight: 2 }]],
-  ['chests/desert_pyramid.json', 0, [{ type: 'item', name: 'effect:tnt_sword', weight: 3 }]],
-  ['chests/igloo_chest.json', 0, [{ type: 'item', name: 'effect:ice_sword', weight: 3 }]],
-  ['chests/jungle_temple.json', 0, [{ type: 'item', name: 'effect:jungle_sword', weight: 3 }]],
+  ['chests/abandoned_mineshaft.json', 1, [{ type: 'item', name: 'effect:spider_sword', weight: 5 }]],
+  ['chests/desert_pyramid.json', 0, [{ type: 'item', name: 'effect:tnt_sword', weight: 15 }]],
+  ['chests/igloo_chest.json', 0, [{ type: 'item', name: 'effect:ice_sword', weight: 4 }]],
+  ['chests/jungle_temple.json', 0, [{ type: 'item', name: 'effect:jungle_sword', weight: 25 }]],
   ['chests/pillager_outpost.json', 1, [
     { type: 'item', name: 'effect:emerald_sword', weight: 2 },
     { type: 'item', name: 'effect:lapis_sword', weight: 3 },
   ]],
-  ['chests/spawn_bonus_chest.json', 0, [
-    { type: 'item', name: 'effect:coal_sword', weight: 5 },
-  ]],
   ['chests/stronghold_corridor.json', 0, [
-    { type: 'item', name: 'effect:emerald_sword', weight: 2 },
-    { type: 'item', name: 'effect:lapis_sword', weight: 3 },
+    { type: 'item', name: 'effect:emerald_sword', weight: 10 },
+    { type: 'item', name: 'effect:lapis_sword', weight: 12 },
   ]],
-  ['chests/stronghold_library.json', 0, [{ type: 'item', name: 'effect:lapis_sword', weight: 4 }]],
-  ['chests/underwater_ruin_big.json', 0, [{ type: 'item', name: 'effect:magma_sword', weight: 2 }]],
-  ['chests/village/village_snowy_house.json', 0, [{ type: 'item', name: 'effect:ice_sword', weight: 2 }]],
-  ['chests/woodland_mansion.json', 0, [{ type: 'item', name: 'effect:emerald_sword', weight: 3 }]],
+  ['chests/stronghold_library.json', 0, [{ type: 'item', name: 'effect:lapis_sword', weight: 15 }]],
+  ['chests/underwater_ruin_big.json', 0, [{ type: 'item', name: 'effect:magma_sword', weight: 3 }]],
+  ['chests/village/village_snowy_house.json', 0, [{ type: 'item', name: 'effect:ice_sword', weight: 4 }]],
+  ['chests/woodland_mansion.json', 0, [{ type: 'item', name: 'effect:emerald_sword', weight: 35 }]],
 ];
 
 for (const [rel, poolIdx, entries] of chestInjections) {
@@ -950,6 +948,25 @@ for (const [rel, poolIdx, entries] of chestInjections) {
   const targetPool = base.pools[Math.min(poolIdx, base.pools.length - 1)];
   targetPool.entries.push(...entries);
   writeJson(path.join(BP, 'loot_tables', rel), base);
+}
+
+// Dedicated bonus pools for `buriedtreasure.json` & `spawn_bonus_chest.json` so guaranteed `heart_of_the_sea` & starter axe are NEVER overwritten!
+{
+  const bt = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/chests/buriedtreasure.json'), 'utf8'));
+  bt.pools.push({
+    rolls: 1,
+    conditions: [{ condition: 'random_chance', chance: 0.35 }],
+    entries: [{ type: 'item', name: 'effect:sea_sword', weight: 1 }],
+  });
+  writeJson(path.join(BP, 'loot_tables/chests/buriedtreasure.json'), bt);
+
+  const sbc = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/chests/spawn_bonus_chest.json'), 'utf8'));
+  sbc.pools.push({
+    rolls: 1,
+    conditions: [{ condition: 'random_chance', chance: 0.35 }],
+    entries: [{ type: 'item', name: 'effect:coal_sword', weight: 1 }],
+  });
+  writeJson(path.join(BP, 'loot_tables/chests/spawn_bonus_chest.json'), sbc);
 }
 
 // Rebase entity loot tables (`elder_guardian`, `shulker`, `wither_skeleton`) onto v1.26.60
@@ -1067,6 +1084,7 @@ writeJson(path.join(BP, 'spawn_rules/ghost.json'), {
         'minecraft:spawns_on_surface': {},
         'minecraft:spawns_on_block_filter': ['minecraft:grass_block', 'minecraft:stone'],
         'minecraft:brightness_filter': { min: 0, max: 7, adjust_for_weather: true },
+        'minecraft:spawn_event': { event: 'ghost_wailing' },
         'minecraft:difficulty_filter': { min: 'easy', max: 'hard' },
         'minecraft:weight': { default: 50 },
         'minecraft:density_limit': { surface: 3 },
@@ -1086,6 +1104,8 @@ writeJson(path.join(BP, 'spawn_rules/living_flame.json'), {
     conditions: [
       {
         'minecraft:spawns_underground': {},
+        'minecraft:spawns_on_surface': {},
+        'minecraft:spawn_event': { event: 'hostile_entity' },
         'minecraft:difficulty_filter': { min: 'easy', max: 'hard' },
         'minecraft:weight': { default: 20 },
         'minecraft:herd': { min_size: 1, max_size: 4 },

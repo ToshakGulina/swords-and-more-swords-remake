@@ -1,4 +1,5 @@
 import {
+  BlockPermutation,
   Dimension,
   Entity,
   EntityComponentTypes,
@@ -74,7 +75,11 @@ export function consumeMainhandDurability(player: Player, amount: number): boole
 export function giveOrDropItem(player: Player, itemStack: ItemStack): void {
   try {
     const inv = player.getComponent(EntityComponentTypes.Inventory) as EntityInventoryComponent | undefined;
-    const leftover = inv?.container?.addItem(itemStack);
+    if (!inv?.container) {
+      player.dimension.spawnItem(itemStack, player.location);
+      return;
+    }
+    const leftover = inv.container.addItem(itemStack);
     if (leftover) {
       player.dimension.spawnItem(leftover, player.location);
     }
@@ -85,22 +90,43 @@ export function giveOrDropItem(player: Player, itemStack: ItemStack): void {
   }
 }
 
+const PROTECTED_UTILITY_TYPES = new Set([
+  'minecraft:item',
+  'minecraft:xp_orb',
+  'minecraft:npc',
+  'minecraft:armor_stand',
+  'minecraft:item_frame',
+  'minecraft:glow_item_frame',
+  'minecraft:painting',
+  'minecraft:leash_knot',
+  'minecraft:boat',
+  'minecraft:chest_boat',
+  'minecraft:minecart',
+  'minecraft:chest_minecart',
+  'minecraft:hopper_minecart',
+  'minecraft:tnt_minecart',
+  'minecraft:ender_crystal',
+  'minecraft:falling_block',
+  'minecraft:area_effect_cloud',
+  'minecraft:evocation_fang',
+  'entity:bee_sword',
+]);
+
 export function isProtectedEntity(entity: Entity, owner?: Entity): boolean {
   if (!entity.isValid) return true;
   if (owner && entity.id === owner.id) return true;
   const typeId = entity.typeId;
-  if (
-    typeId === 'minecraft:item' ||
-    typeId === 'minecraft:xp_orb' ||
-    typeId === 'minecraft:npc' ||
-    typeId === 'minecraft:armor_stand' ||
-    typeId.startsWith('effect:')
-  ) {
+  if (PROTECTED_UTILITY_TYPES.has(typeId) || typeId.startsWith('effect:')) {
     return true;
   }
   try {
     // Protect tamed pets (wolves, cats, parrots, horses, etc.)
     if (entity.getComponent('minecraft:is_tamed')) return true;
+    // Allow AoE sword skills to hit hostile Centella & wild hostile Living Flames, while protecting all player helper entities!
+    if (typeId === 'entity:centella') return false;
+    if (typeId === 'entity:living_flame') {
+      return entity.hasTag('player_summoned') || !entity.matches({ families: ['living_flame_hostile'] });
+    }
     if (entity.matches({ families: ['effect99_entities'] })) return true;
   } catch {}
   return false;
@@ -151,35 +177,45 @@ export function safeRandomTeleport(entity: Entity, minRadius: number, maxRadius:
     const heightRange = dim.heightRange;
 
     for (let attempt = 0; attempt < 24; attempt++) {
-      const angle = Math.random() * Math.PI * 2;
-      const dist = minRadius + Math.random() * (maxRadius - minRadius);
-      const tx = Math.floor(origin.x + Math.cos(angle) * dist);
-      const tz = Math.floor(origin.z + Math.sin(angle) * dist);
+      try {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = minRadius + Math.random() * (maxRadius - minRadius);
+        const tx = Math.floor(origin.x + Math.cos(angle) * dist);
+        const tz = Math.floor(origin.z + Math.sin(angle) * dist);
 
-      const startY = Math.min(heightRange.max - 3, Math.floor(origin.y) + 12);
-      const endY = Math.max(heightRange.min + 1, Math.floor(origin.y) - 12);
+        const startY = Math.min(heightRange.max - 3, Math.floor(origin.y) + 12);
+        const endY = Math.max(heightRange.min + 1, Math.floor(origin.y) - 12);
 
-      for (let y = startY; y >= endY; y--) {
-        const below = dim.getBlock({ x: tx, y: y - 1, z: tz });
-        const foot = dim.getBlock({ x: tx, y, z: tz });
-        const head = dim.getBlock({ x: tx, y: y + 1, z: tz });
-        if (!below || !foot || !head) continue;
-        if (
-          !below.isAir &&
-          !below.isLiquid &&
-          below.typeId !== 'minecraft:magma' &&
-          below.typeId !== 'minecraft:cactus' &&
-          (foot.isAir || foot.typeId === 'minecraft:short_grass' || foot.typeId === 'minecraft:snow_layer') &&
-          head.isAir
-        ) {
-          dim.spawnParticle('minecraft:portal_directional', entity.location);
-          dim.playSound('mob.endermen.portal', entity.location, { volume: 1.0, pitch: 1.0 });
-          entity.teleport({ x: tx + 0.5, y, z: tz + 0.5 });
-          dim.spawnParticle('minecraft:portal_directional', { x: tx + 0.5, y: y + 1.0, z: tz + 0.5 });
-          dim.playSound('mob.endermen.portal', { x: tx + 0.5, y, z: tz + 0.5 }, { volume: 1.0, pitch: 1.1 });
-          return true;
+        for (let y = startY; y >= endY; y--) {
+          const below = dim.getBlock({ x: tx, y: y - 1, z: tz });
+          const foot = dim.getBlock({ x: tx, y, z: tz });
+          const head = dim.getBlock({ x: tx, y: y + 1, z: tz });
+          if (!below || !foot || !head) continue;
+          if (
+            !below.isAir &&
+            !below.isLiquid &&
+            below.typeId !== 'minecraft:magma' &&
+            below.typeId !== 'minecraft:cactus' &&
+            below.typeId !== 'effect99:lightblock' &&
+            below.typeId !== 'effect99:lightblock2' &&
+            (foot.isAir ||
+              foot.typeId === 'minecraft:short_grass' ||
+              foot.typeId === 'minecraft:snow_layer' ||
+              foot.typeId === 'effect99:lightblock' ||
+              foot.typeId === 'effect99:lightblock2') &&
+            (head.isAir ||
+              head.typeId === 'effect99:lightblock' ||
+              head.typeId === 'effect99:lightblock2')
+          ) {
+            try { dim.spawnParticle('minecraft:portal_directional', entity.location); } catch {}
+            try { dim.playSound('mob.endermen.portal', entity.location, { volume: 1.0, pitch: 1.0 }); } catch {}
+            entity.teleport({ x: tx + 0.5, y, z: tz + 0.5 });
+            try { dim.spawnParticle('minecraft:portal_directional', { x: tx + 0.5, y: y + 1.0, z: tz + 0.5 }); } catch {}
+            try { dim.playSound('mob.endermen.portal', { x: tx + 0.5, y, z: tz + 0.5 }, { volume: 1.0, pitch: 1.1 }); } catch {}
+            return true;
+          }
         }
-      }
+      } catch {} // A single unloaded candidate must not abort the other attempts.
     }
   } catch {}
   return false;
@@ -249,19 +285,30 @@ export function growInstantJungleTree(dim: Dimension, baseLoc: Vector3): void {
       }
     }
 
-    // Add hanging vines around the outer canopy
+    // Add hanging vines around the outer canopy, anchored to adjacent canopy leaves (`vine_direction_bits`)
     for (let dx = -4; dx <= 5; dx++) {
       for (let dz = -4; dz <= 5; dz++) {
-        const dist = Math.hypot(dx - 0.5, dz - 0.5);
-        if (dist >= 3.2 && dist <= 4.3 && Math.random() < 0.45) {
-          const vineLen = 2 + Math.floor(Math.random() * 4);
-          for (let vy = 0; vy < vineLen; vy++) {
-            const vb = dim.getBlock({ x: bx + dx, y: by + height - 3 - vy, z: bz + dz });
-            if (vb && vb.isAir) {
-              vb.setType('minecraft:vine');
-            } else {
-              break;
-            }
+        const vx = bx + dx;
+        const topY = by + height - 3;
+        const vz = bz + dz;
+        const topBlock = dim.getBlock({ x: vx, y: topY, z: vz });
+        if (!topBlock || !topBlock.isAir || Math.random() >= 0.45) continue;
+
+        let dirBits = 0;
+        if (dim.getBlock({ x: vx, y: topY, z: vz + 1 })?.typeId === 'minecraft:jungle_leaves') dirBits |= 1; // South (+Z)
+        if (dim.getBlock({ x: vx - 1, y: topY, z: vz })?.typeId === 'minecraft:jungle_leaves') dirBits |= 2; // West (-X)
+        if (dim.getBlock({ x: vx, y: topY, z: vz - 1 })?.typeId === 'minecraft:jungle_leaves') dirBits |= 4; // North (-Z)
+        if (dim.getBlock({ x: vx + 1, y: topY, z: vz })?.typeId === 'minecraft:jungle_leaves') dirBits |= 8; // East (+X)
+        if (dirBits === 0) continue;
+
+        const vinePerm = BlockPermutation.resolve('minecraft:vine', { vine_direction_bits: dirBits });
+        const vineLen = 2 + Math.floor(Math.random() * 4);
+        for (let vy = 0; vy < vineLen; vy++) {
+          const vb = dim.getBlock({ x: vx, y: topY - vy, z: vz });
+          if (vb && vb.isAir) {
+            vb.setPermutation(vinePerm);
+          } else {
+            break;
           }
         }
       }

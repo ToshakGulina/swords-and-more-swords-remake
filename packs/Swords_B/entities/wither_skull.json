@@ -3,7 +3,7 @@
   "minecraft:entity": {
     "description": {
       "identifier": "minecraft:wither_skull",
-      "is_summonable": false,
+      "is_summonable": true,
       "is_spawnable": false
     },
     "components": {

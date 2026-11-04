@@ -53,7 +53,8 @@
           "impact_damage": {
             "damage": 64,
             "knockback": true
-          }
+          },
+          "remove_on_hit": {}
         },
         "power": 2,
         "gravity": 0,
@@ -69,9 +70,9 @@
         ],
         "reflect_on_hurt": false
       },
-      "minecraft:environment_sensor": [
-        {
-          "on_environment": {
+      "minecraft:environment_sensor": {
+        "triggers": [
+          {
             "filters": {
               "all_of": [
                 {
@@ -82,8 +83,8 @@
             },
             "event": "projectile_particle"
           }
-        }
-      ],
+        ]
+      },
       "minecraft:pushable": {
         "is_pushable": false,
         "is_pushable_by_piston": false
@@ -91,13 +92,19 @@
       "minecraft:physics": {
         "has_gravity": false,
         "has_collision": false
-      }
+      },
+      "minecraft:is_baby": {}
     },
     "events": {
       "minecraft:explode": {
+        "add": {
+          "component_groups": [
+            "despawn"
+          ]
+        },
         "queue_command": {
           "command": [
-            "summon entity:ultra_instinct_explode"
+            "summon entity:ultra_instinct_explode ~ ~ ~"
           ]
         }
       },
@@ -114,7 +121,8 @@
             "effect:instant_despawn"
           ]
         }
-      }
+      },
+      "minecraft:end_scale": {}
     }
   }
 }

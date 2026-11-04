@@ -1,0 +1,19 @@
+{
+  "name": "swords-and-more-swords-remake",
+  "private": true,
+  "version": "3.0.4",
+  "scripts": {
+    "compile": "tsc -p tsconfig.json",
+    "validate": "node tools/validate_addon.mjs",
+    "test": "node tools/run_tests.mjs",
+    "build:data": "node tools/build_data.mjs && node tools/build_entities.mjs && node tools/build_ui_and_lang.mjs",
+    "package": "node tools/package_addon.mjs"
+  },
+  "devDependencies": {
+    "@minecraft/server": "2.6.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "jsonc-parser": "3.3.1",
+    "typescript": "7.0.2"
+  }
+}

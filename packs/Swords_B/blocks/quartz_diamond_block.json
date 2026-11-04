@@ -10,23 +10,33 @@
     "components": {
       "minecraft:display_name": "tile.effect99:quartz_diamond_block.name",
       "minecraft:destructible_by_mining": {
-        "seconds_to_destroy": 5,
+        "seconds_to_destroy": 18,
         "item_specific_speeds": [
           {
-            "item": {
-              "tags": "q.any_tag('minecraft:is_pickaxe', 'is_pickaxe')"
-            },
-            "destroy_speed": 1.2
+            "item": "minecraft:iron_pickaxe",
+            "destroy_speed": 2.2
+          },
+          {
+            "item": "minecraft:diamond_pickaxe",
+            "destroy_speed": 1.5
+          },
+          {
+            "item": "minecraft:netherite_pickaxe",
+            "destroy_speed": 1.1
+          },
+          {
+            "item": "effect:bedrock_sword",
+            "destroy_speed": 0.05
           }
         ]
       },
       "minecraft:destructible_by_explosion": {
-        "explosion_resistance": 12
+        "explosion_resistance": 999
       },
       "minecraft:light_dampening": 15,
       "minecraft:light_emission": 4,
       "minecraft:map_color": "#e8f4ff",
-      "minecraft:loot": "loot_tables/blocks/quartz_diamond_block.json",
+      "minecraft:loot": "loot_tables/empty.json",
       "minecraft:material_instances": {
         "*": {
           "texture": "quartz_diamond_block",

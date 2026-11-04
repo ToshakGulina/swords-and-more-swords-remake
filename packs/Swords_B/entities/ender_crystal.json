@@ -58,9 +58,42 @@
           "triggers": [
             {
               "cause": "all",
-              "deals_damage": false
+              "deals_damage": "no"
             }
           ]
+        }
+      },
+      "effect:ender_crystal_scale": {
+        "minecraft:type_family": {
+          "family": [
+            "ender_crystal",
+            "spectral_sword",
+            "ender_crystal_scale",
+            "effect99_entities"
+          ]
+        },
+        "minecraft:scale": {
+          "value": 0.2
+        },
+        "minecraft:collision_box": {
+          "width": 0,
+          "height": 0
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "all",
+              "deals_damage": "no"
+            }
+          ]
+        },
+        "minecraft:timer": {
+          "time": 18,
+          "looping": false,
+          "time_down_event": {
+            "event": "effect:end_scale",
+            "target": "self"
+          }
         }
       },
       "effect:instant_despawn": {
@@ -69,17 +102,68 @@
     },
     "events": {
       "minecraft:crystal_explode": {
-        "add": {
-          "component_groups": [
-            "crystal_exploding"
-          ]
-        },
-        "remove": {}
+        "sequence": [
+          {
+            "filters": {
+              "test": "is_family",
+              "subject": "self",
+              "operator": "!=",
+              "value": "spectral_sword"
+            },
+            "queue_command": {
+              "command": [
+                "scriptevent effect:ender_crystal_exploded ~"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "crystal_exploding"
+              ]
+            }
+          }
+        ]
       },
       "effect:spectral_rider": {
+        "remove": {
+          "component_groups": [
+            "effect:ender_crystal_scale"
+          ]
+        },
         "add": {
           "component_groups": [
             "effect:spectral_rider"
+          ]
+        }
+      },
+      "effect:end_scale": {
+        "remove": {
+          "component_groups": [
+            "effect:ender_crystal_scale"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:spectral_rider"
+          ]
+        },
+        "queue_command": {
+          "command": [
+            "playsound portal.travel @a[r=16] ~ ~ ~ 0.6 7",
+            "particle minecraft:example_flipbook ~ ~0.8 ~"
+          ]
+        }
+      },
+      "effect:ender_crystal_scale": {
+        "remove": {
+          "component_groups": [
+            "effect:spectral_rider"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:ender_crystal_scale"
           ]
         }
       },

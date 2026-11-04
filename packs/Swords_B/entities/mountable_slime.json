@@ -356,7 +356,7 @@
           "command": [
             "effect @s jump_boost 1 2 true",
             "execute at @e[r=1.5,family=monster] run summon entity:slime_damage ~ ~ ~",
-            "tp @s[scores={slime_despawn=0}] @e[type=player,family=slime_sword,c=1,rm=8,r=12]",
+            "tp @s[scores={slime_despawn=..30}] @e[type=player,family=slime_sword,c=1,rm=8,r=12]",
             "scoreboard players add @s slime_despawn 1",
             "execute as @s[scores={slime_despawn=100..}] run event entity @s despawn"
           ]
@@ -365,7 +365,13 @@
       "default_slime": {
         "remove": {
           "component_groups": [
-            "slime_random_direction"
+            "slime_random_direction",
+            "defense_mode_slime"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "default_slime"
           ]
         }
       },

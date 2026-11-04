@@ -314,29 +314,40 @@
     },
     "events": {
       "minecraft:entity_spawned": {
-        "randomize": [
+        "sequence": [
           {
-            "weight": 80,
+            "remove": {},
             "add": {
               "component_groups": [
                 "minecraft:enderman_calm",
-                "effect:default_enderman"
+                "minecraft:not_riding"
               ]
             }
           },
           {
-            "weight": 20,
-            "filters": {
-              "test": "has_biome_tag",
-              "operator": "==",
-              "value": "overworld"
-            },
-            "add": {
-              "component_groups": [
-                "minecraft:enderman_calm",
-                "effect:red_enderman"
-              ]
-            }
+            "randomize": [
+              {
+                "weight": 80,
+                "add": {
+                  "component_groups": [
+                    "effect:default_enderman"
+                  ]
+                }
+              },
+              {
+                "weight": 20,
+                "filters": {
+                  "test": "has_biome_tag",
+                  "operator": "==",
+                  "value": "overworld"
+                },
+                "add": {
+                  "component_groups": [
+                    "effect:red_enderman"
+                  ]
+                }
+              }
+            ]
           }
         ]
       },
@@ -392,6 +403,7 @@
         "add": {
           "component_groups": [
             "minecraft:enderman_calm",
+            "minecraft:not_riding",
             "effect:red_enderman"
           ]
         }

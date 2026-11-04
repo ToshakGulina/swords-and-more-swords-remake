@@ -199,12 +199,12 @@
         {
           "type": "item",
           "name": "effect:emerald_sword",
-          "weight": 2
+          "weight": 10
         },
         {
           "type": "item",
           "name": "effect:lapis_sword",
-          "weight": 3
+          "weight": 12
         }
       ]
     },

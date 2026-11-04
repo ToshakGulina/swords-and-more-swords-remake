@@ -1,6 +1,8 @@
-import { BlockPermutation, EntityComponentTypes, EntityDamageCause, GameMode, MoonPhase, system, world, } from '@minecraft/server';
-import { LIGHT_EMITTING_SWORDS } from './blockComponents.js';
+import { BlockPermutation, EntityComponentTypes, EntityDamageCause, EquipmentSlot, GameMode, MoonPhase, system, world, } from '@minecraft/server';
+import { BRIGHT_LIGHT_SWORDS, LIGHT_EMITTING_SWORDS } from './blockComponents.js';
 import { tryConvertSpongeSword } from './swordSkills.js';
+import { recoverRandomTickSpeed, setTimeSwordActive } from './randomTickManager.js';
+import { spawnSwordLightning } from './lightningOrigin.js';
 import { getMainhandItem, getOffhandItem, isFullMoonNight, isProtectedEntity, } from './utils.js';
 const PLAYER_COMPONENT_KEYS = new Set([
     'sea_sword',
@@ -30,10 +32,11 @@ const playerWitherBossbar = new Map();
 const playerSpectralCrystal = new Map();
 const playerSpiderMount = new Map();
 const playerSlimeMount = new Map();
+const shulkerToggleCooldown = new Map();
+const airborneSlimeIds = new Set();
 const nextLapisTick = new Map();
 const nextBeeFlowerTick = new Map();
 const werewolfCursedPlayers = new Set();
-let timeSwordActiveInWorld = false;
 const SMALL_FLOWERS = [
     'minecraft:dandelion',
     'minecraft:poppy',
@@ -97,18 +100,16 @@ function clearTrackedLight(playerId) {
     catch { }
 }
 function updateDynamicLight(player, mainId, offId) {
-    const isModerateBlaze = mainId === 'effect:blaze_sword' &&
-        offId !== 'effect:glowstone_sword' &&
-        offId !== 'effect:fire_sword';
-    const isLight = LIGHT_EMITTING_SWORDS.has(mainId) ||
+    const isBright = BRIGHT_LIGHT_SWORDS.has(mainId) ||
         offId === 'effect:glowstone_sword' ||
         offId === 'effect:fire_sword';
+    const isLight = isBright || LIGHT_EMITTING_SWORDS.has(mainId);
     if (!isLight) {
         clearTrackedLight(player.id);
         return;
     }
-    // Exact 2.8.8: Blaze Sword uses `lightblock2` (level 11); Glowstone/Fire/Lightning/Time/Wither/Spectral use `lightblock` (level 15)
-    const targetType = isModerateBlaze ? 'effect99:lightblock2' : 'effect99:lightblock';
+    // Exact 2.8.8: Glowstone/Fire/Ultra Instinct use `lightblock` (level 15); Blaze/Lightning/Time/Wither/Spectral use `lightblock2` (level 11)
+    const targetType = isBright ? 'effect99:lightblock' : 'effect99:lightblock2';
     const headLoc = {
         x: Math.floor(player.location.x),
         y: Math.floor(player.location.y + 1),
@@ -119,7 +120,8 @@ function updateDynamicLight(player, mainId, offId) {
         prev.dim.id === player.dimension.id &&
         prev.loc.x === headLoc.x &&
         prev.loc.y === headLoc.y &&
-        prev.loc.z === headLoc.z) {
+        prev.loc.z === headLoc.z &&
+        prev.typeId === targetType) {
         return;
     }
     clearTrackedLight(player.id);
@@ -127,7 +129,7 @@ function updateDynamicLight(player, mainId, offId) {
         const b = player.dimension.getBlock(headLoc);
         if (b && b.isAir) {
             b.setType(targetType);
-            lastLightBlock.set(player.id, { dim: player.dimension, loc: headLoc });
+            lastLightBlock.set(player.id, { dim: player.dimension, loc: headLoc, typeId: targetType });
         }
     }
     catch { }
@@ -140,8 +142,56 @@ export function getActiveShulkerShieldOwner(shieldId) {
     }
     return undefined;
 }
+// A mount belongs to one player; never claim an arbitrary nearby player's mount.
+export function mountPlayerSlime(player) {
+    let slime = playerSlimeMount.get(player.id);
+    if (!slime || !slime.isValid || slime.dimension.id !== player.dimension.id) {
+        cleanupHelperEntity(playerSlimeMount, player.id, 'despawn');
+        slime = player.dimension.spawnEntity('entity:mountable_slime', player.location, {
+            spawnEvent: 'minecraft:entity_spawned',
+        });
+        playerSlimeMount.set(player.id, slime);
+    }
+    slime.triggerEvent('default_slime');
+    const rideable = slime.getComponent(EntityComponentTypes.Rideable);
+    rideable?.addRider(player);
+}
+function cleanupAllHelpersForPlayer(playerId) {
+    clearTrackedLight(playerId);
+    cleanupHelperEntity(playerShulkerShield, playerId);
+    cleanupHelperEntity(playerWitherBossbar, playerId);
+    cleanupHelperEntity(playerSpectralCrystal, playerId, 'effect:despawn');
+    cleanupHelperEntity(playerSpiderMount, playerId, 'effect:despawn_mount');
+    cleanupHelperEntity(playerSlimeMount, playerId, 'despawn');
+}
 export function startPassiveEngine() {
     let tick = 0;
+    recoverRandomTickSpeed();
+    // Lifecycle cleanup on disconnect, respawn, world-rejoin, and portal dimension travel
+    world.afterEvents.playerLeave.subscribe((ev) => {
+        cleanupAllHelpersForPlayer(ev.playerId);
+        lastEquipKey.delete(ev.playerId);
+        lastMainhandId.delete(ev.playerId);
+        shulkerToggleCooldown.delete(ev.playerId);
+        nextLapisTick.delete(ev.playerId);
+        nextBeeFlowerTick.delete(ev.playerId);
+        werewolfCursedPlayers.delete(ev.playerId);
+    });
+    world.afterEvents.playerDimensionChange.subscribe((ev) => {
+        const pid = ev.player.id;
+        cleanupAllHelpersForPlayer(pid);
+        lastEquipKey.delete(pid);
+        lastMainhandId.delete(pid);
+    });
+    world.afterEvents.playerSpawn.subscribe((ev) => {
+        const p = ev.player;
+        lastEquipKey.delete(p.id);
+        lastMainhandId.delete(p.id);
+        if (!ev.initialSpawn) {
+            werewolfCursedPlayers.delete(p.id);
+            cleanupAllHelpersForPlayer(p.id);
+        }
+    });
     system.runInterval(() => {
         tick++;
         const players = world.getAllPlayers();
@@ -189,6 +239,8 @@ export function startPassiveEngine() {
                     }
                 }
                 catch { }
+                if (prevMainId === 'effect:lapis_sword' && mainId !== prevMainId)
+                    nextLapisTick.delete(player.id);
                 // Werewolf Full Moon transformation howl & particle FX!
                 if (equipKey === 'wolf_transformation' && prevKey !== 'wolf_transformation') {
                     try {
@@ -215,13 +267,90 @@ export function startPassiveEngine() {
                 // Auto-summon Baby Slime Mount when equipping Slime Sword!
                 if (mainId === 'effect:slime_sword' && prevMainId !== 'effect:slime_sword') {
                     try {
-                        let slime = playerSlimeMount.get(player.id);
-                        if (!slime || !slime.isValid) {
-                            slime = dim.spawnEntity('entity:mountable_slime', player.location);
-                            playerSlimeMount.set(player.id, slime);
+                        mountPlayerSlime(player);
+                    }
+                    catch { }
+                }
+                // Exact 2.8.8 equip/unequip FX & effect cleanups
+                if ((mainId === 'effect:ultra_instinct_sword' || prevMainId === 'effect:ultra_instinct_sword') &&
+                    mainId !== prevMainId) {
+                    try {
+                        dim.spawnParticle('minecraft:example_flipbook', player.location);
+                        dim.spawnParticle('minecraft:example_flipbook', {
+                            x: player.location.x,
+                            y: player.location.y + 1.5,
+                            z: player.location.z,
+                        });
+                        dim.playSound('mob.wither.ambient', player.location, { volume: 2.0, pitch: 0.6 });
+                    }
+                    catch { }
+                }
+                if (mainId === 'effect:lightning_sword' && prevMainId !== 'effect:lightning_sword') {
+                    try {
+                        const skyY = Math.min(dim.heightRange.max - 2, player.location.y + 45);
+                        spawnSwordLightning(dim, {
+                            x: player.location.x,
+                            y: skyY,
+                            z: player.location.z,
+                        });
+                    }
+                    catch { }
+                }
+                if ((mainId === 'effect:blaze_sword' || prevMainId === 'effect:blaze_sword') && mainId !== prevMainId) {
+                    try {
+                        dim.spawnParticle('minecraft:example_linearcurve', {
+                            x: player.location.x,
+                            y: player.location.y + 1.0,
+                            z: player.location.z,
+                        });
+                        for (const [ox, oy, oz] of [
+                            [0, 0, 0],
+                            [0, 1, 0],
+                            [0.4, 0.5, 0],
+                            [-0.4, 1.2, 0],
+                            [0, 0.8, 0.4],
+                            [0, 0.3, -0.4],
+                        ]) {
+                            dim.spawnParticle('minecraft:mobflame_single', {
+                                x: player.location.x + ox,
+                                y: player.location.y + oy,
+                                z: player.location.z + oz,
+                            });
                         }
-                        const rideable = slime.getComponent(EntityComponentTypes.Rideable);
-                        rideable?.addRider(player);
+                        dim.playSound('random.fizz', player.location, { volume: 0.9, pitch: 1.0 });
+                        if (prevMainId === 'effect:blaze_sword') {
+                            player.removeEffect('levitation');
+                            player.removeEffect('slow_falling');
+                        }
+                    }
+                    catch { }
+                }
+                if ((mainId === 'effect:sea_sword' || prevMainId === 'effect:sea_sword') && mainId !== prevMainId) {
+                    try {
+                        dim.spawnParticle('minecraft:example_bounce', player.location);
+                        dim.playSound('random.splash', player.location, { volume: 0.5, pitch: 1.0 });
+                        if (prevMainId === 'effect:sea_sword') {
+                            player.removeEffect('conduit_power');
+                            player.removeEffect('water_breathing');
+                        }
+                    }
+                    catch { }
+                }
+                if (mainId === 'effect:ender_sword' && prevMainId !== 'effect:ender_sword') {
+                    try {
+                        dim.playSound('mob.endermen.portal', player.location, { volume: 0.9, pitch: 1.0 });
+                    }
+                    catch { }
+                }
+                if (mainId === 'effect:wither_sword' && prevMainId !== 'effect:wither_sword') {
+                    try {
+                        dim.playSound('mob.wither.spawn', player.location, { volume: 0.9, pitch: 1.0 });
+                    }
+                    catch { }
+                }
+                if (prevMainId === 'effect:emerald_sword' && mainId !== 'effect:emerald_sword') {
+                    try {
+                        player.removeEffect('village_hero');
                     }
                     catch { }
                 }
@@ -238,11 +367,12 @@ export function startPassiveEngine() {
                     }
                     catch { }
                 }
-                // Clear Ghost Sword weakness/levitation when unequipping
+                // Clear Ghost Sword effects when unequipping
                 if (prevMainId === 'effect:ghost_sword' && mainId !== 'effect:ghost_sword') {
                     try {
                         player.removeEffect('weakness');
                         player.removeEffect('levitation');
+                        player.removeEffect('slow_falling');
                         player.removeEffect('invisibility');
                         dim.spawnParticle('minecraft:ghost_spiral', player.location);
                     }
@@ -355,12 +485,20 @@ export function startPassiveEngine() {
                         break;
                     }
                     case 'effect:ghost_sword': {
-                        // Cannot harm any entity + invisible legs + sneak levitation + cave wall X-ray!
+                        // Cannot harm any entity + invisible legs + slow_falling + sneak flight + lava/water float + cave wall X-ray!
                         if (tick % 10 === 0) {
                             player.addEffect('weakness', 40, { amplifier: 255, showParticles: false });
+                            player.addEffect('slow_falling', 40, { amplifier: 0, showParticles: false });
+                            player.addEffect('saturation', 40, { amplifier: 1, showParticles: false });
                         }
-                        if (player.isSneaking) {
-                            player.addEffect('levitation', 10, { amplifier: 3, showParticles: false });
+                        const footBlock = dim.getBlock(player.location);
+                        const inLava = footBlock && (footBlock.typeId === 'minecraft:lava' || footBlock.typeId === 'minecraft:flowing_lava');
+                        if (inLava) {
+                            player.addEffect('fire_resistance', 30, { amplifier: 0, showParticles: false });
+                            player.addEffect('levitation', 10, { amplifier: 1, showParticles: false });
+                        }
+                        else if (player.isSneaking || player.isInWater) {
+                            player.addEffect('levitation', 10, { amplifier: player.isSneaking ? 3 : 0, showParticles: false });
                         }
                         else {
                             player.removeEffect('levitation');
@@ -385,6 +523,8 @@ export function startPassiveEngine() {
                                             originKey = 'deepslate';
                                         else if (b.typeId === 'minecraft:netherrack')
                                             originKey = 'netherrack';
+                                        else if (b.typeId === 'minecraft:end_stone')
+                                            originKey = 'end_stone';
                                         if (originKey) {
                                             b.setPermutation(BlockPermutation.resolve('effect99:spectral_block', { 'effect99:origin': originKey }));
                                         }
@@ -402,7 +542,7 @@ export function startPassiveEngine() {
                             const inLava = foot && (foot.typeId === 'minecraft:lava' || foot.typeId === 'minecraft:flowing_lava');
                             if ((onFireComp || inLava) && player.getGameMode() !== GameMode.Creative) {
                                 const eq = player.getComponent(EntityComponentTypes.Equippable);
-                                eq?.setEquipment('Mainhand', undefined);
+                                eq?.setEquipment(EquipmentSlot.Mainhand, undefined);
                                 if (dim.id !== 'minecraft:nether' && foot && (foot.isAir || foot.typeId.includes('fire') || inLava)) {
                                     foot.setType('minecraft:water');
                                 }
@@ -410,7 +550,7 @@ export function startPassiveEngine() {
                                 dim.spawnParticle('minecraft:cauldron_explosion_emitter', player.location);
                                 break;
                             }
-                            // All water under your feet turns to ice (Frost Walker)
+                            // All water under your feet turns to cracking Fake Ice (`from_water: true` preserves source water on melt!)
                             const px = Math.floor(player.location.x);
                             const py = Math.floor(player.location.y) - 1;
                             const pz = Math.floor(player.location.z);
@@ -420,7 +560,11 @@ export function startPassiveEngine() {
                                         continue;
                                     const b = dim.getBlock({ x: px + dx, y: py, z: pz + dz });
                                     if (b && (b.typeId === 'minecraft:water' || b.typeId === 'minecraft:flowing_water')) {
-                                        b.setType('minecraft:frosted_ice');
+                                        const isSource = b.typeId === 'minecraft:water' && (b.permutation.getState('liquid_depth') ?? 0) === 0;
+                                        b.setPermutation(BlockPermutation.resolve('effect99:fake_ice', {
+                                            'effect99:crack_stage': 0,
+                                            'effect99:from_water': isSource,
+                                        }));
                                     }
                                 }
                             }
@@ -428,7 +572,7 @@ export function startPassiveEngine() {
                         break;
                     }
                     case 'effect:magma_sword': {
-                        // Magma blocks won't hurt you (player.json), lava under feet turns into magma blocks!
+                        // Magma blocks won't hurt you (player.json), lava under feet turns into magma blocks + underwater bubble FX!
                         if (tick % 4 === 0) {
                             const px = Math.floor(player.location.x);
                             const py = Math.floor(player.location.y) - 1;
@@ -444,18 +588,28 @@ export function startPassiveEngine() {
                                 }
                             }
                         }
+                        if (tick % 16 === 0) {
+                            dim.spawnParticle('minecraft:guardian_attack_particle', {
+                                x: player.location.x,
+                                y: player.location.y + 0.9,
+                                z: player.location.z,
+                            });
+                            if (player.isInWater && Math.random() < 0.25) {
+                                dim.playSound('bubble.up', player.location, { volume: 1.0, pitch: 0.9 });
+                            }
+                        }
                         break;
                     }
                     case 'effect:blaze_sword': {
-                        // Small fireballs cannot approach within radius 7 + flame particles + water hurts wielder!
+                        // Small fireballs cannot approach within radius 7 + flame particles (water & rain damage handled natively in player.json!)
                         if (tick % 20 === 0) {
                             dim.spawnParticle('minecraft:mobflame_single', {
                                 x: player.location.x + (Math.random() - 0.5) * 0.6,
                                 y: player.location.y + 0.2,
                                 z: player.location.z + (Math.random() - 0.5) * 0.6,
                             });
-                            if (player.isInWater && player.getGameMode() !== GameMode.Creative) {
-                                player.applyDamage(1, { cause: EntityDamageCause.drowning });
+                            if (Math.random() < 0.25) {
+                                dim.playSound('mob.blaze.breathe', player.location, { volume: 0.5, pitch: 1.0 });
                             }
                         }
                         if (tick % 2 === 0) {
@@ -467,8 +621,11 @@ export function startPassiveEngine() {
                             for (const fb of fireballs) {
                                 if (fb.hasTag('effect_player_shot'))
                                     continue;
-                                fb.clearVelocity();
-                                fb.triggerEvent('minecraft:inertia_disable');
+                                try {
+                                    fb.clearVelocity();
+                                    fb.triggerEvent('minecraft:inertia_disable');
+                                }
+                                catch { }
                             }
                         }
                         break;
@@ -477,12 +634,15 @@ export function startPassiveEngine() {
                         // Exact description: disappears if you enter water, burns very close entities, melts ice and snow!
                         if (player.isInWater && player.getGameMode() !== GameMode.Creative) {
                             const eq = player.getComponent(EntityComponentTypes.Equippable);
-                            eq?.setEquipment('Mainhand', undefined);
+                            eq?.setEquipment(EquipmentSlot.Mainhand, undefined);
                             dim.playSound('random.fizz', player.location, { volume: 1.0, pitch: 0.8 });
                             dim.spawnParticle('minecraft:cauldron_explosion_emitter', player.location);
                             break;
                         }
                         if (tick % 10 === 0) {
+                            if (tick % 30 === 0 && Math.random() < 0.65) {
+                                dim.playSound('fire.fire', player.location, { volume: 0.6, pitch: 1.0 });
+                            }
                             for (const e of dim.getEntities({ location: player.location, maxDistance: 2.2 })) {
                                 if (!isProtectedEntity(e, player)) {
                                     e.setOnFire(4, true);
@@ -501,7 +661,10 @@ export function startPassiveEngine() {
                                             b.setType('minecraft:air');
                                         }
                                         else if (b.typeId === 'minecraft:ice' ||
+                                            b.typeId === 'minecraft:packed_ice' ||
+                                            b.typeId === 'minecraft:blue_ice' ||
                                             b.typeId === 'minecraft:frosted_ice' ||
+                                            b.typeId === 'effect99:fake_ice' ||
                                             b.typeId === 'minecraft:snow') {
                                             b.setType(dim.id === 'minecraft:nether' ? 'minecraft:air' : 'minecraft:water');
                                         }
@@ -522,8 +685,14 @@ export function startPassiveEngine() {
                             for (const arr of arrows) {
                                 if (arr.hasTag('effect_player_shot'))
                                     continue;
-                                arr.clearVelocity();
-                                arr.triggerEvent('minecraft:inertia_disable');
+                                try {
+                                    const vel = arr.getVelocity();
+                                    if (Math.hypot(vel.x, vel.y, vel.z) < 0.05)
+                                        continue;
+                                    arr.clearVelocity();
+                                    arr.triggerEvent('minecraft:inertia_disable');
+                                }
+                                catch { }
                             }
                         }
                         if (tick % 20 === 0) {
@@ -540,9 +709,13 @@ export function startPassiveEngine() {
                     }
                     case 'effect:lapis_sword': {
                         // Exact description: 5 XP in a random period of between 2.5 and 6 seconds (50..120 ticks)
-                        const due = nextLapisTick.get(player.id) ?? tick + 60;
+                        let due = nextLapisTick.get(player.id);
+                        if (due === undefined) {
+                            due = tick + 50 + Math.floor(Math.random() * 71);
+                            nextLapisTick.set(player.id, due);
+                        }
                         if (tick >= due) {
-                            nextLapisTick.set(player.id, tick + 50 + Math.floor(Math.random() * 70));
+                            nextLapisTick.set(player.id, tick + 50 + Math.floor(Math.random() * 71));
                             player.addExperience(5);
                             dim.playSound('random.orb', player.location, { volume: 0.3, pitch: 1.0 });
                         }
@@ -580,17 +753,35 @@ export function startPassiveEngine() {
                         break;
                     }
                     case 'effect:grass_sword': {
-                        // Dirt turns into grass + nearby entities within radius 8 on grass are buried/attacked by entity:grass!
+                        // Dirt turns into grass (5x5) + sprouts short_grass + nearby entities within radius 8 on grass are buried by entity:grass!
                         if (tick % 10 === 0) {
-                            const below = dim.getBlock({
-                                x: Math.floor(player.location.x),
-                                y: Math.floor(player.location.y) - 1,
-                                z: Math.floor(player.location.z),
-                            });
-                            if (below && below.typeId === 'minecraft:dirt') {
-                                below.setType('minecraft:grass_block');
+                            const px = Math.floor(player.location.x);
+                            const py = Math.floor(player.location.y) - 1;
+                            const pz = Math.floor(player.location.z);
+                            for (let dx = -2; dx <= 2; dx++) {
+                                for (let dz = -2; dz <= 2; dz++) {
+                                    const b = dim.getBlock({ x: px + dx, y: py, z: pz + dz });
+                                    if (b && b.typeId === 'minecraft:dirt') {
+                                        b.setType('minecraft:grass_block');
+                                    }
+                                }
                             }
-                            for (const target of dim.getEntities({ location: player.location, maxDistance: 8.0 })) {
+                            const foot = dim.getBlock({ x: px, y: py + 1, z: pz });
+                            const below = dim.getBlock({ x: px, y: py, z: pz });
+                            if (below?.typeId === 'minecraft:grass_block' && foot?.isAir && Math.random() < 0.35) {
+                                foot.setType('minecraft:short_grass');
+                            }
+                            for (const target of dim.getEntities({ location: player.location, maxDistance: 13.0 })) {
+                                const dist = Math.hypot(target.location.x - player.location.x, target.location.y - player.location.y, target.location.z - player.location.z);
+                                if (dist > 8.5) {
+                                    if (target.hasTag('grass')) {
+                                        try {
+                                            target.removeTag('grass');
+                                        }
+                                        catch { }
+                                    }
+                                    continue;
+                                }
                                 if (isProtectedEntity(target, player) || target.hasTag('grass'))
                                     continue;
                                 const tBelow = dim.getBlock({
@@ -623,18 +814,22 @@ export function startPassiveEngine() {
                         break;
                     }
                     case 'effect:slime_sword': {
-                        // Keep companion mountable_slime teleported near owner if it wanders > 10 blocks while in defense mode!
-                        if (tick % 20 === 0) {
+                        // Keep companion mountable_slime alive (`slime_despawn = 0`) & teleported near owner if > 12 blocks away!
+                        if (tick % 10 === 0) {
                             let slime = playerSlimeMount.get(player.id);
                             if (!slime || !slime.isValid) {
-                                slime = dim.spawnEntity('entity:mountable_slime', player.location);
+                                slime = dim.spawnEntity('entity:mountable_slime', player.location, {
+                                    spawnEvent: 'minecraft:entity_spawned',
+                                });
                                 playerSlimeMount.set(player.id, slime);
                             }
-                            else {
-                                const dist = Math.hypot(slime.location.x - player.location.x, slime.location.z - player.location.z);
-                                if (dist > 12) {
-                                    slime.teleport(player.location);
-                                }
+                            try {
+                                world.scoreboard.getObjective('slime_despawn')?.setScore(slime, 0);
+                            }
+                            catch { }
+                            const dist = Math.hypot(slime.location.x - player.location.x, slime.location.z - player.location.z);
+                            if (dist > 12) {
+                                slime.teleport(player.location);
                             }
                         }
                         break;
@@ -642,30 +837,51 @@ export function startPassiveEngine() {
                     case 'effect:shulker_sword': {
                         // Immune to levitation effect!
                         player.removeEffect('levitation');
-                        // Ducking spawns Shulker Shell around player (riding inside it!)
-                        if (player.isSneaking) {
-                            player.addEffect('resistance', 15, { amplifier: 4, showParticles: false });
-                            let shield = playerShulkerShield.get(player.id);
-                            if (!shield || !shield.isValid) {
-                                shield = dim.spawnEntity('entity:shulker_shield', player.location);
-                                const rideable = shield.getComponent(EntityComponentTypes.Rideable);
-                                rideable?.addRider(player);
-                                playerShulkerShield.set(player.id, shield);
-                                dim.playSound('mob.shulker.close', player.location, { volume: 0.9, pitch: 1.0 });
+                        // Exact 2.8.8: pressing Sneak enters the Shulker Shell (`shulker_shield`, scale 0.7, damage-immune);
+                        // the player stays inside until pressing Sneak again to dismount (or until the 20-HP shell is destroyed)!
+                        const existingShield = playerShulkerShield.get(player.id);
+                        const ridingComp = player.getComponent(EntityComponentTypes.Riding);
+                        const currentlyMountedOn = ridingComp?.entityRidingOn;
+                        if (existingShield) {
+                            if (!existingShield.isValid || currentlyMountedOn?.id !== existingShield.id) {
+                                // Player dismounted via Sneak or shell was destroyed -> restore normal player state!
+                                cleanupHelperEntity(playerShulkerShield, player.id);
+                                shulkerToggleCooldown.set(player.id, tick + 16);
+                                try {
+                                    player.triggerEvent('effect:equip_shulker_sword');
+                                    dim.playSound('mob.shulker.open', player.location, { volume: 0.9, pitch: 1.0 });
+                                }
+                                catch { }
+                            }
+                            else {
+                                player.addEffect('resistance', 15, { amplifier: 4, showParticles: false });
                             }
                         }
-                        else if (playerShulkerShield.has(player.id)) {
-                            cleanupHelperEntity(playerShulkerShield, player.id);
-                            dim.playSound('mob.shulker.open', player.location, { volume: 0.9, pitch: 1.0 });
+                        else if (player.isSneaking &&
+                            !currentlyMountedOn &&
+                            tick >= (shulkerToggleCooldown.get(player.id) ?? 0)) {
+                            const shield = dim.spawnEntity('entity:shulker_shield', player.location);
+                            try {
+                                player.triggerEvent('effect:equip_shulker_hiding');
+                            }
+                            catch { }
+                            const rideable = shield.getComponent(EntityComponentTypes.Rideable);
+                            rideable?.addRider(player);
+                            playerShulkerShield.set(player.id, shield);
+                            shulkerToggleCooldown.set(player.id, tick + 12);
+                            dim.playSound('mob.shulker.close', player.location, { volume: 0.9, pitch: 1.0 });
                         }
                         break;
                     }
                     case 'effect:spider_sword': {
                         // Climbing assist on spider mount + re-mount on sneak
-                        if (spiderMount && spiderMount.isValid && spiderMount.isClimbing) {
-                            spiderMount.addEffect('levitation', 8, { amplifier: 2, showParticles: false });
+                        const spiderMount = playerSpiderMount.get(player.id);
+                        if (spiderMount && spiderMount.isValid) {
+                            if (spiderMount.isClimbing) {
+                                spiderMount.addEffect('levitation', 8, { amplifier: 2, showParticles: false });
+                            }
                         }
-                        else if (player.isSneaking && !playerSpiderMount.has(player.id)) {
+                        else if (player.isSneaking) {
                             const riding = player.getComponent(EntityComponentTypes.Riding);
                             if (!riding?.entityRidingOn) {
                                 const spider = dim.spawnEntity('minecraft:spider', player.location, {
@@ -678,15 +894,45 @@ export function startPassiveEngine() {
                         }
                         break;
                     }
+                    case 'effect:ender_sword': {
+                        if (tick % 8 === 0) {
+                            dim.spawnParticle('minecraft:end_chest', {
+                                x: player.location.x,
+                                y: player.location.y + 0.6,
+                                z: player.location.z,
+                            });
+                        }
+                        if (tick % 160 === 0 && Math.random() < 0.45) {
+                            const snds = ['mob.endermen.idle', 'mob.endermen.stare', 'mob.endermen.scream'];
+                            dim.playSound(snds[Math.floor(Math.random() * snds.length)], player.location, {
+                                volume: 0.7,
+                                pitch: 1.0,
+                            });
+                        }
+                        break;
+                    }
                     case 'effect:spectral_sword': {
-                        // Overhead Ender Crystal follows you everywhere!
+                        // Overhead Ender Crystal follows you everywhere (outside The End so it never beams the Ender Dragon, exact 2.8.8!)
                         if (tick % 20 === 0) {
-                            let crystal = playerSpectralCrystal.get(player.id);
-                            if (!crystal || !crystal.isValid) {
-                                crystal = dim.spawnEntity('minecraft:ender_crystal', { x: player.location.x, y: player.location.y + 2.2, z: player.location.z }, { spawnEvent: 'effect:spectral_rider' });
-                                const rideable = player.getComponent(EntityComponentTypes.Rideable);
-                                rideable?.addRider(crystal);
-                                playerSpectralCrystal.set(player.id, crystal);
+                            if (dim.id === 'minecraft:the_end') {
+                                cleanupHelperEntity(playerSpectralCrystal, player.id, 'effect:despawn');
+                            }
+                            else {
+                                let crystal = playerSpectralCrystal.get(player.id);
+                                if (!crystal || !crystal.isValid) {
+                                    const rideable = player.getComponent(EntityComponentTypes.Rideable);
+                                    const existingRider = rideable
+                                        ?.getRiders()
+                                        .find((r) => r.typeId === 'minecraft:ender_crystal');
+                                    if (existingRider) {
+                                        crystal = existingRider;
+                                    }
+                                    else {
+                                        crystal = dim.spawnEntity('minecraft:ender_crystal', { x: player.location.x, y: player.location.y + 2.0, z: player.location.z }, { spawnEvent: 'effect:spectral_rider' });
+                                        rideable?.addRider(crystal);
+                                    }
+                                    playerSpectralCrystal.set(player.id, crystal);
+                                }
                             }
                         }
                         // Makes ONLY the main block of the current dimension transparent!
@@ -731,14 +977,26 @@ export function startPassiveEngine() {
                             // Decorative "Wither Sword" bossbar & dark sky via entity:name!
                             let bossEnt = playerWitherBossbar.get(player.id);
                             if (!bossEnt || !bossEnt.isValid) {
-                                bossEnt = dim.spawnEntity('entity:name', { x: player.location.x, y: player.location.y + 1.5, z: player.location.z }, { spawnEvent: 'minecraft:wither_sword' });
                                 const rideable = player.getComponent(EntityComponentTypes.Rideable);
-                                rideable?.addRider(bossEnt);
+                                const existingRider = rideable?.getRiders().find((r) => r.typeId === 'entity:name');
+                                if (existingRider) {
+                                    bossEnt = existingRider;
+                                }
+                                else {
+                                    bossEnt = dim.spawnEntity('entity:name', { x: player.location.x, y: player.location.y + 1.5, z: player.location.z }, { spawnEvent: 'minecraft:wither_sword' });
+                                    rideable?.addRider(bossEnt);
+                                }
                                 playerWitherBossbar.set(player.id, bossEnt);
                             }
                             // Decorative wither effect (player.json makes wielder 100% immune to wither damage!)
                             player.addEffect('wither', 60, { amplifier: 0, showParticles: false });
-                            // Leaves wither, flowers turn into wither roses, grass turns to dirt!
+                            if (tick % 160 === 0 && Math.random() < 0.45) {
+                                dim.playSound(Math.random() < 0.5 ? 'mob.wither.hurt' : 'mob.wither.death', player.location, {
+                                    volume: 0.6,
+                                    pitch: 1.0,
+                                });
+                            }
+                            // Leaves & vines wither, flowers & mushrooms turn into wither roses, grass -> coarse_dirt, farmland -> dirt, ice -> water!
                             const px = Math.floor(player.location.x);
                             const py = Math.floor(player.location.y);
                             const pz = Math.floor(player.location.z);
@@ -748,14 +1006,23 @@ export function startPassiveEngine() {
                                         const b = dim.getBlock({ x: px + dx, y: py + dy, z: pz + dz });
                                         if (!b)
                                             continue;
-                                        if (SMALL_FLOWER_SET.has(b.typeId)) {
+                                        const bt = b.typeId;
+                                        if (SMALL_FLOWER_SET.has(bt) ||
+                                            bt === 'minecraft:red_mushroom' ||
+                                            bt === 'minecraft:brown_mushroom') {
                                             b.setType('minecraft:wither_rose');
                                         }
-                                        else if (b.typeId === 'minecraft:grass_block' && Math.random() < 0.25) {
+                                        else if (bt === 'minecraft:grass_block' && Math.random() < 0.25) {
+                                            b.setType('minecraft:coarse_dirt');
+                                        }
+                                        else if (bt === 'minecraft:farmland' && Math.random() < 0.25) {
                                             b.setType('minecraft:dirt');
                                         }
-                                        else if (b.typeId.includes('leaves') && Math.random() < 0.2) {
+                                        else if ((bt.includes('leaves') || bt === 'minecraft:vine') && Math.random() < 0.2) {
                                             b.setType('minecraft:air');
+                                        }
+                                        else if (bt === 'minecraft:ice' && Math.random() < 0.25) {
+                                            b.setType(dim.id === 'minecraft:nether' ? 'minecraft:air' : 'minecraft:water');
                                         }
                                     }
                                 }
@@ -785,6 +1052,21 @@ export function startPassiveEngine() {
                     case 'effect:ultra_instinct_sword': {
                         if (tick % 6 === 0) {
                             player.addEffect('speed', 40, { amplifier: 3, showParticles: false });
+                            // Exact 2.8.8: cleanse negative debuffs while wielding Ultra Instinct Sword!
+                            for (const debuff of [
+                                'hunger',
+                                'blindness',
+                                'slowness',
+                                'weakness',
+                                'mining_fatigue',
+                                'nausea',
+                                'wither',
+                            ]) {
+                                try {
+                                    player.removeEffect(debuff);
+                                }
+                                catch { }
+                            }
                             dim.spawnParticle('minecraft:balloon_gas_particle', {
                                 x: player.location.x + (Math.random() - 0.5) * 0.6,
                                 y: player.location.y + Math.random() * 2.0,
@@ -817,16 +1099,9 @@ export function startPassiveEngine() {
             }
             catch { }
         }
-        // Toggle world randomTickSpeed when Time Sword is held vs released
-        if (anyTimeSword !== timeSwordActiveInWorld) {
-            timeSwordActiveInWorld = anyTimeSword;
-            try {
-                world.getDimension('overworld').runCommand(`gamerule randomtickspeed ${anyTimeSword ? 300 : 1}`);
-            }
-            catch { }
-        }
-        // Handle Winged Mountable Slime landing stomp AoE when ridden!
-        if (tick % 8 === 0) {
+        setTimeSwordActive(anyTimeSword);
+        // Handle Winged Mountable Slime landing stomp AoE ONLY when landing from a jump while ridden!
+        if (tick % 3 === 0) {
             for (const dimName of ['overworld', 'nether', 'the_end']) {
                 try {
                     const dim = world.getDimension(dimName);
@@ -834,11 +1109,17 @@ export function startPassiveEngine() {
                     for (const slime of mounts) {
                         const rideable = slime.getComponent(EntityComponentTypes.Rideable);
                         const riders = rideable?.getRiders() ?? [];
-                        if (riders.length === 0)
+                        if (riders.length === 0) {
+                            airborneSlimeIds.delete(slime.id);
                             continue; // Keep alive in defense_mode_slime!
+                        }
                         const rider = riders[0];
-                        if (slime.isOnGround) {
-                            for (const victim of dim.getEntities({ location: slime.location, maxDistance: 2.5 })) {
+                        if (!slime.isOnGround) {
+                            airborneSlimeIds.add(slime.id);
+                        }
+                        else if (airborneSlimeIds.delete(slime.id)) {
+                            dim.playSound('mob.slime.big', slime.location, { volume: 0.9, pitch: 0.9 });
+                            for (const victim of dim.getEntities({ location: slime.location, maxDistance: 2.6 })) {
                                 if (victim.id !== slime.id && !isProtectedEntity(victim, rider)) {
                                     victim.applyDamage(6, { cause: EntityDamageCause.entityAttack, damagingEntity: rider });
                                 }

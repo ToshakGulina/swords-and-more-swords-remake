@@ -15,10 +15,10 @@
         },
         "minecraft:timer": {
           "time": [
-            0.1,
-            0.1
+            1,
+            1
           ],
-          "looping": true,
+          "looping": false,
           "time_down_event": {
             "event": "minecraft:despawn",
             "target": "self"
@@ -130,7 +130,7 @@
       "set_objective": {
         "queue_command": {
           "command": [
-            "summon entity:objective"
+            "summon entity:objective ~ ~ ~"
           ]
         }
       },
@@ -166,13 +166,6 @@
         "queue_command": {
           "command": [
             "particle minecraft:nether_star_hit ~ ~2.5 ~"
-          ]
-        }
-      },
-      "objective": {
-        "add": {
-          "component_groups": [
-            "objective"
           ]
         }
       },

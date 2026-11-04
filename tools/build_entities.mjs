@@ -1,17 +1,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const jsonc = require('/tmp/refs/node_modules/jsonc-parser');
+const jsonc = require('jsonc-parser');
 
-const ROOT = '/home/user/swords-and-more-swords-remake';
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BP = path.join(ROOT, 'packs/Swords_B');
 const RP = path.join(ROOT, 'packs/Swords_R');
-const SRC_288_BP = '/tmp/mcaddons/2.8.8/Swords_B';
-const SRC_288_RP = '/tmp/mcaddons/2.8.8/Swords_R';
-const VANILLA_BP = '/tmp/refs/bedrock-samples/behavior_pack';
-const VANILLA_RP = '/tmp/refs/bedrock-samples/resource_pack';
+const SRC_288_BP = path.join(process.env.SAMS_ORIGINAL ?? '/tmp/mcaddons/2.8.8', 'Swords_B');
+const SRC_288_RP = path.join(process.env.SAMS_ORIGINAL ?? '/tmp/mcaddons/2.8.8', 'Swords_R');
+const VANILLA_BP = path.join(process.env.SAMS_SAMPLES ?? '/tmp/refs/bedrock-samples', 'behavior_pack');
+const VANILLA_RP = path.join(process.env.SAMS_SAMPLES ?? '/tmp/refs/bedrock-samples', 'resource_pack');
 
 function writeJson(filePath, data) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -115,14 +116,23 @@ pcDesc.render_controllers.push(
 
 writeJson(path.join(RP, 'entity/player.entity.json'), playerClient);
 
-// A.2 Rebase `enderman.entity.json` & `witch.entity.json` onto Mojang v1.26.60.5
-const endermanClient = readVanillaRP('enderman.entity.json');
-endermanClient['minecraft:client_entity'].description.textures.red_enderman = 'textures/entity/enderman/red_enderman';
-writeJson(path.join(RP, 'entity/enderman.entity.json'), endermanClient);
-
-const witchClient = readVanillaRP('witch.entity.json');
-witchClient['minecraft:client_entity'].description.textures.grass_witch = 'textures/entity/grass_witch';
-writeJson(path.join(RP, 'entity/witch.entity.json'), witchClient);
+// A.2 Rebase vanilla clients while retaining the original variant appearances.
+// Dedicated controllers avoid replacing a vanilla controller globally.
+for (const [kind, alias] of [['enderman', 'red_enderman'], ['witch', 'grass_witch']]) {
+  const client = readVanillaRP(`${kind}.entity.json`);
+  const desc = client['minecraft:client_entity'].description;
+  desc.textures[alias] = kind === 'enderman'
+    ? 'textures/entity/enderman/red_enderman' : 'textures/entity/grass_witch';
+  const source = jsonc.parse(fs.readFileSync(path.join(VANILLA_RP, 'render_controllers', `${kind}.render_controllers.json`), 'utf8'));
+  const controller = source.render_controllers[`controller.render.${kind}`];
+  controller.textures = [`query.variant == 1 ? Texture.${alias} : Texture.default`];
+  const controllerName = `controller.render.effect_${kind}`;
+  desc.render_controllers = [controllerName];
+  writeJson(path.join(RP, 'entity', `${kind}.entity.json`), client);
+  writeJson(path.join(RP, 'render_controllers', `effect_${kind}.render_controllers.json`), {
+    format_version: '1.8.0', render_controllers: { [controllerName]: controller },
+  });
+}
 
 // A.3 Custom visible client entities (copy & clean spawn egg on alpha_wolf)
 const customClientFiles = [
@@ -142,18 +152,38 @@ const customClientFiles = [
 for (const f of customClientFiles) {
   const c = jsonc.parse(fs.readFileSync(path.join(SRC_288_RP, 'entity', f), 'utf8'));
   if (f === 'alpha_wolf.entity.json') {
-    c['minecraft:client_entity'].description.spawn_egg = {
+    const desc = c['minecraft:client_entity'].description;
+    desc.spawn_egg = {
       base_color: '#3b3b42',
       overlay_color: '#a81c1c',
     };
+    // 1.26.60 compatibility: `controller.render.wolf` now requires 27 wolf-variant texture aliases (`pale_default` etc.),
+    // and `controller.animation.wolf.sitting` requires `wolf_baby_sitting`!
+    desc.animations.wolf_baby_sitting = 'animation.wolf.baby_sitting';
+    desc.animation_controllers = (desc.animation_controllers || []).filter(
+      (entry) => !Object.prototype.hasOwnProperty.call(entry, 'wolf_baby_scaling')
+    );
+    desc.render_controllers = ['controller.render.alpha_wolf'];
   }
   writeJson(path.join(RP, 'entity', f), c);
 }
+
+writeJson(path.join(RP, 'render_controllers/alpha_wolf.render_controllers.json'), {
+  format_version: '1.8.0',
+  render_controllers: {
+    'controller.render.alpha_wolf': {
+      geometry: 'Geometry.default',
+      materials: [{ '*': 'Material.default' }],
+      textures: ['query.is_angry ? Texture.angry : (query.is_tamed ? Texture.tame : Texture.default)'],
+    },
+  },
+});
 
 // Add `minicreeper` client entity so `entity:minicreeper` renders as a cute 0.3x Creeper without overriding vanilla creepers if summoned directly
 const creeperClient = readVanillaRP('creeper.entity.json');
 creeperClient['minecraft:client_entity'].description.identifier = 'entity:minicreeper';
 delete creeperClient['minecraft:client_entity'].description.spawn_egg;
+delete creeperClient['minecraft:client_entity'].description.animation_controllers;
 writeJson(path.join(RP, 'entity/minicreeper.entity.json'), creeperClient);
 
 // Silent `geometry.null` client entities for invisible particle/logic entities
@@ -244,8 +274,18 @@ const SWORD_PLAYER_GROUPS = {
   },
 
   'effect:ghost_sword': {
+    'minecraft:scale': { value: 1.05 },
     'minecraft:collision_box': { width: 0.6, height: 0.9 },
-    'minecraft:type_family': { family: ['monster', 'undead', 'ghost_sword'] },
+    'minecraft:breathable': {
+      total_supply: 15,
+      suffocate_time: 0,
+      inhale_time: 3.75,
+      generates_bubbles: false,
+      breathes_water: true,
+      breathes_air: true,
+      breathes_lava: true,
+    },
+    'minecraft:type_family': { family: ['ghost_sword'] },
     'minecraft:knockback_resistance': { value: 1.0 },
     'minecraft:movement': { value: 0.15 },
     'minecraft:hurt_on_condition': { damage_conditions: [] },
@@ -258,41 +298,45 @@ const SWORD_PLAYER_GROUPS = {
     'minecraft:scale': { value: 1.05 },
     'minecraft:health': { value: 40, max: 40 },
     'minecraft:type_family': { family: ['monster', 'wolf_sword'] },
-    'minecraft:attack': { damage: 16 },
+    'minecraft:attack': { damage: 15 },
     'minecraft:movement': { value: 0.16 },
     'minecraft:knockback_resistance': { value: 0.4 },
   },
 
   'effect:ultra_instinct_sword': {
     'minecraft:type_family': { family: ['player', 'ultra_instinct_sword'] },
-    'minecraft:movement': { value: 0.13 },
+    'minecraft:movement': { value: 0.14 },
     'minecraft:knockback_resistance': { value: 1.0 },
-    'minecraft:hurt_on_condition': { damage_conditions: [] },
     'minecraft:damage_sensor': {
       triggers: [
         {
           on_damage: {
             filters: {
-              any_of: [
-                { test: 'has_damage', value: 'attack' },
-                { test: 'has_damage', value: 'projectile' },
+              all_of: [
+                { test: 'has_damage', operator: '!=', value: 'lava' },
+                { test: 'has_damage', operator: '!=', value: 'drowning' },
+                { test: 'has_damage', operator: '!=', value: 'void' },
+                { test: 'has_damage', operator: '!=', value: 'thorns' },
+                { test: 'has_damage', operator: '!=', value: 'suicide' },
+                { test: 'has_damage', operator: '!=', value: 'starve' },
+                { test: 'has_damage', operator: '!=', value: 'fire' },
+                { test: 'has_damage', operator: '!=', value: 'fire_tick' },
+                { test: 'has_damage', operator: '!=', value: 'fall' },
+                { test: 'has_damage', operator: '!=', value: 'block_explosion' },
+                { test: 'has_damage', operator: '!=', value: 'entity_explosion' },
               ],
             },
             event: 'effect:ui_dodge',
           },
           deals_damage: false,
         },
-        { cause: 'entity_attack', deals_damage: false },
-        { cause: 'projectile', deals_damage: false },
         { cause: 'entity_explosion', deals_damage: false },
         { cause: 'block_explosion', deals_damage: false },
         { cause: 'fire', deals_damage: false },
         { cause: 'fire_tick', deals_damage: false },
-        { cause: 'lava', deals_damage: false },
         { cause: 'hot_floor', deals_damage: false },
         { cause: 'fall', deals_damage: false },
         { cause: 'wither', deals_damage: false },
-        { cause: 'magic', deals_damage: false },
       ],
     },
   },
@@ -363,7 +407,15 @@ const SWORD_PLAYER_GROUPS = {
 
   'effect:blaze_sword': {
     'minecraft:type_family': { family: ['player', 'blaze_sword'] },
-    'minecraft:hurt_on_condition': { damage_conditions: [] },
+    'minecraft:hurt_on_condition': {
+      damage_conditions: [
+        {
+          cause: 'drowning',
+          damage_per_tick: 1,
+          filters: { test: 'in_water_or_rain', subject: 'self', operator: '==', value: true },
+        },
+      ],
+    },
     'minecraft:damage_sensor': {
       triggers: [
         { cause: 'fire', deals_damage: false },
@@ -417,7 +469,7 @@ const SWORD_PLAYER_GROUPS = {
       seat_count: 1,
       family_types: ['entity_name'],
       pull_in_entities: false,
-      seats: [{ position: [0.0, 2.1, 0.0] }],
+      seats: [{ position: [0.0, 0.4, 0.0], lock_rider_rotation: 0 }],
     },
   },
 
@@ -427,7 +479,7 @@ const SWORD_PLAYER_GROUPS = {
       seat_count: 1,
       family_types: ['spectral_sword', 'ender_crystal'],
       pull_in_entities: false,
-      seats: [{ position: [0.0, 2.4, 0.0] }],
+      seats: [{ position: [0.0, 0.4, 0.0], lock_rider_rotation: 0 }],
     },
   },
 
@@ -451,6 +503,7 @@ const SWORD_PLAYER_GROUPS = {
   },
 
   'effect:shulker_sword': {
+    'minecraft:scale': { value: 1.0 },
     'minecraft:type_family': { family: ['player', 'shulker_sword'] },
     'minecraft:damage_sensor': {
       triggers: [
@@ -464,10 +517,26 @@ const SWORD_PLAYER_GROUPS = {
     },
   },
 
+  'effect:shulker_hiding': {
+    'minecraft:scale': { value: 0.7 },
+    'minecraft:type_family': { family: ['player', 'shulker_sword'] },
+    'minecraft:damage_sensor': {
+      triggers: [{ cause: 'all', deals_damage: false }],
+    },
+  },
+
   'effect:slime_sword': {
     'minecraft:type_family': { family: ['player', 'slime_sword'] },
     'minecraft:damage_sensor': {
-      triggers: [{ cause: 'fall', deals_damage: false }],
+      triggers: [
+        { cause: 'fall', deals_damage: false },
+        {
+          on_damage: {
+            filters: { test: 'is_family', subject: 'other', value: 'tamed_slime' },
+          },
+          deals_damage: false,
+        },
+      ],
     },
   },
 
@@ -478,6 +547,18 @@ const SWORD_PLAYER_GROUPS = {
     },
   },
 };
+
+// Normalize all `deals_damage` booleans in `player.json` (`format_version: 1.26.30`) to 1.21.40+ enum strings ('no' / 'yes')!
+for (const grp of Object.values(SWORD_PLAYER_GROUPS)) {
+  const ds = grp['minecraft:damage_sensor'];
+  if (ds && Array.isArray(ds.triggers)) {
+    for (const trig of ds.triggers) {
+      if (typeof trig.deals_damage === 'boolean') {
+        trig.deals_damage = trig.deals_damage ? 'yes' : 'no';
+      }
+    }
+  }
+}
 
 Object.assign(pEnt.component_groups, SWORD_PLAYER_GROUPS);
 
@@ -512,13 +593,22 @@ pEnt.events['effect:ender_dodge'] = {
   },
 };
 pEnt.events['effect:ender_melee_dodge'] = {
-  randomize: [
-    { weight: 50 },
+  sequence: [
     {
-      weight: 50,
       queue_command: {
-        command: ['scriptevent effect:dodge ender_melee'],
+        command: ['playsound mob.endermen.hit @a[r=8] ~ ~ ~'],
       },
+    },
+    {
+      randomize: [
+        { weight: 50 },
+        {
+          weight: 50,
+          queue_command: {
+            command: ['scriptevent effect:dodge ender_melee'],
+          },
+        },
+      ],
     },
   ],
 };
@@ -544,21 +634,26 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
     'minecraft:follow_range': { value: 64, max: 64 },
     'minecraft:loot': { table: 'loot_tables/entities/red_enderman.json' },
   };
+  // Preserve vanilla initialization even when the red variant's biome filter
+  // fails (the End / Nether) and for entities that are not riding.
+  const vanillaSpawn = ent.events['minecraft:entity_spawned'];
   ent.events['minecraft:entity_spawned'] = {
-    randomize: [
+    sequence: [
+      vanillaSpawn,
       {
-        weight: 80,
-        add: { component_groups: ['minecraft:enderman_calm', 'effect:default_enderman'] },
-      },
-      {
-        weight: 20,
-        filters: { test: 'has_biome_tag', operator: '==', value: 'overworld' },
-        add: { component_groups: ['minecraft:enderman_calm', 'effect:red_enderman'] },
+        randomize: [
+          { weight: 80, add: { component_groups: ['effect:default_enderman'] } },
+          {
+            weight: 20,
+            filters: { test: 'has_biome_tag', operator: '==', value: 'overworld' },
+            add: { component_groups: ['effect:red_enderman'] },
+          },
+        ],
       },
     ],
   };
   ent.events['red_enderman'] = {
-    add: { component_groups: ['minecraft:enderman_calm', 'effect:red_enderman'] },
+    add: { component_groups: ['minecraft:enderman_calm', 'minecraft:not_riding', 'effect:red_enderman'] },
   };
   writeJson(path.join(BP, 'entities/enderman.json'), data);
 }
@@ -599,8 +694,8 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
   ent.events['effect:grass_witch_skill'] = {
     queue_command: {
       command: [
-        'execute at @e[family=!grass_witch,type=!item,type=!entity:grass,type=!xp_orb,type=!arrow,r=8,tag=!grass,family=!shulker_sword] if block ~ ~-0.1 ~ grass_block if block ~ ~ ~ air run summon entity:grass ~ ~ ~',
-        'execute at @e[family=!grass_witch,type=!item,type=!entity:grass,type=!xp_orb,type=!arrow,r=8,tag=!grass,family=!shulker_sword] if block ~ ~-0.1 ~ grass_block if block ~ ~ ~ short_grass run summon entity:grass ~ ~ ~',
+        'execute at @e[family=!grass_witch,family=!grass_sword,family=!ghost_sword,type=!item,type=!entity:grass,type=!xp_orb,type=!arrow,r=8,tag=!grass,family=!shulker_sword] if block ~ ~-0.1 ~ grass_block if block ~ ~ ~ air run summon entity:grass ~ ~ ~',
+        'execute at @e[family=!grass_witch,family=!grass_sword,family=!ghost_sword,type=!item,type=!entity:grass,type=!xp_orb,type=!arrow,r=8,tag=!grass,family=!shulker_sword] if block ~ ~-0.1 ~ grass_block if block ~ ~ ~ short_grass run summon entity:grass ~ ~ ~',
       ],
     },
   };
@@ -626,10 +721,10 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
     },
     'minecraft:damage_sensor': {
       triggers: [
-        { cause: 'fall', deals_damage: false },
+        { cause: 'fall', deals_damage: 'no' },
         {
           on_damage: { filters: { test: 'is_family', subject: 'other', value: 'player' } },
-          deals_damage: false,
+          deals_damage: 'no',
         },
       ],
     },
@@ -646,23 +741,70 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
   writeJson(path.join(BP, 'entities/spider.json'), data);
 }
 
-// C.4 `ender_crystal.json` — Overhead Spectral Sword crystal + 2% Spectral Sword drop in Nether
+// C.4 `ender_crystal.json` — Overhead Spectral Sword crystal + 18s scale recharge + 2% Spectral Sword drop in Nether (post-blast!)
 {
   const data = readVanillaBP('ender_crystal.json');
   const ent = data['minecraft:entity'];
+  // Keep vanilla on_hurt in the base components: crystals saved before the pack
+  // was installed will not necessarily receive entity_spawned again on reload.
+  // The sword rider's damage sensor prevents ordinary damage.
   ent.component_groups['effect:spectral_rider'] = {
     'minecraft:type_family': { family: ['ender_crystal', 'spectral_sword', 'effect99_entities'] },
     'minecraft:scale': { value: 0.55 },
     'minecraft:collision_box': { width: 0.0, height: 0.0 },
     'minecraft:damage_sensor': {
-      triggers: [{ cause: 'all', deals_damage: false }],
+      triggers: [{ cause: 'all', deals_damage: 'no' }],
+    },
+  };
+  ent.component_groups['effect:ender_crystal_scale'] = {
+    'minecraft:type_family': {
+      family: ['ender_crystal', 'spectral_sword', 'ender_crystal_scale', 'effect99_entities'],
+    },
+    'minecraft:scale': { value: 0.2 },
+    'minecraft:collision_box': { width: 0.0, height: 0.0 },
+    'minecraft:damage_sensor': {
+      triggers: [{ cause: 'all', deals_damage: 'no' }],
+    },
+    'minecraft:timer': {
+      time: 18.0,
+      looping: false,
+      time_down_event: { event: 'effect:end_scale', target: 'self' },
     },
   };
   ent.component_groups['effect:instant_despawn'] = {
     'minecraft:instant_despawn': {},
   };
+
+  ent.events['minecraft:crystal_explode'] = {
+    sequence: [
+      {
+        filters: { test: 'is_family', subject: 'self', operator: '!=', value: 'spectral_sword' },
+        queue_command: {
+          command: ['scriptevent effect:ender_crystal_exploded ~'],
+        },
+      },
+      {
+        add: { component_groups: ['crystal_exploding'] },
+      },
+    ],
+  };
   ent.events['effect:spectral_rider'] = {
+    remove: { component_groups: ['effect:ender_crystal_scale'] },
     add: { component_groups: ['effect:spectral_rider'] },
+  };
+  ent.events['effect:end_scale'] = {
+    remove: { component_groups: ['effect:ender_crystal_scale'] },
+    add: { component_groups: ['effect:spectral_rider'] },
+    queue_command: {
+      command: [
+        'playsound portal.travel @a[r=16] ~ ~ ~ 0.6 7',
+        'particle minecraft:example_flipbook ~ ~0.8 ~',
+      ],
+    },
+  };
+  ent.events['effect:ender_crystal_scale'] = {
+    remove: { component_groups: ['effect:spectral_rider'] },
+    add: { component_groups: ['effect:ender_crystal_scale'] },
   };
   ent.events['effect:despawn'] = {
     add: { component_groups: ['effect:instant_despawn'] },
@@ -677,7 +819,7 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
   const ent = data['minecraft:entity'];
   if (ent.component_groups['minecraft:forced_charged_exploding']) {
     ent.component_groups['minecraft:forced_charged_exploding']['minecraft:timer'] = {
-      time: [1.4, 1.4],
+      time: 1.4,
       looping: false,
       time_down_event: { event: 'effect:creeper_sword_drop', target: 'self' },
     };
@@ -722,7 +864,7 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
       destroy_affected_by_griefing: true,
     },
     'minecraft:timer': {
-      time: [7.9, 7.9],
+      time: 7.9,
       looping: false,
       time_down_event: { event: 'effect:giant_tnt_fx', target: 'self' },
     },
@@ -742,9 +884,11 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
 }
 
 // C.8 Projectiles (`arrow`, `small_fireball`, `fireball`, `shulker_bullet`, `snowball`, `wither_skull`, `wither_skull_dangerous`)
+// All custom-spawned projectiles MUST have `is_summonable: true` so `dimension.spawnEntity(...)` succeeds in 1.26.60!
 for (const projFile of ['arrow.json', 'small_fireball.json']) {
   const data = readVanillaBP(projFile);
   const ent = data['minecraft:entity'];
+  ent.description.is_summonable = true;
   const baseProj = JSON.parse(JSON.stringify(ent.components['minecraft:projectile']));
   baseProj.inertia = 0.05;
   baseProj.liquid_inertia = 0.05;
@@ -768,6 +912,7 @@ for (const projFile of ['arrow.json', 'small_fireball.json']) {
 for (const projFile of ['fireball.json', 'wither_skull.json', 'wither_skull_dangerous.json']) {
   const data = readVanillaBP(projFile);
   const ent = data['minecraft:entity'];
+  ent.description.is_summonable = true;
   const playerProj = JSON.parse(JSON.stringify(ent.components['minecraft:projectile']));
   playerProj.gravity = 0.02;
   playerProj.power = 1.8;
@@ -785,6 +930,7 @@ for (const projFile of ['fireball.json', 'wither_skull.json', 'wither_skull_dang
 {
   const data = readVanillaBP('shulker_bullet.json');
   const ent = data['minecraft:entity'];
+  ent.description.is_summonable = true;
   const swordProj = JSON.parse(JSON.stringify(ent.components['minecraft:projectile']));
   swordProj.homing = false;
   swordProj.gravity = 0.01;
@@ -806,7 +952,7 @@ for (const projFile of ['fireball.json', 'wither_skull.json', 'wither_skull_dang
   const ent = data['minecraft:entity'];
   const iceProj = JSON.parse(JSON.stringify(ent.components['minecraft:projectile']));
   iceProj.on_hit = iceProj.on_hit || {};
-  iceProj.on_hit.impact_damage = { damage: 2, knockback: true };
+  iceProj.on_hit.impact_damage = { damage: { min: 2, max: 2 }, knockback: true };
   iceProj.on_hit.definition_event = {
     affect_projectile: true,
     event_trigger: { event: 'effect:place_snow', target: 'self' },
@@ -834,9 +980,11 @@ for (const projFile of ['fireball.json', 'wither_skull.json', 'wither_skull_dang
 // Helper to modernize legacy 1.16 commands inside custom entity JSONs
 function modernizeCommand(cmd) {
   let c = cmd.trim();
+  // Replace unspaced `~~~` legacy coordinate shorthand BEFORE regex matching!
+  c = c.replace(/(^|\s)~~~(?=\s|$)/g, '$1~ ~ ~');
   // Replace `structure load <sword> ...` with clean 1.26 `loot spawn ~ ~ ~ loot "swords/<sword>"`
   c = c.replace(/structure\s+load\s+([a-z0-9_]+)\s+([^\s]+(?:\s+[^\s]+){0,2})/g, 'loot spawn $2 loot "swords/$1"');
-  // Replace `~~~` shorthand spacing where needed & legacy block data
+  // Replace legacy block data
   c = c.replace(/fill\s+([^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+)\s+effect99:lightblock\s+0\s+replace\s+air/g, 'fill $1 effect99:lightblock [] replace air');
   c = c.replace(/fill\s+([^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+)\s+effect99:lightblock\s+0\s+replace\s+effect99:lightblock/g, '');
   c = c.replace(/fill\s+([^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+)\s+fire\s+0\s+replace\s+air/g, 'fill $1 fire [] replace air');
@@ -844,6 +992,7 @@ function modernizeCommand(cmd) {
   c = c.replace(/fill\s+([^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+)\s+tallgrass\s+0\s+replace\s+air/g, 'fill $1 short_grass [] replace air');
   c = c.replace(/fill\s+([^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+)\s+web\s+0\s+replace\s+air/g, 'fill $1 web [] replace air');
   c = c.replace(/summon\s+lightning_bolt\s+([^\s]+(?:\s+[^\s]+){0,2})\s+default_lightning_bolt/g, 'summon lightning_bolt $1');
+  c = c.replace(/^effect\s+(@[^\s]+)\s+([a-z0-9_:]+)\s+0\s+0$/g, 'effect $1 $2 0');
   c = c.replace(/^say\s+\d+$/g, '');
   c = c.replace(/tp\s+@s\s+~\s+-103\s+~/g, 'event entity @s effect:instant_despawn');
   // Legacy execute conversions
@@ -854,14 +1003,14 @@ function modernizeCommand(cmd) {
       .replace(/execute @e\[type=!entity:grass,c=1,r=1,tag=grass\] ~ ~ ~ detect ~ ~-1 ~ grass 0 execute @s ~ ~ ~ detect ~ ~ ~ tallgrass 0 tp @s ~ ~-1 ~/g,
         'execute as @e[type=!entity:grass,c=1,r=2,tag=grass] at @s if block ~ ~-1 ~ grass_block if block ~ ~ ~ short_grass run tp @s ~ ~-0.85 ~')
       .replace(/execute @e\[family=!grass_witch,type=!entity:grass,type=!xp_orb,type=!arrow,r=1,tag=!grass\] ~ ~ ~ tag @s add grass/g,
-        'tag @e[family=!grass_witch,family=!player,type=!entity:grass,type=!item,type=!xp_orb,type=!arrow,r=2,tag=!grass] add grass')
-      .replace(/execute @s ~~~ detect ~~~ air 0 event entity @s teleport_enable/g,
+        'tag @e[family=!grass_witch,family=!grass_sword,family=!shulker_sword,family=!ghost_sword,type=!entity:grass,type=!item,type=!xp_orb,type=!arrow,r=2,tag=!grass] add grass')
+      .replace(/execute @s ~ ~ ~ detect ~ ~ ~ air 0 event entity @s teleport_enable/g,
         'execute as @s at @s if block ~ ~ ~ air run event entity @s teleport_enable')
-      .replace(/execute @s ~~~ detect ~ ~-1 ~ air 0 execute @s ~~~ detect ~ ~-2 ~ air 0 event entity @s is_baby/g,
+      .replace(/execute @s ~ ~ ~ detect ~ ~-1 ~ air 0 execute @s ~ ~ ~ detect ~ ~-2 ~ air 0 event entity @s is_baby/g,
         'execute as @s at @s if block ~ ~-1 ~ air if block ~ ~-2 ~ air run event entity @s is_baby')
-      .replace(/execute @e\[r=1,family=monster\] ~~~ summon entity:slime_damage/g,
+      .replace(/execute @e\[r=1,family=monster\] ~ ~ ~ summon entity:slime_damage/g,
         'execute at @e[r=1.5,family=monster] run summon entity:slime_damage ~ ~ ~')
-      .replace(/execute @s\[scores=\{slime_despawn=100\}\] ~~~ event entity @s despawn/g,
+      .replace(/execute @s\[scores=\{slime_despawn=100\}\] ~ ~ ~ event entity @s despawn/g,
         'execute as @s[scores={slime_despawn=100..}] run event entity @s despawn');
   }
   return c.trim();
@@ -900,6 +1049,18 @@ for (const f of customEntityFiles.sort()) {
   // Remove old animation controller references on custom entities where our TS or modern events drive them cleanly,
   // EXCEPT keep valid animation controllers we ship in `Swords_B/animation_controllers/`.
   if (f === 'ultra_instinct_projectile.json') {
+    // Fix `ageable` (requires `is_baby` + valid `minecraft:end_scale` event) and `summon entity:ultra_instinct_explode ~ ~ ~`!
+    ent.components['minecraft:is_baby'] = {};
+    if (ent.components['minecraft:projectile']?.on_hit) {
+      ent.components['minecraft:projectile'].on_hit.remove_on_hit = {};
+    }
+    ent.events['minecraft:end_scale'] = {};
+    ent.events['minecraft:explode'] = {
+      add: { component_groups: ['despawn'] },
+      queue_command: {
+        command: ['summon entity:ultra_instinct_explode ~ ~ ~'],
+      },
+    };
     // Do NOT delete `minecraft:bedrock` or `effect:*` sword items when carving tunnels!
     ent.events.projectile_particle = {
       queue_command: {
@@ -907,6 +1068,65 @@ for (const f of customEntityFiles.sort()) {
           'particle minecraft:example_flipbook ~ ~ ~',
         ],
       },
+    };
+  }
+  if (f === 'living_flame.json') {
+    // Ensure `ageable` (`duration: 1 -> hostile_entity_detect`) genuinely ticks when summoned without a spawn event!
+    ent.components['minecraft:is_baby'] = {};
+  }
+  if (f === 'shulker_shield.json') {
+    // Clean despawn without calling nonexistent `stop_shulker_sword_event` on player
+    ent.events['minecraft:despawn'] = {
+      add: { component_groups: ['despawn'] },
+      queue_command: {
+        command: ['playsound mob.shulker.open @a[r=12] ~ ~ ~ 0.9 1.0'],
+      },
+    };
+  }
+  if (f === 'lightning_projectile.json') {
+    // Extend flight lifetime for ranged swings & define `particle` event for environment_sensor!
+    ent.components['minecraft:timer'] = {
+      time: [1.2, 1.2],
+      looping: false,
+      time_down_event: { event: 'despawn', target: 'self' },
+    };
+    if (ent.components['minecraft:projectile']?.on_hit) {
+      ent.components['minecraft:projectile'].on_hit.remove_on_hit = {};
+    }
+    ent.events.particle = {
+      queue_command: {
+        command: ['particle minecraft:electric_spark_particle ~ ~ ~'],
+      },
+    };
+  }
+  if (f === 'wither_effect.json') {
+    ent.components['minecraft:timer'] = {
+      time: [0.6, 0.6],
+      looping: false,
+      time_down_event: { event: 'despawn', target: 'self' },
+    };
+    if (ent.components['minecraft:projectile']?.on_hit) {
+      ent.components['minecraft:projectile'].on_hit.remove_on_hit = {};
+    }
+    ent.events.particle = {
+      queue_command: {
+        command: ['particle minecraft:basic_smoke_particle ~ ~ ~'],
+      },
+    };
+  }
+  if (f === 'nether_star_projectile.json') {
+    delete ent.events.objective;
+    ent.events.set_objective = {
+      queue_command: {
+        command: ['summon entity:objective ~ ~ ~'],
+      },
+    };
+    if (ent.component_groups?.nether_star_sword?.['minecraft:timer']) {
+      ent.component_groups.nether_star_sword['minecraft:timer'].time = [1.0, 1.0];
+      ent.component_groups.nether_star_sword['minecraft:timer'].looping = false;
+    }
+    ent.events['effect:nether_star_tracer'] = {
+      add: { component_groups: ['nether_star_sword'] },
     };
   }
   if (f === 'alpha_wolf.json') {
@@ -980,11 +1200,6 @@ for (const f of customEntityFiles.sort()) {
       time_down_event: { event: 'despawn', target: 'self' },
     };
   }
-  if (f === 'nether_star_projectile.json') {
-    ent.events['effect:nether_star_tracer'] = {
-      add: { component_groups: ['nether_star_sword'] },
-    };
-  }
   if (f === 'centella.json') {
     if (ent.components?.['minecraft:loot']) {
       ent.components['minecraft:loot'].table = 'loot_tables/empty.json';
@@ -996,7 +1211,28 @@ for (const f of customEntityFiles.sort()) {
       },
     };
   }
+  if (f === 'mountable_slime.json') {
+    ent.events.default_slime = {
+      remove: { component_groups: ['slime_random_direction', 'defense_mode_slime'] },
+      add: { component_groups: ['default_slime'] },
+    };
+    if (ent.events.slime_events?.run_command?.command) {
+      ent.events.slime_events.run_command.command = ent.events.slime_events.run_command.command.map((cmd) =>
+        cmd.replace('scores={slime_despawn=0}', 'scores={slime_despawn=..30}')
+      );
+    }
+  }
 
+  // 1.26 expects a sensor object with triggers, not the old array of
+  // on_environment wrappers used by several 2.8.8 entities.
+  for (const components of [ent.components || {}, ...Object.values(ent.component_groups)]) {
+    const sensor = components['minecraft:environment_sensor'];
+    if (Array.isArray(sensor)) {
+      components['minecraft:environment_sensor'] = {
+        triggers: sensor.map((entry) => entry.on_environment ?? entry),
+      };
+    }
+  }
   walkTransformCommands(ent);
   writeJson(path.join(BP, 'entities', f), raw);
 }
@@ -1081,7 +1317,7 @@ writeJson(path.join(BP, 'animation_controllers/despawn.json'), {
   animation_controllers: {
     'controller.animation.despawn': {
       states: {
-        default: { transitions: [{ despawn: '!q.has_rider' }] },
+        default: { transitions: [{ despawn: 'q.life_time > 0.25 && !q.has_rider' }] },
         despawn: { on_entry: ['@s minecraft:despawn'], transitions: [{ default: '1.0' }] },
       },
     },
@@ -1097,7 +1333,7 @@ writeJson(path.join(BP, 'animation_controllers/despawn.json'), {
     },
     'controller.animation.despawn2': {
       states: {
-        default: { transitions: [{ despawn2: '!q.is_riding' }] },
+        default: { transitions: [{ despawn2: 'q.life_time > 0.25 && !q.is_riding' }] },
         despawn2: { on_entry: ['@s minecraft:despawn'], transitions: [{ default: '1.0' }] },
       },
     },

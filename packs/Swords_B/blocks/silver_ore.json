@@ -11,13 +11,23 @@
     "components": {
       "minecraft:display_name": "tile.effect99:silver_ore.name",
       "minecraft:destructible_by_mining": {
-        "seconds_to_destroy": 4.5,
+        "seconds_to_destroy": 12,
         "item_specific_speeds": [
           {
-            "item": {
-              "tags": "q.any_tag('minecraft:is_pickaxe', 'is_pickaxe')"
-            },
-            "destroy_speed": 1
+            "item": "minecraft:iron_pickaxe",
+            "destroy_speed": 1.3
+          },
+          {
+            "item": "minecraft:diamond_pickaxe",
+            "destroy_speed": 0.9
+          },
+          {
+            "item": "minecraft:netherite_pickaxe",
+            "destroy_speed": 0.75
+          },
+          {
+            "item": "effect:bedrock_sword",
+            "destroy_speed": 0.05
           }
         ]
       },
@@ -27,7 +37,7 @@
       "minecraft:light_dampening": 15,
       "minecraft:light_emission": 0,
       "minecraft:map_color": "#c0c8d0",
-      "minecraft:loot": "loot_tables/blocks/silver_ore.json",
+      "minecraft:loot": "loot_tables/empty.json",
       "minecraft:material_instances": {
         "*": {
           "texture": "silver_ore",

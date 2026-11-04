@@ -62,10 +62,7 @@
           "destroy_affected_by_griefing": true
         },
         "minecraft:timer": {
-          "time": [
-            7.9,
-            7.9
-          ],
+          "time": 7.9,
           "looping": false,
           "time_down_event": {
             "event": "effect:giant_tnt_fx",

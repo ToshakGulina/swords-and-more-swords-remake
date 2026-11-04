@@ -65,9 +65,9 @@
         "angle_offset": 0
       },
       "minecraft:physics": {},
-      "minecraft:environment_sensor": [
-        {
-          "on_environment": {
+      "minecraft:environment_sensor": {
+        "triggers": [
+          {
             "filters": {
               "all_of": [
                 {
@@ -79,8 +79,8 @@
             },
             "event": "shoot_sound"
           }
-        }
-      ]
+        ]
+      }
     },
     "events": {
       "set_web": {

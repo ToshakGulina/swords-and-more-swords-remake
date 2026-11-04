@@ -134,7 +134,7 @@
             "weight": 10,
             "queue_command": {
               "command": [
-                "playsound mob.endermen.portal @a[r=17] ~~~",
+                "playsound mob.endermen.portal @a[r=17] ~ ~ ~",
                 "spreadplayers ~ ~ 0 16 @s"
               ]
             }
@@ -148,8 +148,8 @@
             },
             "queue_command": {
               "command": [
-                "loot spawn ~~~ loot \"swords/ghost_sword\"",
-                "particle minecraft:ghost_spiral ~~~",
+                "loot spawn ~ ~ ~ loot \"swords/ghost_sword\"",
+                "particle minecraft:ghost_spiral ~ ~ ~",
                 "playsound mob.wither.ambient @a[r=16] ~ ~1 ~ 2 0.3",
                 "particle minecraft:egg_destroy_emitter ~ ~ ~",
                 "particle minecraft:egg_destroy_emitter ~ ~0.3 ~",
@@ -182,7 +182,7 @@
                 "weight": 50,
                 "queue_command": {
                   "command": [
-                    "playsound ghost_sword.wailing @a[rm=10,r=50] ~~~ 1 7"
+                    "playsound ghost_sword.wailing @a[rm=10,r=50] ~ ~ ~ 1 7"
                   ]
                 }
               }
@@ -213,7 +213,7 @@
         },
         "queue_command": {
           "command": [
-            "particle minecraft:ghost_spiral ~~~",
+            "particle minecraft:ghost_spiral ~ ~ ~",
             "playsound mob.wither.ambient @a[r=16] ~ ~1 ~ 2 0.3",
             "particle minecraft:egg_destroy_emitter ~ ~ ~",
             "particle minecraft:egg_destroy_emitter ~ ~0.3 ~",
