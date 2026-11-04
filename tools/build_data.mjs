@@ -1044,41 +1044,44 @@ for (const [rel, pool] of entityPoolAdditions) {
 // values, but none of that touches the swords, so re-creating it would be a
 // regression to stale vanilla numbers for no gameplay gain.
 //
-// The sword trade itself does need the 2.8.8 numbers. It has to sit in the tier
-// whose `total_exp_required` is 310; the 2.8.8 table had that as a fifth tier
-// (0/10/60/160/310) whereas the current vanilla table only reaches 250. We
-// rebuild the sword tier rather than appending to the vanilla 250 tier so that
-// the sword unlocks at the same trader level it did in 2.8.8.
+// The sword trade itself does need the 2.8.8 numbers: 32 emerald blocks for an
+// enchanted Emerald Sword, `trader_exp` 0, `max_uses` 2.
+//
+// It must live in the FIFTH tier, which is the case in 2.8.8 (0/10/60/160/310).
+// A villager only has five trade levels, so a table with six tiers silently
+// drops the sixth — appending a brand-new 310 tier made the sword unbuyable.
+// The current vanilla table reaches 250 in its fifth tier, so the sword trade is
+// appended to that existing fifth tier instead of creating a new one.
 const econWeaponsmith = jsonc.parse(
   fs.readFileSync(path.join(VANILLA_BP, 'trading/economy_trades/weapon_smith_trades.json'), 'utf8'),
 );
-econWeaponsmith.tiers = econWeaponsmith.tiers.filter((tier) => tier.total_exp_required !== 310);
-econWeaponsmith.tiers.push({
-  total_exp_required: 310,
-  groups: [
+const lastWeaponsmithTier = econWeaponsmith.tiers[econWeaponsmith.tiers.length - 1];
+if (!lastWeaponsmithTier) throw new Error('weapon_smith_trades.json has no tiers');
+lastWeaponsmithTier.groups = lastWeaponsmithTier.groups || [];
+lastWeaponsmithTier.groups.push({
+  num_to_select: 1,
+  trades: [
     {
-      num_to_select: 1,
-      trades: [
+      wants: [{ item: 'minecraft:emerald_block', quantity: 32, price_multiplier: 0.0 }],
+      gives: [
         {
-          wants: [{ item: 'minecraft:emerald_block', quantity: 32, price_multiplier: 0.0 }],
-          gives: [
-            {
-              item: 'effect:emerald_sword',
-              quantity: 1,
-              functions: [
-                { function: 'enchant_with_levels', treasure: false, levels: { min: 5, max: 60 } },
-              ],
-            },
+          item: 'effect:emerald_sword',
+          quantity: 1,
+          functions: [
+            { function: 'enchant_with_levels', treasure: false, levels: { min: 5, max: 60 } },
           ],
-          // 2.8.8: trader_exp 0, max_uses 2.
-          trader_exp: 0,
-          max_uses: 2,
-          reward_exp: true,
         },
       ],
+      // 2.8.8: trader_exp 0, max_uses 2.
+      trader_exp: 0,
+      max_uses: 2,
+      reward_exp: true,
     },
   ],
 });
+if (econWeaponsmith.tiers.length > 5) {
+  throw new Error('a villager has five trade levels; the table must not grow past five tiers');
+}
 writeJson(path.join(BP, 'trading/economy_trades/weapon_smith_trades.json'), econWeaponsmith);
 
 // ---------------------------------------------------------------------------

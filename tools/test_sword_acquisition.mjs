@@ -30,9 +30,13 @@ const smith = read('packs/Swords_B/trading/economy_trades/weapon_smith_trades.js
 const swordTier = smith.tiers.find((t) =>
   t.groups.some((g) => g.trades.some((tr) => tr.gives.some((i) => i.item === 'effect:emerald_sword'))));
 assert.ok(swordTier, 'the Emerald Sword trade must exist');
-assert.equal(swordTier.total_exp_required, 310, '2.8.8 unlocks the sword at 310 trader exp');
-assert.equal(smith.tiers.filter((t) => t.total_exp_required === 310).length, 1,
-  'exactly one 310 tier, no duplicate');
+// A villager has five trade levels. A sixth tier is never reached, which made the
+// sword unbuyable until the trade was moved into the last real tier.
+assert.equal(smith.tiers.length, 5, 'the table must not have more than five tiers');
+assert.equal(smith.tiers[smith.tiers.length - 1], swordTier,
+  'the sword trade sits in the fifth and final tier');
+assert.equal(swordTier.total_exp_required, 250,
+  'the trade uses the vanilla fifth-tier exp gate, which a villager can actually reach');
 
 const swordTrade = swordTier.groups
   .flatMap((g) => g.trades)
@@ -53,4 +57,4 @@ assert.deepEqual(chestTables.sort(),
   ['pillager_outpost.json', 'stronghold_corridor.json', 'woodland_mansion.json'],
   'the Emerald Sword chest routes must match 2.8.8');
 
-console.log('Sword acquisition: Slime King table wired, 310-tier trade exact, chest routes intact');
+console.log('Sword acquisition: Slime King table wired, fifth-tier trade reachable, chest routes intact');
