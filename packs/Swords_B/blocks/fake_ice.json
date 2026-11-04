@@ -1,0 +1,71 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "effect99:fake_ice",
+      "menu_category": {
+        "category": "none",
+        "is_hidden_in_commands": false
+      },
+      "states": {
+        "effect99:crack_stage": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.effect99:fake_ice.name",
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.4
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.5
+      },
+      "minecraft:friction": 0.02,
+      "minecraft:light_dampening": 2,
+      "minecraft:light_emission": 0,
+      "minecraft:loot": "loot_tables/empty.json",
+      "minecraft:map_color": "#9fd8ff",
+      "minecraft:geometry": "geometry.fake_ice",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "fake_ice",
+          "render_method": "blend",
+          "ambient_occlusion": 1,
+          "face_dimming": true
+        }
+      },
+      "minecraft:tick": {
+        "interval_range": [
+          35,
+          55
+        ],
+        "looping": true
+      },
+      "effect99:fake_ice": {}
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('effect99:crack_stage') == 1",
+        "components": {
+          "minecraft:geometry": "geometry.fake_ice2"
+        }
+      },
+      {
+        "condition": "q.block_state('effect99:crack_stage') == 2",
+        "components": {
+          "minecraft:geometry": "geometry.fake_ice3"
+        }
+      },
+      {
+        "condition": "q.block_state('effect99:crack_stage') == 3",
+        "components": {
+          "minecraft:geometry": "geometry.fake_ice4"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "lib": ["ES2022"],
+    "moduleResolution": "bundler",
+    "rootDir": "./src",
+    "outDir": "./packs/Swords_B/scripts",
+    "strict": true,
+    "noEmitOnError": true,
+    "skipLibCheck": false,
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@minecraft/server": ["/tmp/refs/check260/node_modules/@minecraft/server/index.d.ts"],
+      "@minecraft/server-ui": ["/tmp/refs/check260/node_modules/@minecraft/server-ui/index.d.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

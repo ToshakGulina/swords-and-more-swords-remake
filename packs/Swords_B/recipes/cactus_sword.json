@@ -1,0 +1,32 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "effect:cactus_sword"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "F",
+      "F",
+      "E"
+    ],
+    "key": {
+      "E": {
+        "item": "minecraft:stick"
+      },
+      "F": {
+        "item": "minecraft:cactus"
+      }
+    },
+    "result": {
+      "item": "effect:cactus_sword"
+    },
+    "unlock": [
+      {
+        "item": "minecraft:stick"
+      }
+    ]
+  }
+}

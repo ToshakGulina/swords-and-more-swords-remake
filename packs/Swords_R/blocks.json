@@ -1,0 +1,39 @@
+{
+  "format_version": [
+    1,
+    1,
+    0
+  ],
+  "effect99:spectral_block": {
+    "textures": "spectral_block",
+    "sound": "stone"
+  },
+  "effect99:silver_ore": {
+    "textures": "silver_ore",
+    "sound": "stone"
+  },
+  "effect99:quartz_diamond_ore": {
+    "textures": "quartz_diamond_ore",
+    "sound": "glass"
+  },
+  "effect99:quartz_diamond_block": {
+    "textures": "quartz_diamond_block",
+    "sound": "metal"
+  },
+  "effect99:lightblock": {
+    "textures": "lightblock",
+    "sound": "stone"
+  },
+  "effect99:lightblock2": {
+    "textures": "lightblock2",
+    "sound": "stone"
+  },
+  "effect99:fake_ice": {
+    "textures": "fake_ice",
+    "sound": "glass"
+  },
+  "effect99:sapling3": {
+    "textures": "sapling_jungle",
+    "sound": "grass"
+  }
+}

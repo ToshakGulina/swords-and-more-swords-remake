@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "effect:quartz_diamond_stick"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "effect:quartz_diamond"
+      }
+    },
+    "result": {
+      "item": "effect:quartz_diamond_stick"
+    },
+    "unlock": [
+      {
+        "item": "effect:quartz_diamond"
+      }
+    ]
+  }
+}

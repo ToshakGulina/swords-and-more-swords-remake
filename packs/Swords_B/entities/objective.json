@@ -1,0 +1,87 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "entity:objective",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "despawn": {
+        "minecraft:instant_despawn": {}
+      },
+      "effect:instant_despawn": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "effect99_entities",
+          "objective"
+        ]
+      },
+      "minecraft:timer": {
+        "time": [
+          1,
+          1
+        ],
+        "looping": true,
+        "time_down_event": {
+          "event": "minecraft:despawn",
+          "target": "self"
+        }
+      },
+      "minecraft:damage_sensor": {
+        "triggers": {
+          "cause": "all",
+          "deals_damage": false
+        }
+      },
+      "minecraft:collision_box": {
+        "width": 0.25,
+        "height": 0.25
+      },
+      "minecraft:physics": {
+        "has_gravity": false,
+        "has_collision": false
+      },
+      "minecraft:environment_sensor": {
+        "triggers": [
+          {
+            "filters": {},
+            "event": "follow_entity"
+          }
+        ]
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": true
+      }
+    },
+    "events": {
+      "follow_entity": {
+        "queue_command": {
+          "command": [
+            "tp @s @e[r=8,c=1,type=!player,type=!item,family=!parrot_tame,family=!tamed,type=!arrow,type=!xp_orb,family=!effect99_entities]"
+          ]
+        }
+      },
+      "minecraft:despawn": {
+        "add": {
+          "component_groups": [
+            "despawn"
+          ]
+        }
+      },
+      "effect:instant_despawn": {
+        "add": {
+          "component_groups": [
+            "effect:instant_despawn"
+          ]
+        }
+      }
+    }
+  }
+}

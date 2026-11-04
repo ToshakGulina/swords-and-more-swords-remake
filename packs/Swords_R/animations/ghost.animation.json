@@ -1,0 +1,55 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.ghost.move": {
+			"loop": true,
+			"animation_length": 2.0833,
+			"bones": {
+				"body": {
+					"position": {
+						"0.0": [0, 0, 0],
+						"1.0333": [0, 2, 0],
+						"2.0833": [0, 0, 0]
+					}
+				},
+				"ghost_tail": {
+					"rotation": {
+						"0.0": [0, 0, 0],
+						"0.7167": [5, 0, 0],
+						"1.4333": [10, 0, 0],
+						"2.0833": [0, 0, 0]
+					},
+					"position": {
+						"0.0": [0, 0, 0],
+						"1.2": [0, 0.5, 0],
+						"2.0833": [0, 0, 0]
+					}
+				},
+				"leftArm": {
+					"rotation": {
+						"0.0": [0, 0, 0],
+						"1.0": [0, 0, -5],
+						"2.0333": [0, 0, 0]
+					},
+					"position": [0, 0, 0]
+				},
+				"rightArm": {
+					"rotation": {
+						"0.0": [0, 0, 0],
+						"0.9667": [0, 0, 5],
+						"2.0833": [0, 0, 0]
+					},
+					"position": [0, 0, 0]
+				}
+			}
+		},
+		"animation.ghost.look_at_target": {
+			"loop": true,
+			"bones": {
+				"ghost_head": {
+					"rotation": [ "query.target_x_rotation", "query.target_y_rotation", 0 ]
+				}
+			}
+		}
+	}
+}

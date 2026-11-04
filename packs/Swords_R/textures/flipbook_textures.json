@@ -1,0 +1,9 @@
+[
+  {
+    "flipbook_texture": "textures/blocks/quartz_diamond_block",
+    "atlas_tile": "quartz_diamond_block",
+    "ticks_per_frame": 2,
+    "frames": [ 0, 1, 2, 3, 4, 5, 6, 7 ],
+    "blend_frames": false
+  }
+]

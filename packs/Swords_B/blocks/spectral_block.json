@@ -1,0 +1,48 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "effect99:spectral_block",
+      "menu_category": {
+        "category": "none",
+        "is_hidden_in_commands": true
+      },
+      "states": {
+        "effect99:origin": [
+          "stone",
+          "deepslate",
+          "netherrack",
+          "end_stone"
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 6
+      },
+      "minecraft:light_dampening": 0,
+      "minecraft:light_emission": 2,
+      "minecraft:loot": "loot_tables/empty.json",
+      "minecraft:geometry": "geometry.spectral_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "spectral_block",
+          "render_method": "alpha_test",
+          "ambient_occlusion": 0,
+          "face_dimming": false
+        }
+      },
+      "minecraft:tick": {
+        "interval_range": [
+          20,
+          35
+        ],
+        "looping": true
+      },
+      "effect99:spectral_block": {}
+    }
+  }
+}

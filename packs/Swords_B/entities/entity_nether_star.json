@@ -1,0 +1,106 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "entity:nether_star",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "despawn": {
+        "minecraft:instant_despawn": {}
+      },
+      "effect:instant_despawn": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "effect99_entities"
+        ]
+      },
+      "minecraft:timer": {
+        "time": [
+          0.5,
+          0.5
+        ],
+        "looping": true,
+        "time_down_event": {
+          "event": "minecraft:despawn",
+          "target": "self"
+        }
+      },
+      "minecraft:nameable": {},
+      "minecraft:collision_box": {
+        "width": 0.25,
+        "height": 0.25
+      },
+      "minecraft:health": {
+        "value": 99,
+        "max": 99
+      },
+      "minecraft:navigation.walk": {},
+      "minecraft:damage_sensor": {
+        "triggers": {
+          "cause": "all",
+          "deals_damage": false
+        }
+      },
+      "minecraft:balloonable": {},
+      "minecraft:behavior.ranged_attack": {
+        "priority": 1,
+        "speed_multiplier": 0,
+        "attack_interval": 0.1,
+        "charge_shoot_trigger": 0.1,
+        "charge_charged_trigger": 0.1,
+        "attack_radius": 28
+      },
+      "minecraft:shooter": {
+        "def": "entity:nether_star_projectile"
+      },
+      "minecraft:behavior.nearest_attackable_target": {
+        "priority": 1,
+        "reselect_targets": true,
+        "scan_interval": 1,
+        "target_search_height": 28,
+        "entity_types": [
+          {
+            "filters": {
+              "test": "is_family",
+              "subject": "other",
+              "value": "objective"
+            },
+            "max_dist": 28
+          }
+        ],
+        "must_see": false
+      },
+      "minecraft:persistent": {},
+      "minecraft:physics": {
+        "has_gravity": false
+      },
+      "minecraft:pushable": {
+        "is_pushable": true,
+        "is_pushable_by_piston": true
+      }
+    },
+    "events": {
+      "minecraft:despawn": {
+        "add": {
+          "component_groups": [
+            "despawn"
+          ]
+        }
+      },
+      "effect:instant_despawn": {
+        "add": {
+          "component_groups": [
+            "effect:instant_despawn"
+          ]
+        }
+      }
+    }
+  }
+}

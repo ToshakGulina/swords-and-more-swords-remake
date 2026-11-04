@@ -1,0 +1,118 @@
+{
+  "format_version": "1.11.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "entity:web",
+      "runtime_identifier": "minecraft:snowball",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "remove_shoot_sound": {
+        "minecraft:type_family": {
+          "family": [
+            "effect99_entities"
+          ]
+        }
+      },
+      "despawn": {
+        "minecraft:instant_despawn": {}
+      },
+      "effect:instant_despawn": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "effect99_entities",
+          "shoot_sound"
+        ]
+      },
+      "minecraft:scale": {
+        "value": 0.5
+      },
+      "minecraft:collision_box": {
+        "width": 0.25,
+        "height": 0.25
+      },
+      "minecraft:projectile": {
+        "on_hit": {
+          "definition_event": {
+            "affect_projectile": true,
+            "event_trigger": {
+              "event": "set_web",
+              "target": "self"
+            }
+          },
+          "impact_damage": {
+            "damage": 1,
+            "knockback": true,
+            "destroy_on_hit": true
+          },
+          "remove_on_hit": {},
+          "particle_on_hit": {
+            "particle_type": "iconcrack",
+            "num_particles": 1,
+            "on_entity_hit": true,
+            "on_other_hit": true
+          }
+        },
+        "hit_sound": "pop",
+        "power": 1.5,
+        "gravity": 0.03,
+        "angle_offset": 0
+      },
+      "minecraft:physics": {},
+      "minecraft:environment_sensor": [
+        {
+          "on_environment": {
+            "filters": {
+              "all_of": [
+                {
+                  "test": "is_family",
+                  "subject": "self",
+                  "value": "shoot_sound"
+                }
+              ]
+            },
+            "event": "shoot_sound"
+          }
+        }
+      ]
+    },
+    "events": {
+      "set_web": {
+        "sequence": [
+          {
+            "queue_command": {
+              "command": [
+                "fill ~ ~ ~ ~ ~ ~ web [] replace air"
+              ]
+            }
+          }
+        ]
+      },
+      "shoot_sound": {
+        "add": {
+          "component_groups": [
+            "remove_shoot_sound"
+          ]
+        },
+        "queue_command": {
+          "command": [
+            "playsound random.bow @a[r=12] ~ ~ ~ 1 0.33"
+          ]
+        }
+      },
+      "effect:instant_despawn": {
+        "add": {
+          "component_groups": [
+            "effect:instant_despawn"
+          ]
+        }
+      }
+    }
+  }
+}

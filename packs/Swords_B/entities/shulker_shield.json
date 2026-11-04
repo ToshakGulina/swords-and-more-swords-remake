@@ -1,0 +1,122 @@
+{
+  "format_version": "1.11.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "entity:shulker_shield",
+      "runtime_identifier": "minecraft:shulker",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false,
+      "scripts": {
+        "animate": [
+          "despawn"
+        ]
+      },
+      "animations": {
+        "despawn": "controller.animation.despawn"
+      }
+    },
+    "component_groups": {
+      "minecraft:shulker_shield": {},
+      "despawn": {
+        "minecraft:instant_despawn": {}
+      },
+      "effect:instant_despawn": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "effect99_entities",
+          "player",
+          "shulker_sword"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0.6,
+        "height": 0.9
+      },
+      "minecraft:health": {
+        "value": 20
+      },
+      "minecraft:rideable": {
+        "crouching_skip_interact": true,
+        "seat_count": 1,
+        "family_types": [
+          "player"
+        ],
+        "seats": {
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "minecraft:physics": {},
+      "minecraft:on_death": {
+        "event": "damage_player",
+        "target": "self"
+      },
+      "minecraft:environment_sensor": [
+        {
+          "on_environment": {
+            "filters": {
+              "all_of": [
+                {
+                  "test": "is_family",
+                  "subject": "self",
+                  "value": "effect99_entities"
+                }
+              ]
+            },
+            "event": "shulker_shield_clear_effect"
+          }
+        }
+      ]
+    },
+    "events": {
+      "shulker_shield_clear_effect": {
+        "queue_command": {
+          "command": [
+            "effect @s levitation 0 0"
+          ]
+        }
+      },
+      "shulker_shield": {
+        "add": {
+          "component_groups": [
+            "minecraft:shulker_shield"
+          ]
+        }
+      },
+      "minecraft:despawn": {
+        "add": {
+          "component_groups": [
+            "despawn"
+          ]
+        },
+        "queue_command": {
+          "command": [
+            "event entity @p[family=shulker_sword,r=6] stop_shulker_sword_event"
+          ]
+        }
+      },
+      "damage_player": {
+        "queue_command": {
+          "command": [
+            "effect @p[r=1,family=shulker_sword] instant_damage 1 2 true"
+          ]
+        }
+      },
+      "effect:instant_despawn": {
+        "add": {
+          "component_groups": [
+            "effect:instant_despawn"
+          ]
+        }
+      }
+    }
+  }
+}

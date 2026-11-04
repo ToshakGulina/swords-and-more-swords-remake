@@ -1,0 +1,195 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "entity:nether_star_projectile",
+      "runtime_identifier": "minecraft:snowball",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "nether_star_sword": {
+        "minecraft:scale": {
+          "value": 0
+        },
+        "minecraft:timer": {
+          "time": [
+            0.1,
+            0.1
+          ],
+          "looping": true,
+          "time_down_event": {
+            "event": "minecraft:despawn",
+            "target": "self"
+          }
+        },
+        "minecraft:environment_sensor": {},
+        "minecraft:projectile": {
+          "on_hit": {
+            "definition_event": {
+              "affect_projectile": true,
+              "event_trigger": {
+                "event": "set_objective",
+                "target": "self"
+              }
+            },
+            "impact_damage": {
+              "damage": -1,
+              "knockback": false,
+              "destroy_on_hit": true
+            },
+            "remove_on_hit": {}
+          },
+          "power": 5,
+          "gravity": 0,
+          "angle_offset": 0
+        }
+      },
+      "despawn": {
+        "minecraft:instant_despawn": {}
+      },
+      "effect:instant_despawn": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "effect99_entities",
+          "nether_star_projectile"
+        ]
+      },
+      "minecraft:timer": {
+        "time": [
+          5,
+          5
+        ],
+        "looping": true,
+        "time_down_event": {
+          "event": "minecraft:despawn",
+          "target": "self"
+        }
+      },
+      "minecraft:collision_box": {
+        "width": 1,
+        "height": 1
+      },
+      "minecraft:projectile": {
+        "on_hit": {
+          "definition_event": {
+            "affect_projectile": true,
+            "event_trigger": {
+              "event": "set_sound",
+              "target": "self"
+            }
+          },
+          "impact_damage": {
+            "damage": 6,
+            "knockback": true,
+            "destroy_on_hit": true
+          },
+          "remove_on_hit": {}
+        },
+        "power": 1,
+        "gravity": 0,
+        "angle_offset": 0
+      },
+      "minecraft:environment_sensor": {
+        "triggers": [
+          {
+            "filters": {},
+            "event": "set_particle"
+          }
+        ]
+      },
+      "minecraft:physics": {},
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": false
+      }
+    },
+    "events": {
+      "minecraft:entity_spawned": {
+        "sequence": [
+          {
+            "filters": {
+              "test": "has_equipment",
+              "subject": "other",
+              "domain": "hand",
+              "value": "effect:nether_star_sword"
+            },
+            "add": {
+              "component_groups": [
+                "nether_star_sword"
+              ]
+            }
+          }
+        ]
+      },
+      "set_objective": {
+        "queue_command": {
+          "command": [
+            "summon entity:objective"
+          ]
+        }
+      },
+      "set_sound": {
+        "randomize": [
+          {
+            "weight": 1,
+            "queue_command": {
+              "command": [
+                "playsound item.trident.thunder @a[r=20] ~ ~ ~ 1 5.5"
+              ]
+            }
+          },
+          {
+            "weight": 1,
+            "queue_command": {
+              "command": [
+                "playsound item.trident.thunder @a[r=20] ~ ~ ~ 1 6"
+              ]
+            }
+          },
+          {
+            "weight": 1,
+            "queue_command": {
+              "command": [
+                "playsound item.trident.thunder @a[r=20] ~ ~ ~ 1 7"
+              ]
+            }
+          }
+        ]
+      },
+      "set_particle": {
+        "queue_command": {
+          "command": [
+            "particle minecraft:nether_star_hit ~ ~2.5 ~"
+          ]
+        }
+      },
+      "objective": {
+        "add": {
+          "component_groups": [
+            "objective"
+          ]
+        }
+      },
+      "minecraft:despawn": {
+        "add": {
+          "component_groups": [
+            "despawn"
+          ]
+        }
+      },
+      "effect:instant_despawn": {
+        "add": {
+          "component_groups": [
+            "effect:instant_despawn"
+          ]
+        }
+      }
+    }
+  }
+}

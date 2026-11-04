@@ -1,0 +1,32 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "effect:fire_sword"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "F",
+      "F",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:blaze_rod"
+      },
+      "F": {
+        "item": "minecraft:fire"
+      }
+    },
+    "result": {
+      "item": "effect:fire_sword"
+    },
+    "unlock": [
+      {
+        "item": "minecraft:blaze_rod"
+      }
+    ]
+  }
+}

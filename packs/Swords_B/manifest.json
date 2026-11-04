@@ -1,0 +1,66 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "§6§lSwords and More Swords §r§a(1.26+ Remake)",
+    "description": "§eПолное восстановление всех 38+ мечей, боссов, руд и способностей мода Effect99 для Minecraft Bedrock 1.26.60+ (Android & Windows) без экспериментальных режимов.",
+    "uuid": "94e87f3a-51c2-4d9e-8b31-7a01c56d2901",
+    "version": [
+      3,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      20
+    ]
+  },
+  "modules": [
+    {
+      "description": "Swords and More Swords Behavior Data",
+      "type": "data",
+      "uuid": "94e87f3a-51c2-4d9e-8b31-7a01c56d2902",
+      "version": [
+        3,
+        0,
+        0
+      ]
+    },
+    {
+      "description": "Swords and More Swords Script Engine",
+      "type": "script",
+      "language": "javascript",
+      "uuid": "94e87f3a-51c2-4d9e-8b31-7a01c56d2903",
+      "version": [
+        3,
+        0,
+        0
+      ],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [
+    {
+      "uuid": "94e87f3a-51c2-4d9e-8b31-7a01c56d2904",
+      "version": [
+        3,
+        0,
+        0
+      ]
+    },
+    {
+      "module_name": "@minecraft/server",
+      "version": "2.6.0"
+    },
+    {
+      "module_name": "@minecraft/server-ui",
+      "version": "2.0.0"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      "Effect99 (Original Creator)",
+      "Remake for Bedrock 1.26.60+"
+    ]
+  }
+}

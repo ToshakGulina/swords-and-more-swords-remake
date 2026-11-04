@@ -1,0 +1,593 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "entity:living_flame",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "fire_sword_skill": {
+        "minecraft:damage_sensor": {
+          "triggers": {
+            "cause": "all",
+            "deals_damage": false
+          }
+        },
+        "minecraft:collision_box": {
+          "width": 0.1,
+          "height": 0.1
+        },
+        "minecraft:physics": {
+          "has_gravity": false,
+          "has_collision": false
+        },
+        "minecraft:type_family": {
+          "family": [
+            "fire_sword_skill",
+            "effect99_entities"
+          ]
+        },
+        "minecraft:timer": {
+          "time": [
+            10,
+            10
+          ],
+          "looping": false,
+          "time_down_event": {
+            "event": "minecraft:despawn",
+            "target": "self"
+          }
+        },
+        "minecraft:behavior.ranged_attack": {
+          "attack_interval": 0.1,
+          "attack_radius": 64
+        },
+        "minecraft:shooter": {
+          "def": "minecraft:small_fireball"
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 2,
+          "entity_types": [
+            {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "target"
+              },
+              "max_dist": 64
+            }
+          ]
+        }
+      },
+      "target": {
+        "minecraft:behavior.nearest_attackable_target": {},
+        "minecraft:damage_sensor": {
+          "triggers": {
+            "cause": "all",
+            "deals_damage": false
+          }
+        },
+        "minecraft:type_family": {
+          "family": [
+            "target",
+            "effect99_entities"
+          ]
+        },
+        "minecraft:timer": {
+          "time": [
+            10,
+            10
+          ],
+          "looping": false,
+          "time_down_event": {
+            "event": "minecraft:despawn",
+            "target": "self"
+          }
+        },
+        "minecraft:physics": {
+          "has_gravity": false,
+          "has_collision": false
+        }
+      },
+      "living_flame_projectile": {
+        "minecraft:type_family": {
+          "family": [
+            "living_flame",
+            "living_flame_projectile",
+            "effect99_entities"
+          ]
+        },
+        "minecraft:behavior.nearest_attackable_target": {},
+        "minecraft:damage_sensor": {
+          "triggers": {
+            "cause": "all",
+            "deals_damage": false
+          }
+        },
+        "minecraft:projectile": {
+          "on_hit": {
+            "definition_event": {
+              "affect_projectile": true,
+              "event_trigger": {
+                "event": "minecraft:stop_projectile",
+                "target": "self"
+              }
+            },
+            "impact_damage": {
+              "damage": 1,
+              "knockback": true,
+              "catch_fire": true
+            }
+          },
+          "power": 1,
+          "gravity": 0.02,
+          "inertia": 1,
+          "liquid_inertia": 1
+        }
+      },
+      "despawn": {
+        "minecraft:instant_despawn": {}
+      },
+      "hostile_entity": {
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 1,
+          "entity_types": [
+            {
+              "filters": {
+                "any_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "monster"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  }
+                ]
+              },
+              "max_dist": 16
+            }
+          ]
+        },
+        "minecraft:on_death": {
+          "event": "start_death_hostile",
+          "target": "self"
+        },
+        "minecraft:damage_sensor": {
+          "triggers": {
+            "on_damage": {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  }
+                ]
+              },
+              "event": "start_death_hostile"
+            },
+            "deals_damage": false
+          }
+        },
+        "minecraft:collision_box": {
+          "width": 0.8,
+          "height": 1.3
+        },
+        "minecraft:type_family": {
+          "family": [
+            "living_flame",
+            "living_flame_hostile",
+            "effect99_entities"
+          ]
+        },
+        "minecraft:timer": {
+          "time": [
+            25,
+            60
+          ],
+          "looping": true,
+          "randomInterval": true,
+          "time_down_event": {
+            "event": "minecraft:start_death",
+            "target": "self"
+          }
+        }
+      },
+      "passive_entity": {
+        "minecraft:on_death": {
+          "event": "minecraft:start_death",
+          "target": "self"
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "entity_types": [
+            {
+              "filters": {
+                "any_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "monster"
+                  }
+                ]
+              },
+              "max_dist": 16
+            }
+          ]
+        },
+        "minecraft:collision_box": {
+          "width": 0.8,
+          "height": 1.3
+        },
+        "minecraft:type_family": {
+          "family": [
+            "living_flame",
+            "living_flame_passive",
+            "effect99_entities"
+          ]
+        },
+        "minecraft:timer": {
+          "time": [
+            10,
+            30
+          ],
+          "looping": true,
+          "randomInterval": true,
+          "time_down_event": {
+            "event": "minecraft:start_death",
+            "target": "self"
+          }
+        },
+        "minecraft:damage_sensor": {
+          "triggers": {
+            "on_damage": {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  }
+                ]
+              },
+              "event": "minecraft:start_death"
+            },
+            "deals_damage": false
+          }
+        }
+      },
+      "effect:instant_despawn": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "living_flame",
+          "effect99_entities"
+        ]
+      },
+      "minecraft:on_death": {
+        "event": "minecraft:start_death",
+        "target": "self"
+      },
+      "minecraft:movement": {
+        "value": 0.25
+      },
+      "minecraft:behavior.random_stroll": {
+        "interval": 60,
+        "xz_dist": 16
+      },
+      "minecraft:navigation.walk": {
+        "can_path_over_water": false,
+        "can_path_over_lava": true,
+        "can_walk_in_lava": true,
+        "can_jump": false,
+        "avoid_water": true,
+        "avoid_damage_blocks": false
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:fire_immune": true,
+      "minecraft:nameable": {
+        "allow_name_tag_renaming": false,
+        "always_show": true
+      },
+      "minecraft:ageable": {
+        "duration": 1,
+        "grow_up": {
+          "event": "hostile_entity_detect",
+          "target": "self"
+        }
+      },
+      "minecraft:hurt_on_condition": {
+        "damage_conditions": [
+          {
+            "filters": {
+              "test": "in_water_or_rain",
+              "operator": "==",
+              "value": true
+            },
+            "cause": "drowning",
+            "damage_per_tick": 1
+          }
+        ]
+      },
+      "minecraft:jump.static": {},
+      "minecraft:can_climb": {},
+      "minecraft:behavior.float": {
+        "priority": 1
+      },
+      "minecraft:attack": {
+        "damage": 3
+      },
+      "minecraft:behavior.melee_attack": {
+        "priority": 4,
+        "target_dist": 1.2,
+        "speed_multiplier": 1,
+        "track_target": true
+      },
+      "minecraft:timer": {
+        "time": [
+          10,
+          40
+        ],
+        "looping": true,
+        "randomInterval": true,
+        "time_down_event": {
+          "event": "minecraft:start_death",
+          "target": "self"
+        }
+      },
+      "minecraft:behavior.nearest_attackable_target": {
+        "priority": 2,
+        "entity_types": [
+          {
+            "filters": {
+              "any_of": [
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "monster"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "player"
+                }
+              ]
+            },
+            "max_dist": 16
+          }
+        ]
+      },
+      "minecraft:behavior.hurt_by_target": {
+        "priority": 1,
+        "alert_same_type": true
+      },
+      "minecraft:health": {
+        "value": 20
+      },
+      "minecraft:collision_box": {
+        "width": 0.8,
+        "height": 1.3
+      },
+      "minecraft:physics": {},
+      "minecraft:environment_sensor": {
+        "triggers": [
+          {
+            "filters": {
+              "all_of": [
+                {
+                  "test": "is_family",
+                  "subject": "self",
+                  "operator": "!=",
+                  "value": "fire_sword_skill"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "self",
+                  "operator": "!=",
+                  "value": "target"
+                }
+              ]
+            },
+            "event": "minecraft:set_fire"
+          }
+        ]
+      }
+    },
+    "events": {
+      "minecraft:entity_spawned": {
+        "sequence": [
+          {
+            "filters": {
+              "test": "has_equipment",
+              "subject": "other",
+              "domain": "hand",
+              "value": "effect:fire_sword"
+            },
+            "add": {
+              "component_groups": [
+                "living_flame_projectile"
+              ]
+            }
+          }
+        ]
+      },
+      "hostile_entity": {
+        "add": {
+          "component_groups": [
+            "hostile_entity"
+          ]
+        }
+      },
+      "hostile_entity_detect": {
+        "sequence": [
+          {
+            "filters": {
+              "all_of": [
+                {
+                  "test": "is_family",
+                  "subject": "self",
+                  "operator": "!=",
+                  "value": "living_flame_hostile"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "self",
+                  "operator": "!=",
+                  "value": "living_flame_passive"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "self",
+                  "operator": "!=",
+                  "value": "living_flame_projectile"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "self",
+                  "operator": "!=",
+                  "value": "fire_sword_skill"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "self",
+                  "operator": "!=",
+                  "value": "target"
+                }
+              ]
+            },
+            "add": {
+              "component_groups": [
+                "hostile_entity"
+              ]
+            }
+          }
+        ]
+      },
+      "minecraft:set_fire": {
+        "queue_command": {
+          "command": [
+            "fill ~ ~ ~ ~ ~ ~ fire [] replace air",
+            "particle minecraft:basic_flame_particle ~ ~1 ~"
+          ]
+        }
+      },
+      "minecraft:start_death": {
+        "add": {
+          "component_groups": [
+            "despawn"
+          ]
+        },
+        "queue_command": {
+          "command": [
+            "fill ~ ~ ~ ~ ~ ~ air [] replace fire",
+            "particle minecraft:example_linearcurve ~ ~0.4 ~",
+            "playsound random.fizz @a[r=12] ~ ~ ~"
+          ]
+        }
+      },
+      "start_death_hostile": {
+        "sequence": [
+          {
+            "add": {
+              "component_groups": [
+                "despawn"
+              ]
+            },
+            "queue_command": {
+              "command": [
+                "fill ~ ~ ~ ~ ~ ~ air [] replace fire",
+                "particle minecraft:example_linearcurve ~ ~0.4 ~",
+                "playsound random.fizz @a[r=12] ~ ~ ~"
+              ]
+            }
+          },
+          {
+            "filters": {
+              "all_of": [
+                {
+                  "test": "is_family",
+                  "subject": "self",
+                  "operator": "!=",
+                  "value": "living_flame_passive"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "self",
+                  "operator": "!=",
+                  "value": "living_flame_projectile"
+                }
+              ]
+            },
+            "randomize": [
+              {
+                "weight": 85
+              },
+              {
+                "weight": 15,
+                "queue_command": {
+                  "command": [
+                    "loot spawn ~ ~ ~ loot \"entities/living_flame\""
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "minecraft:stop_projectile": {
+        "sequence": [
+          {
+            "remove": {
+              "component_groups": [
+                "hostile_entity",
+                "living_flame_projectile"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "passive_entity"
+              ]
+            }
+          }
+        ]
+      },
+      "minecraft:despawn": {
+        "add": {
+          "component_groups": [
+            "despawn"
+          ]
+        }
+      },
+      "minecraft:target": {
+        "add": {
+          "component_groups": [
+            "target"
+          ]
+        }
+      },
+      "fire_sword_skill": {
+        "add": {
+          "component_groups": [
+            "fire_sword_skill"
+          ]
+        }
+      },
+      "effect:instant_despawn": {
+        "add": {
+          "component_groups": [
+            "effect:instant_despawn"
+          ]
+        }
+      }
+    }
+  }
+}

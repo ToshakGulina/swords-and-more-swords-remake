@@ -1,0 +1,14 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "effect:coal_sword",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

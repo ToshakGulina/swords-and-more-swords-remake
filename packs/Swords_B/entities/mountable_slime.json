@@ -1,0 +1,395 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "entity:mountable_slime",
+      "runtime_identifier": "minecraft:slime",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false,
+      "scripts": {
+        "animate": [
+          "despawn",
+          "mountable_slime"
+        ]
+      },
+      "animations": {
+        "despawn": "controller.animation.despawn",
+        "mountable_slime": "controller.animation.mountable_slime"
+      }
+    },
+    "component_groups": {
+      "despawn": {
+        "minecraft:instant_despawn": {}
+      },
+      "minecraft:is_jumping": {
+        "minecraft:is_baby": {}
+      },
+      "slime_random_direction": {
+        "minecraft:behavior.slime_random_direction": {
+          "priority": 4
+        }
+      },
+      "default_slime": {
+        "minecraft:behavior.slime_float": {
+          "priority": 1
+        },
+        "minecraft:behavior.slime_keep_on_jumping": {
+          "priority": 5
+        },
+        "minecraft:movement": {
+          "value": 0.25
+        },
+        "minecraft:movement.jump": {
+          "jump_delay": [
+            0.16,
+            0.5
+          ]
+        },
+        "minecraft:navigation.walk": {
+          "can_path_over_water": true
+        },
+        "minecraft:jump.static": {},
+        "minecraft:can_climb": {},
+        "minecraft:type_family": {
+          "family": [
+            "effect99_entities",
+            "tamed_slime"
+          ]
+        },
+        "minecraft:health": {
+          "value": 1
+        },
+        "minecraft:collision_box": {
+          "width": 0.6,
+          "height": 0
+        },
+        "minecraft:physics": {},
+        "minecraft:rideable": {
+          "crouching_skip_interact": true,
+          "seat_count": 1,
+          "family_types": [
+            "player"
+          ],
+          "seats": {
+            "position": [
+              0,
+              0.35,
+              0
+            ]
+          }
+        },
+        "minecraft:input_ground_controlled": {},
+        "minecraft:behavior.controlled_by_player": {
+          "priority": 0
+        },
+        "minecraft:can_power_jump": {},
+        "minecraft:horse.jump_strength": {
+          "value": {
+            "range_min": 0.8,
+            "range_max": 2
+          }
+        },
+        "minecraft:is_tamed": {}
+      },
+      "defense_mode_slime": {
+        "minecraft:type_family": {
+          "family": [
+            "effect99_entities",
+            "tamed_slime",
+            "player"
+          ]
+        },
+        "minecraft:movement": {
+          "value": 0.45
+        },
+        "minecraft:behavior.slime_attack": {
+          "priority": 3,
+          "set_persistent": true
+        },
+        "minecraft:behavior.slime_random_direction": {
+          "priority": 4
+        },
+        "minecraft:behavior.slime_keep_on_jumping": {
+          "priority": 5
+        },
+        "minecraft:environment_sensor": {
+          "triggers": [
+            {
+              "filters": {},
+              "event": "minecraft:is_jumping"
+            },
+            {
+              "filters": {},
+              "event": "slime_events"
+            }
+          ]
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 1,
+          "entity_types": [
+            {
+              "filters": {
+                "any_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "monster"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "undead"
+                  }
+                ]
+              },
+              "max_dist": 16
+            }
+          ],
+          "must_see": true,
+          "set_persistent": true,
+          "must_reach": false
+        },
+        "minecraft:attack": {
+          "damage": 1
+        }
+      },
+      "minecraft:slime_large": {
+        "minecraft:type_family": {
+          "family": [
+            "effect99_entities",
+            "slime3",
+            "tamed_slime"
+          ]
+        },
+        "minecraft:rideable": {
+          "crouching_skip_interact": true,
+          "seat_count": 1,
+          "family_types": [
+            "player"
+          ],
+          "seats": {
+            "position": [
+              0,
+              1.9,
+              0
+            ]
+          }
+        },
+        "minecraft:collision_box": {
+          "width": 0.4,
+          "height": 0
+        },
+        "minecraft:movement": {
+          "value": 0.25
+        },
+        "minecraft:scale": {
+          "value": 0.4
+        }
+      },
+      "minecraft:slime_medium": {
+        "minecraft:type_family": {
+          "family": [
+            "effect99_entities",
+            "slime2",
+            "tamed_slime"
+          ]
+        },
+        "minecraft:rideable": {
+          "crouching_skip_interact": true,
+          "seat_count": 1,
+          "family_types": [
+            "player"
+          ],
+          "seats": {
+            "position": [
+              0,
+              0.9,
+              0
+            ]
+          }
+        },
+        "minecraft:collision_box": {
+          "width": 0.4,
+          "height": 0
+        },
+        "minecraft:movement": {
+          "value": 0.25
+        },
+        "minecraft:scale": {
+          "value": 0.8
+        }
+      },
+      "minecraft:slime_small": {
+        "minecraft:type_family": {
+          "family": [
+            "effect99_entities",
+            "slime1",
+            "tamed_slime"
+          ]
+        },
+        "minecraft:rideable": {
+          "crouching_skip_interact": true,
+          "seat_count": 1,
+          "family_types": [
+            "player"
+          ],
+          "seats": {
+            "position": [
+              0,
+              0.46,
+              0
+            ]
+          }
+        },
+        "minecraft:collision_box": {
+          "width": 0.4,
+          "height": 0
+        },
+        "minecraft:movement": {
+          "value": 0.25
+        },
+        "minecraft:scale": {
+          "value": 1.5
+        }
+      },
+      "effect:instant_despawn": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:environment_sensor": {
+        "triggers": [
+          {
+            "filters": {},
+            "event": "minecraft:is_jumping"
+          }
+        ]
+      },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "on_damage": {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "has_damage",
+                    "subject": "self",
+                    "value": "fall"
+                  }
+                ]
+              },
+              "event": "fall_damage"
+            },
+            "deals_damage": false
+          },
+          {
+            "on_damage": {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "has_damage",
+                    "subject": "self",
+                    "operator": "!=",
+                    "value": "void"
+                  }
+                ]
+              }
+            },
+            "deals_damage": false
+          }
+        ]
+      }
+    },
+    "events": {
+      "minecraft:entity_spawned": {
+        "add": {
+          "component_groups": [
+            "default_slime"
+          ]
+        }
+      },
+      "minecraft:despawn": {
+        "add": {
+          "component_groups": [
+            "defense_mode_slime"
+          ]
+        }
+      },
+      "despawn": {
+        "add": {
+          "component_groups": [
+            "despawn"
+          ]
+        },
+        "queue_command": {
+          "command": [
+            "particle minecraft:crop_growth_emitter ~ ~ ~",
+            "particle minecraft:crop_growth_emitter ~ ~0.6 ~",
+            "particle minecraft:crop_growth_emitter ~ ~-0.6 ~",
+            "particle minecraft:crop_growth_emitter ~0.6 ~ ~",
+            "particle minecraft:crop_growth_emitter ~ ~ ~0.6",
+            "particle minecraft:crop_growth_emitter ~-0.6 ~ ~",
+            "particle minecraft:crop_growth_emitter ~ ~ ~-0.6",
+            "playsound random.orb @a[r=12] ~ ~ ~ 1 0.6"
+          ]
+        }
+      },
+      "fall_damage": {
+        "queue_command": {
+          "command": [
+            "effect @e[r=1,family=!slime_sword,family=!undead] instant_damage 1 1 true",
+            "effect @e[r=1,family=undead] instant_health 3 1 true",
+            "event entity @s not_baby"
+          ]
+        }
+      },
+      "minecraft:is_jumping": {
+        "queue_command": {
+          "command": [
+            "execute as @s at @s if block ~ ~-1 ~ air if block ~ ~-2 ~ air run event entity @s is_baby"
+          ]
+        }
+      },
+      "slime_events": {
+        "queue_command": {
+          "command": [
+            "effect @s jump_boost 1 2 true",
+            "execute at @e[r=1.5,family=monster] run summon entity:slime_damage ~ ~ ~",
+            "tp @s[scores={slime_despawn=0}] @e[type=player,family=slime_sword,c=1,rm=8,r=12]",
+            "scoreboard players add @s slime_despawn 1",
+            "execute as @s[scores={slime_despawn=100..}] run event entity @s despawn"
+          ]
+        }
+      },
+      "default_slime": {
+        "remove": {
+          "component_groups": [
+            "slime_random_direction"
+          ]
+        }
+      },
+      "is_baby": {
+        "add": {
+          "component_groups": [
+            "minecraft:is_jumping"
+          ]
+        }
+      },
+      "not_baby": {
+        "remove": {
+          "component_groups": [
+            "minecraft:is_jumping"
+          ]
+        }
+      },
+      "effect:instant_despawn": {
+        "add": {
+          "component_groups": [
+            "effect:instant_despawn"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "effect:cursed_pumpkin_sword",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.sword"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "cursed_pumpkin_sword"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.effect:cursed_pumpkin_sword"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": {
+        "value": true
+      },
+      "minecraft:can_destroy_in_creative": {
+        "value": false
+      },
+      "minecraft:damage": {
+        "value": 5
+      },
+      "minecraft:durability": {
+        "max_durability": 606,
+        "damage_chance": {
+          "min": 100,
+          "max": 100
+        }
+      },
+      "minecraft:enchantable": {
+        "slot": "sword",
+        "value": 9
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "effect:cursed_pumpkin_sword"
+            ],
+            "repair_amount": 606
+          },
+          {
+            "items": [
+              "minecraft:honey_block"
+            ],
+            "repair_amount": 400
+          },
+          {
+            "items": [
+              "minecraft:honeycomb"
+            ],
+            "repair_amount": 150
+          },
+          {
+            "items": [
+              "minecraft:pumpkin",
+              "minecraft:carved_pumpkin"
+            ],
+            "repair_amount": 150
+          }
+        ]
+      },
+      "minecraft:digger": {
+        "use_efficiency": true,
+        "destroy_speeds": [
+          {
+            "block": "minecraft:web",
+            "speed": 15
+          },
+          {
+            "block": "minecraft:bamboo",
+            "speed": 10
+          }
+        ]
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_sword",
+          "minecraft:is_tool"
+        ]
+      },
+      "effect:sword": {
+        "id": "cursed_pumpkin_sword"
+      }
+    }
+  }
+}

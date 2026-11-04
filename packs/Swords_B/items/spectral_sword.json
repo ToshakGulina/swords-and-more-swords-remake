@@ -1,0 +1,97 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "effect:spectral_sword",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.sword"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "spectral_sword"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.effect:spectral_sword"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": {
+        "value": true
+      },
+      "minecraft:can_destroy_in_creative": {
+        "value": false
+      },
+      "minecraft:glint": {
+        "value": true
+      },
+      "minecraft:should_despawn": {
+        "value": false
+      },
+      "minecraft:damage": {
+        "value": 9
+      },
+      "minecraft:durability": {
+        "max_durability": 3256,
+        "damage_chance": {
+          "min": 100,
+          "max": 100
+        }
+      },
+      "minecraft:enchantable": {
+        "slot": "sword",
+        "value": 9
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "effect:spectral_sword"
+            ],
+            "repair_amount": 3256
+          },
+          {
+            "items": [
+              "minecraft:end_crystal"
+            ],
+            "repair_amount": 620
+          },
+          {
+            "items": [
+              "minecraft:nether_star"
+            ],
+            "repair_amount": 2052
+          }
+        ]
+      },
+      "minecraft:cooldown": {
+        "category": "spectral_sword",
+        "duration": 18
+      },
+      "minecraft:digger": {
+        "use_efficiency": true,
+        "destroy_speeds": [
+          {
+            "block": "minecraft:web",
+            "speed": 15
+          },
+          {
+            "block": "minecraft:bamboo",
+            "speed": 10
+          }
+        ]
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_sword",
+          "minecraft:is_tool"
+        ]
+      },
+      "effect:sword": {
+        "id": "spectral_sword"
+      }
+    }
+  }
+}

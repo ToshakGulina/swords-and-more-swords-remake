@@ -1,0 +1,121 @@
+{
+  "format_version": "1.11.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "entity:ghost_projectile",
+      "runtime_identifier": "minecraft:snowball",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "teleport_enable": {
+        "minecraft:timer": {},
+        "minecraft:physics": {
+          "has_collision": true
+        },
+        "minecraft:collision_box": {
+          "width": 10,
+          "height": 10
+        },
+        "minecraft:projectile": {
+          "on_hit": {
+            "impact_damage": {
+              "damage": -1,
+              "knockback": false
+            },
+            "teleport_owner": {},
+            "remove_on_hit": {}
+          },
+          "power": 2.5,
+          "gravity": 0,
+          "liquid_inertia": 2.8,
+          "angle_offset": 0
+        }
+      },
+      "despawn": {
+        "minecraft:instant_despawn": {}
+      },
+      "effect:instant_despawn": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:timer": {
+        "time": [
+          0,
+          0
+        ],
+        "looping": true,
+        "time_down_event": {
+          "event": "teleport_owner",
+          "target": "self"
+        }
+      },
+      "minecraft:type_family": {
+        "family": [
+          "effect99_entities"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0,
+        "height": 0
+      },
+      "minecraft:projectile": {
+        "on_hit": {
+          "impact_damage": {
+            "damage": -1
+          }
+        },
+        "power": 2.5,
+        "gravity": 0,
+        "liquid_inertia": 2.8,
+        "angle_offset": 0
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": false
+      },
+      "minecraft:physics": {
+        "has_collision": false
+      }
+    },
+    "events": {
+      "teleport_owner": {
+        "sequence": [
+          {
+            "queue_command": {
+              "command": [
+                "execute as @s at @s if block ~ ~ ~ air run event entity @s teleport_enable"
+              ]
+            }
+          },
+          {
+            "filters": {
+              "test": "in_water"
+            },
+            "add": {
+              "component_groups": [
+                "teleport_enable"
+              ]
+            }
+          }
+        ]
+      },
+      "teleport_enable": {
+        "add": {
+          "component_groups": [
+            "teleport_enable"
+          ]
+        }
+      },
+      "effect:instant_despawn": {
+        "add": {
+          "component_groups": [
+            "effect:instant_despawn"
+          ]
+        }
+      }
+    }
+  }
+}

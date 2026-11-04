@@ -1,0 +1,46 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "§6§lSwords and More Swords §r§bResources (1.26+)",
+    "description": "§eРесурс-пак мода Swords and More Swords (текстуры, 3D-модели, анимации, звуки и русская/английская энциклопедия) для Minecraft Bedrock 1.26.60+.",
+    "uuid": "94e87f3a-51c2-4d9e-8b31-7a01c56d2904",
+    "version": [
+      3,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      20
+    ]
+  },
+  "modules": [
+    {
+      "description": "Swords and More Swords Resource Assets",
+      "type": "resources",
+      "uuid": "94e87f3a-51c2-4d9e-8b31-7a01c56d2905",
+      "version": [
+        3,
+        0,
+        0
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "uuid": "94e87f3a-51c2-4d9e-8b31-7a01c56d2901",
+      "version": [
+        3,
+        0,
+        0
+      ]
+    }
+  ],
+  "metadata": {
+    "authors": [
+      "Effect99 (Original Creator)",
+      "Remake for Bedrock 1.26.60+"
+    ]
+  }
+}

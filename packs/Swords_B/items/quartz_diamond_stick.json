@@ -1,0 +1,46 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "effect:quartz_diamond_stick",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "quartz_diamond_stick"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.effect:quartz_diamond_stick"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": {
+        "value": true
+      },
+      "minecraft:glint": {
+        "value": true
+      },
+      "minecraft:damage": {
+        "value": 24
+      },
+      "minecraft:durability": {
+        "max_durability": 20,
+        "damage_chance": {
+          "min": 100,
+          "max": 100
+        }
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_tool"
+        ]
+      },
+      "effect:sword": {
+        "id": "quartz_diamond_stick"
+      }
+    }
+  }
+}
