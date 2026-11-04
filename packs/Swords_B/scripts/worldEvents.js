@@ -287,11 +287,18 @@ export function registerWorldEvents() {
                 }
                 case 'minecraft:witch': {
                     if (deadEntity.matches({ families: ['grass_witch'] })) {
-                        const foot = dim.getBlock(loc);
-                        if (foot && foot.isAir) {
-                            foot.setType('minecraft:short_grass');
+                        // Exact 2.8.8 `grass_witch` on_death: nothing is rolled by a loot table
+                        // (the group ships `"minecraft:loot": {}`), instead an 80/20 randomize
+                        // spawns `structure load grass_sword` + `setblock ~ ~ ~ double_plant 2`
+                        // + `playsound dig.grass`. Kill method does not matter.
+                        if (Math.random() < 0.2) {
+                            dim.spawnItem(new ItemStack('effect:grass_sword', 1), loc);
+                            const foot = dim.getBlock(loc);
+                            if (foot && foot.isAir) {
+                                foot.setType('minecraft:short_grass');
+                            }
+                            dim.playSound('dig.grass', loc, { volume: 1.0, pitch: 1.0 });
                         }
-                        dim.playSound('dig.grass', loc, { volume: 1.0, pitch: 1.0 });
                     }
                     break;
                 }

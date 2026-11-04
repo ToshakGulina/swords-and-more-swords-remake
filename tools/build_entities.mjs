@@ -683,7 +683,9 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
     'minecraft:type_family': { family: ['witch', 'grass_witch', 'monster', 'mob'] },
     'minecraft:health': { value: 32, max: 32 },
     'minecraft:follow_range': { value: 80, max: 80 },
-    'minecraft:loot': { table: 'loot_tables/entities/grass_witch.json' },
+    // Exact 2.8.8: the group carries `"minecraft:loot": {}` — a Grass Witch drops
+    // nothing at all; the sword comes from the scripted 20% `on_death` roll.
+    'minecraft:loot': {},
     'minecraft:timer': {
       time: [1.5, 2.5],
       looping: true,

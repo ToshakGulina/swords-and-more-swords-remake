@@ -914,18 +914,15 @@ for (const [rel, data] of Object.entries(customLootTables)) {
   writeJson(path.join(BP, 'loot_tables', rel), data);
 }
 
-// 7.1b Grass Witch loot table = vanilla Witch drops + 20% Grass Sword drop (exact 2.8.8!)
+// 7.1b The 2.8.8 Grass Witch has an EMPTY loot component (`"minecraft:loot": {}`)
+// and drops its sword through a scripted 20% on-death roll, so no custom witch
+// table is shipped here — a leftover `grass_witch.json` would make it drop the
+// vanilla witch loot as well.
 {
-  const grassWitchLoot = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/entities/witch.json'), 'utf8'));
-  grassWitchLoot.pools.push({
-    conditions: [
-      { condition: 'killed_by_player' },
-      { condition: 'random_chance_with_looting', chance: 0.2, looting_multiplier: 0.05 },
-    ],
-    rolls: 1,
-    entries: [{ type: 'item', name: 'effect:grass_sword', weight: 1 }],
-  });
-  writeJson(path.join(BP, 'loot_tables/entities/grass_witch.json'), grassWitchLoot);
+  const staleGrassWitch = path.join(BP, 'loot_tables/entities/grass_witch.json');
+  if (fs.existsSync(staleGrassWitch)) {
+    fs.unlinkSync(staleGrassWitch);
+  }
 }
 
 // 2.8.8 ships exactly one treasure table (`gameplay/fishing/treasure.json`, with

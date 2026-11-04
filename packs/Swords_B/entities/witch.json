@@ -452,9 +452,7 @@
           "value": 80,
           "max": 80
         },
-        "minecraft:loot": {
-          "table": "loot_tables/entities/grass_witch.json"
-        },
+        "minecraft:loot": {},
         "minecraft:timer": {
           "time": [
             1.5,
