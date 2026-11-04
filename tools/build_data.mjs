@@ -2,17 +2,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const jsonc = require('/tmp/refs/node_modules/jsonc-parser');
+const jsonc = require('jsonc-parser');
 
-const ROOT = '/home/user/swords-and-more-swords-remake';
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BP = path.join(ROOT, 'packs/Swords_B');
 const RP = path.join(ROOT, 'packs/Swords_R');
-const SRC_288_BP = '/tmp/mcaddons/2.8.8/Swords_B';
-const SRC_288_RP = '/tmp/mcaddons/2.8.8/Swords_R';
-const VANILLA_BP = '/tmp/refs/bedrock-samples/behavior_pack';
-const VANILLA_RP = '/tmp/refs/bedrock-samples/resource_pack';
+const SRC_288_BP = path.join(process.env.SAMS_ORIGINAL ?? '/tmp/mcaddons/2.8.8', 'Swords_B');
+const SRC_288_RP = path.join(process.env.SAMS_ORIGINAL ?? '/tmp/mcaddons/2.8.8', 'Swords_R');
+const VANILLA_BP = path.join(process.env.SAMS_SAMPLES ?? '/tmp/refs/bedrock-samples', 'behavior_pack');
+const VANILLA_RP = path.join(process.env.SAMS_SAMPLES ?? '/tmp/refs/bedrock-samples', 'resource_pack');
 
 // Deterministic fresh UUIDs (v4 format) so Android & Windows never hit "Duplicate pack detected"
 const UUIDS = {
@@ -37,7 +38,7 @@ writeJson(path.join(BP, 'manifest.json'), {
     name: '§6§lSwords and More Swords §r§a(1.26+ Remake)',
     description: '§eПолное восстановление всех 38 мечей, боссов, руд и способностей мода Effect99 для Minecraft Bedrock 1.26.60+ (Android & Windows) без экспериментальных режимов.',
     uuid: UUIDS.bp_header,
-    version: [3, 0, 3],
+    version: [3, 0, 4],
     min_engine_version: [1, 26, 20],
   },
   modules: [
@@ -45,21 +46,21 @@ writeJson(path.join(BP, 'manifest.json'), {
       description: 'Swords and More Swords Behavior Data',
       type: 'data',
       uuid: UUIDS.bp_data,
-      version: [3, 0, 3],
+      version: [3, 0, 4],
     },
     {
       description: 'Swords and More Swords Script Engine',
       type: 'script',
       language: 'javascript',
       uuid: UUIDS.bp_script,
-      version: [3, 0, 3],
+      version: [3, 0, 4],
       entry: 'scripts/main.js',
     },
   ],
   dependencies: [
     {
       uuid: UUIDS.rp_header,
-      version: [3, 0, 3],
+      version: [3, 0, 4],
     },
     {
       module_name: '@minecraft/server',
@@ -77,7 +78,7 @@ writeJson(path.join(RP, 'manifest.json'), {
     name: '§6§lSwords and More Swords §r§bResources (1.26+)',
     description: '§eРесурс-пак мода Swords and More Swords (текстуры, 3D-модели, анимации, звуки и встроенный справочник на русском и английском языках) для Minecraft Bedrock 1.26.60+.',
     uuid: UUIDS.rp_header,
-    version: [3, 0, 3],
+    version: [3, 0, 4],
     min_engine_version: [1, 26, 20],
   },
   modules: [
@@ -85,13 +86,13 @@ writeJson(path.join(RP, 'manifest.json'), {
       description: 'Swords and More Swords Resource Assets',
       type: 'resources',
       uuid: UUIDS.rp_res,
-      version: [3, 0, 3],
+      version: [3, 0, 4],
     },
   ],
   dependencies: [
     {
       uuid: UUIDS.bp_header,
-      version: [3, 0, 3],
+      version: [3, 0, 4],
     },
   ],
   metadata: {
@@ -469,7 +470,6 @@ writeJson(path.join(BP, 'blocks/quartz_diamond_block.json'), {
           face_dimming: true,
         },
       },
-      'effect99:quartz_diamond_block': {},
     },
   },
 });
@@ -509,7 +509,6 @@ writeJson(path.join(BP, 'blocks/quartz_diamond_ore.json'), {
           face_dimming: true,
         },
       },
-      'effect99:quartz_diamond_ore': {},
     },
   },
 });
@@ -549,7 +548,6 @@ writeJson(path.join(BP, 'blocks/silver_ore.json'), {
           face_dimming: true,
         },
       },
-      'effect99:silver_ore': {},
     },
   },
 });
@@ -770,7 +768,8 @@ writeJson(path.join(BP, 'feature_rules/quartz_diamond_ore_end_rule.json'), {
     distribution: {
       iterations: 3,
       x: { distribution: 'uniform', extent: [0, 15] },
-      y: { distribution: 'uniform', extent: [4, 32] },
+      // End islands are typically around Y=60; the old 4..32 range mostly sampled void.
+      y: { distribution: 'uniform', extent: [30, 80] },
       z: { distribution: 'uniform', extent: [0, 15] },
     },
   },

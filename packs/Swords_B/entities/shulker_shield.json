@@ -59,9 +59,9 @@
         "event": "damage_player",
         "target": "self"
       },
-      "minecraft:environment_sensor": [
-        {
-          "on_environment": {
+      "minecraft:environment_sensor": {
+        "triggers": [
+          {
             "filters": {
               "all_of": [
                 {
@@ -73,8 +73,8 @@
             },
             "event": "shulker_shield_clear_effect"
           }
-        }
-      ]
+        ]
+      }
     },
     "events": {
       "shulker_shield_clear_effect": {

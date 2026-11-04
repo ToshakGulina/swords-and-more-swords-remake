@@ -1,3 +1,4 @@
+import { consumeSwordLightning, spawnSwordLightning } from './lightningOrigin.js';
 import {
   Dimension,
   EntityComponentTypes,
@@ -12,12 +13,14 @@ import {
   world,
 } from '@minecraft/server';
 import { getActiveShulkerShieldOwner } from './passiveEngine.js';
+import { handleOreBreak } from './blockComponents.js';
 import { registerAirSwingEvents } from './swordSkills.js';
 import { getMainhandItem, isDesertWellWater, safeRandomTeleport } from './utils.js';
 
 let isRainingOverworld = false;
 let lastCentellaDeathTick = -1000;
 let lastCentellaDeathLoc: Vector3 | undefined;
+let lastCentellaDeathDimension: string | undefined;
 const manuallyDroppedBedrock = new Set<string>();
 const fadingFireSwordTicks = new Map<string, number>();
 
@@ -131,15 +134,18 @@ export function registerWorldEvents(): void {
 
   // 4. Breaking any Pumpkin block (except stem) has a 0.5% (5/1000) chance to drop Cursed Pumpkin Sword!
   world.afterEvents.playerBreakBlock.subscribe((ev) => {
+    handleOreBreak(ev);
     try {
       const bId = ev.brokenBlockPermutation.type.id;
-      if (bId.includes('pumpkin') && !bId.includes('stem') && Math.random() < 0.005) {
+      if (bId.includes('pumpkin') && !bId.includes('stem') &&
+          !ev.player.hasTag('pumpkin_sword') && Math.random() < 0.005) {
         const center = {
           x: ev.block.location.x + 0.5,
           y: ev.block.location.y + 0.5,
           z: ev.block.location.z + 0.5,
         };
         ev.dimension.spawnItem(new ItemStack('effect:cursed_pumpkin_sword', 1), center);
+        ev.player.addTag('pumpkin_sword');
         ev.dimension.playSound('mob.witch.celebrate', center, { volume: 1.0, pitch: 0.8 });
       }
     } catch {}
@@ -219,18 +225,17 @@ export function registerWorldEvents(): void {
       if (ev.entity.typeId === 'minecraft:lightning_bolt') {
         const dim = ev.entity.dimension;
         const loc = ev.entity.location;
-        // Skip lightning bolts summoned by a dying Centella or by a Lightning Sword wielder
+        // Skip only bolts explicitly spawned by the sword, not natural lightning
+        // near a player holding one. The Centella death fallback is approximate.
+        if (consumeSwordLightning(dim, loc)) return;
         if (
           system.currentTick - lastCentellaDeathTick <= 10 &&
-          lastCentellaDeathLoc &&
+          lastCentellaDeathLoc && lastCentellaDeathDimension === dim.id &&
           Math.hypot(loc.x - lastCentellaDeathLoc.x, loc.z - lastCentellaDeathLoc.z) < 6
         ) {
           return;
         }
-        const nearbyHolder = dim
-          .getPlayers({ location: loc, maxDistance: 64 })
-          .some((p) => getMainhandItem(p)?.typeId === 'effect:lightning_sword');
-        if (!nearbyHolder && Math.random() < 0.2) {
+        if (Math.random() < 0.2) {
           dim.spawnEntity('entity:centella', loc);
         }
       }
@@ -281,6 +286,7 @@ export function registerWorldEvents(): void {
         case 'entity:centella': {
           lastCentellaDeathTick = system.currentTick;
           lastCentellaDeathLoc = { ...loc };
+          lastCentellaDeathDimension = dim.id;
           // Exact 2.8.8: 2% Lightning Sword drop when killed by a player (works for both melee and Bow/Trident, spawned post-lightning!)
           if (killer instanceof Player && Math.random() < 0.02) {
             const dropLoc = { x: loc.x, y: loc.y + 1.0, z: loc.z };
@@ -305,33 +311,29 @@ export function registerWorldEvents(): void {
         }
 
         case 'minecraft:blaze': {
-          // Exact 2.8.8 combined Snow Golem drop chance (loot table 2.5% + entity event 0.5% = 3.0%)!
-          if (
-            (killer?.typeId === 'minecraft:snow_golem' || proj?.typeId === 'minecraft:snowball') &&
-            killer?.typeId !== 'minecraft:player' &&
-            Math.random() < 0.03
-          ) {
+          // Original loot table: a snow golem must be the killer. Its separate
+          // 0.5% event is defined but has no trigger in the original entity.
+          if (killer?.typeId === 'minecraft:snow_golem' && Math.random() < 0.025) {
             dim.spawnItem(new ItemStack('effect:blaze_sword', 1), loc);
           }
           break;
         }
 
         case 'minecraft:skeleton': {
-          // Nighttime Skeleton in a Desert biome -> 0.7% Bone Sword!
-          const time = world.getTimeOfDay();
-          if (time >= 13000 && time <= 23000 && Math.random() < 0.007) {
-            const biomeId = dim.getBiome(loc).id;
-            if (biomeId.includes('desert')) {
-              dim.spawnItem(new ItemStack('effect:bone_sword', 1), loc);
-            }
+          // The original requires a player kill in a dark desert, not a time
+          // of day: underground shade can qualify in daytime, and lamps can
+          // prevent the drop at night. Light levels here are integer 0..15.
+          if (killer instanceof Player && dim.getBiome(loc).id.includes('desert') &&
+              dim.getLightLevel(loc) <= 7 && Math.random() < 0.007) {
+            dim.spawnItem(new ItemStack('effect:bone_sword', 1), loc);
           }
           break;
         }
 
         case 'minecraft:ghast': {
-          // Slain by reflected fireball -> 6% Spectral Sword!
+          // Identified ghast fireball -> 6% Spectral Sword; ordinary arrows are not fireballs.
           if (
-            (proj?.typeId === 'minecraft:fireball' || damageSource.cause === EntityDamageCause.projectile) &&
+            proj?.typeId === 'minecraft:fireball' &&
             Math.random() < 0.06
           ) {
             dim.spawnItem(new ItemStack('effect:spectral_sword', 1), loc);
@@ -352,6 +354,7 @@ export function registerWorldEvents(): void {
         const items = dim.getEntities({ type: 'minecraft:item' });
 
         for (const itemEnt of items) {
+          try {
           if (!itemEnt.isValid || itemEnt.hasTag('effect_processed')) continue;
           const itemComp = itemEnt.getComponent(EntityComponentTypes.Item) as EntityItemComponent | undefined;
           const stack = itemComp?.itemStack;
@@ -372,7 +375,8 @@ export function registerWorldEvents(): void {
 
           // Check outdoor liquid rain exposure in Overworld (excluding arid & snowy biomes)
           let inRain = false;
-          if (dimName === 'overworld' && isRainingOverworld && !inWater) {
+          if (dimName === 'overworld' && isRainingOverworld && !inWater &&
+              (id === 'effect:fire_sword' || id === 'effect:sponge_sword')) {
             const top = dim.getTopmostBlock({ x: Math.floor(loc.x), z: Math.floor(loc.z) });
             if (!top || top.location.y <= Math.floor(loc.y)) {
               const biomeId = dim.getBiome(loc).id;
@@ -469,7 +473,7 @@ export function registerWorldEvents(): void {
           // D. Dropped Lightning Sword in fire summons lightning!
           if (id === 'effect:lightning_sword' && inFire) {
             itemEnt.remove();
-            dim.spawnEntity('minecraft:lightning_bolt', loc);
+            spawnSwordLightning(dim, loc);
             continue;
           }
 
@@ -556,6 +560,9 @@ export function registerWorldEvents(): void {
                 }
               }
             }
+          }
+          } catch {
+            // One stale entity or unloaded location must not skip other drops in this dimension.
           }
         }
 

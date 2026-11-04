@@ -5,6 +5,7 @@ import {
   ItemComponentTypes,
   ItemEnchantableComponent,
   ItemStack,
+  PlayerBreakBlockAfterEvent,
 } from '@minecraft/server';
 import { getMainhandItem, getOffhandItem, growInstantJungleTree } from './utils.js';
 
@@ -118,100 +119,43 @@ export function registerBlockComponents(registry: BlockComponentRegistry): void 
     },
   });
 
-  // 5. Silver Ore (Exact 2.8.8: requires Iron/Diamond/Netherite Pickaxe or Bedrock Sword to drop)
-  registry.registerCustomComponent('effect99:silver_ore', {
-    onPlayerBreak(event) {
-      const { block, dimension, player } = event;
-      if (!player || player.getGameMode() === GameMode.Creative) return;
-      try {
-        const tool = getMainhandItem(player);
-        if (!tool || !VALID_ORE_MINING_TOOLS.has(tool.typeId)) return;
-        const center = { x: block.location.x + 0.5, y: block.location.y + 0.5, z: block.location.z + 0.5 };
-        dimension.spawnItem(new ItemStack('effect99:silver_ore', 1), center);
-      } catch {}
-    },
-  });
+}
 
-  // 6. Quartz-Diamond Block (Exact 2.8.8: requires Iron+ Pickaxe / Bedrock Sword + 6-block arcane shockwave!)
-  registry.registerCustomComponent('effect99:quartz_diamond_block', {
-    onPlayerBreak(event) {
-      const { block, dimension, player } = event;
-      if (!player || player.getGameMode() === GameMode.Creative) return;
-      try {
-        const tool = getMainhandItem(player);
-        if (!tool || !VALID_ORE_MINING_TOOLS.has(tool.typeId)) return;
-        const center = { x: block.location.x + 0.5, y: block.location.y + 0.5, z: block.location.z + 0.5 };
-        dimension.spawnItem(new ItemStack('effect99:quartz_diamond_block', 1), center);
-
-        dimension.spawnParticle('minecraft:knockback_roar_particle', {
-          x: center.x,
-          y: center.y + 0.5,
-          z: center.z,
-        });
-        dimension.playSound('damage.thorns', center, { volume: 1.0, pitch: 0.9 });
-        const dist = Math.hypot(
-          player.location.x - center.x,
-          player.location.y + 0.9 - center.y,
-          player.location.z - center.z
-        );
-        if (dist <= 6.0) {
-          player.applyDamage(6, { cause: EntityDamageCause.magic });
+// Use the pre-break snapshot: the tool may have broken or been replaced by
+// the time a block custom component's onPlayerBreak callback runs.
+export function handleOreBreak(event: PlayerBreakBlockAfterEvent): void {
+  const { block, dimension, player, itemStackBeforeBreak: tool } = event;
+  const id = event.brokenBlockPermutation.type.id;
+  if (!['effect99:silver_ore', 'effect99:quartz_diamond_block', 'effect99:quartz_diamond_ore'].includes(id)) return;
+  try {
+    if (player.getGameMode() === GameMode.Creative || !tool || !VALID_ORE_MINING_TOOLS.has(tool.typeId)) return;
+    const center = { x: block.location.x + 0.5, y: block.location.y + 0.5, z: block.location.z + 0.5 };
+    if (id === 'effect99:silver_ore') {
+      dimension.spawnItem(new ItemStack(id, 1), center);
+      return;
+    }
+    if (id === 'effect99:quartz_diamond_block') {
+      dimension.spawnItem(new ItemStack(id, 1), center);
+    } else {
+      const ench = tool.getComponent(ItemComponentTypes.Enchantable) as ItemEnchantableComponent | undefined;
+      const silkTouch = ench?.getEnchantment('silk_touch')?.level ?? 0;
+      if (silkTouch > 0) {
+        dimension.spawnItem(new ItemStack(id, 1), center);
+      } else {
+        const r = Math.random() * 100;
+        let count = r >= 99 ? 2 + Math.floor(Math.random() * 3) : r >= 89 ? 1 + Math.floor(Math.random() * 2) : 1;
+        const fortune = ench?.getEnchantment('fortune')?.level ?? 0;
+        if (fortune > 0 && Math.random() < fortune * 0.25) count += 1 + Math.floor(Math.random() * fortune);
+        dimension.spawnItem(new ItemStack('effect:quartz_diamond', count), center);
+        for (let i = 0; i < 6; i++) {
+          try { dimension.spawnEntity('minecraft:xp_orb', center); } catch {}
         }
-      } catch {}
-    },
-  });
-
-  // 7. Quartz-Diamond Ore (Exact 2.8.8: Iron+ Pickaxe / Bedrock Sword, 89/10/1 drop table, Silk Touch & Fortune, 6 XP orbs, arcane shockwave!)
-  registry.registerCustomComponent('effect99:quartz_diamond_ore', {
-    onPlayerBreak(event) {
-      const { block, dimension, player } = event;
-      if (!player || player.getGameMode() === GameMode.Creative) return;
-      try {
-        const tool = getMainhandItem(player);
-        if (!tool || !VALID_ORE_MINING_TOOLS.has(tool.typeId)) return;
-
-        const center = { x: block.location.x + 0.5, y: block.location.y + 0.5, z: block.location.z + 0.5 };
-        const ench = tool.getComponent(ItemComponentTypes.Enchantable) as ItemEnchantableComponent | undefined;
-        const silkTouch = ench?.getEnchantment('silk_touch')?.level ?? 0;
-
-        if (silkTouch > 0) {
-          dimension.spawnItem(new ItemStack('effect99:quartz_diamond_ore', 1), center);
-        } else {
-          // Exact 2.8.8 loot weights: 89% -> 1, 10% -> 1..2, 1% -> 2..4
-          const r = Math.random() * 100;
-          let count = 1;
-          if (r >= 99) {
-            count = 2 + Math.floor(Math.random() * 3);
-          } else if (r >= 89) {
-            count = 1 + Math.floor(Math.random() * 2);
-          }
-          const fortune = ench?.getEnchantment('fortune')?.level ?? 0;
-          if (fortune > 0 && Math.random() < fortune * 0.25) {
-            count += 1 + Math.floor(Math.random() * fortune);
-          }
-          dimension.spawnItem(new ItemStack('effect:quartz_diamond', count), center);
-
-          for (let i = 0; i < 6; i++) {
-            dimension.spawnEntity('minecraft:xp_orb', center);
-          }
-        }
-
-        // Exact 2.8.8: knockback_roar_particle + 6 magic damage within r=6
-        dimension.spawnParticle('minecraft:knockback_roar_particle', {
-          x: center.x,
-          y: center.y + 0.5,
-          z: center.z,
-        });
-        dimension.playSound('damage.thorns', center, { volume: 1.0, pitch: 1.2 });
-        const dist = Math.hypot(
-          player.location.x - center.x,
-          player.location.y + 0.9 - center.y,
-          player.location.z - center.z
-        );
-        if (dist <= 6.0) {
-          player.applyDamage(6, { cause: EntityDamageCause.magic });
-        }
-      } catch {}
-    },
-  });
+      }
+    }
+    // Cosmetic failures must not cancel the gameplay backlash.
+    try { dimension.spawnParticle('minecraft:knockback_roar_particle', { x: center.x, y: center.y + 0.5, z: center.z }); } catch {}
+    try { dimension.playSound('damage.thorns', center, { volume: 1.0, pitch: id === 'effect99:quartz_diamond_block' ? 0.9 : 1.2 }); } catch {}
+    const dist = Math.hypot(player.location.x - center.x, player.location.y + 0.9 - center.y, player.location.z - center.z);
+    if (dist <= 6.0) player.applyDamage(6, { cause: EntityDamageCause.magic });
+  } catch {}
 }

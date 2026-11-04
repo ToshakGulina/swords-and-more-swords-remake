@@ -525,7 +525,7 @@
           ]
         },
         "minecraft:attack": {
-          "damage": 20
+          "damage": 15
         },
         "minecraft:movement": {
           "value": 0.16

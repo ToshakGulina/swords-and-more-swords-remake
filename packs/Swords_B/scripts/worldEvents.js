@@ -1,10 +1,13 @@
+import { consumeSwordLightning, spawnSwordLightning } from './lightningOrigin.js';
 import { EntityComponentTypes, EntityDamageCause, GameMode, ItemStack, Player, system, WeatherType, world, } from '@minecraft/server';
 import { getActiveShulkerShieldOwner } from './passiveEngine.js';
+import { handleOreBreak } from './blockComponents.js';
 import { registerAirSwingEvents } from './swordSkills.js';
 import { getMainhandItem, isDesertWellWater, safeRandomTeleport } from './utils.js';
 let isRainingOverworld = false;
 let lastCentellaDeathTick = -1000;
 let lastCentellaDeathLoc;
+let lastCentellaDeathDimension;
 const manuallyDroppedBedrock = new Set();
 const fadingFireSwordTicks = new Map();
 function isNonRainingBiome(biomeId) {
@@ -121,15 +124,18 @@ export function registerWorldEvents() {
     });
     // 4. Breaking any Pumpkin block (except stem) has a 0.5% (5/1000) chance to drop Cursed Pumpkin Sword!
     world.afterEvents.playerBreakBlock.subscribe((ev) => {
+        handleOreBreak(ev);
         try {
             const bId = ev.brokenBlockPermutation.type.id;
-            if (bId.includes('pumpkin') && !bId.includes('stem') && Math.random() < 0.005) {
+            if (bId.includes('pumpkin') && !bId.includes('stem') &&
+                !ev.player.hasTag('pumpkin_sword') && Math.random() < 0.005) {
                 const center = {
                     x: ev.block.location.x + 0.5,
                     y: ev.block.location.y + 0.5,
                     z: ev.block.location.z + 0.5,
                 };
                 ev.dimension.spawnItem(new ItemStack('effect:cursed_pumpkin_sword', 1), center);
+                ev.player.addTag('pumpkin_sword');
                 ev.dimension.playSound('mob.witch.celebrate', center, { volume: 1.0, pitch: 0.8 });
             }
         }
@@ -208,16 +214,16 @@ export function registerWorldEvents() {
             if (ev.entity.typeId === 'minecraft:lightning_bolt') {
                 const dim = ev.entity.dimension;
                 const loc = ev.entity.location;
-                // Skip lightning bolts summoned by a dying Centella or by a Lightning Sword wielder
+                // Skip only bolts explicitly spawned by the sword, not natural lightning
+                // near a player holding one. The Centella death fallback is approximate.
+                if (consumeSwordLightning(dim, loc))
+                    return;
                 if (system.currentTick - lastCentellaDeathTick <= 10 &&
-                    lastCentellaDeathLoc &&
+                    lastCentellaDeathLoc && lastCentellaDeathDimension === dim.id &&
                     Math.hypot(loc.x - lastCentellaDeathLoc.x, loc.z - lastCentellaDeathLoc.z) < 6) {
                     return;
                 }
-                const nearbyHolder = dim
-                    .getPlayers({ location: loc, maxDistance: 64 })
-                    .some((p) => getMainhandItem(p)?.typeId === 'effect:lightning_sword');
-                if (!nearbyHolder && Math.random() < 0.2) {
+                if (Math.random() < 0.2) {
                     dim.spawnEntity('entity:centella', loc);
                 }
             }
@@ -262,6 +268,7 @@ export function registerWorldEvents() {
                 case 'entity:centella': {
                     lastCentellaDeathTick = system.currentTick;
                     lastCentellaDeathLoc = { ...loc };
+                    lastCentellaDeathDimension = dim.id;
                     // Exact 2.8.8: 2% Lightning Sword drop when killed by a player (works for both melee and Bow/Trident, spawned post-lightning!)
                     if (killer instanceof Player && Math.random() < 0.02) {
                         const dropLoc = { x: loc.x, y: loc.y + 1.0, z: loc.z };
@@ -285,28 +292,26 @@ export function registerWorldEvents() {
                     break;
                 }
                 case 'minecraft:blaze': {
-                    // Exact 2.8.8 combined Snow Golem drop chance (loot table 2.5% + entity event 0.5% = 3.0%)!
-                    if ((killer?.typeId === 'minecraft:snow_golem' || proj?.typeId === 'minecraft:snowball') &&
-                        killer?.typeId !== 'minecraft:player' &&
-                        Math.random() < 0.03) {
+                    // Original loot table: a snow golem must be the killer. Its separate
+                    // 0.5% event is defined but has no trigger in the original entity.
+                    if (killer?.typeId === 'minecraft:snow_golem' && Math.random() < 0.025) {
                         dim.spawnItem(new ItemStack('effect:blaze_sword', 1), loc);
                     }
                     break;
                 }
                 case 'minecraft:skeleton': {
-                    // Nighttime Skeleton in a Desert biome -> 0.7% Bone Sword!
-                    const time = world.getTimeOfDay();
-                    if (time >= 13000 && time <= 23000 && Math.random() < 0.007) {
-                        const biomeId = dim.getBiome(loc).id;
-                        if (biomeId.includes('desert')) {
-                            dim.spawnItem(new ItemStack('effect:bone_sword', 1), loc);
-                        }
+                    // The original requires a player kill in a dark desert, not a time
+                    // of day: underground shade can qualify in daytime, and lamps can
+                    // prevent the drop at night. Light levels here are integer 0..15.
+                    if (killer instanceof Player && dim.getBiome(loc).id.includes('desert') &&
+                        dim.getLightLevel(loc) <= 7 && Math.random() < 0.007) {
+                        dim.spawnItem(new ItemStack('effect:bone_sword', 1), loc);
                     }
                     break;
                 }
                 case 'minecraft:ghast': {
-                    // Slain by reflected fireball -> 6% Spectral Sword!
-                    if ((proj?.typeId === 'minecraft:fireball' || damageSource.cause === EntityDamageCause.projectile) &&
+                    // Identified ghast fireball -> 6% Spectral Sword; ordinary arrows are not fireballs.
+                    if (proj?.typeId === 'minecraft:fireball' &&
                         Math.random() < 0.06) {
                         dim.spawnItem(new ItemStack('effect:spectral_sword', 1), loc);
                     }
@@ -324,197 +329,203 @@ export function registerWorldEvents() {
                 const dim = world.getDimension(dimName);
                 const items = dim.getEntities({ type: 'minecraft:item' });
                 for (const itemEnt of items) {
-                    if (!itemEnt.isValid || itemEnt.hasTag('effect_processed'))
-                        continue;
-                    const itemComp = itemEnt.getComponent(EntityComponentTypes.Item);
-                    const stack = itemComp?.itemStack;
-                    if (!stack)
-                        continue;
-                    const id = stack.typeId;
-                    const loc = itemEnt.location;
-                    const block = dim.getBlock(loc);
-                    if (!block)
-                        continue;
-                    const bType = block.typeId;
-                    const inWater = bType === 'minecraft:water' || bType === 'minecraft:flowing_water';
-                    const inFire = bType === 'minecraft:fire' ||
-                        bType === 'minecraft:soul_fire' ||
-                        bType === 'minecraft:lava' ||
-                        bType === 'minecraft:flowing_lava';
-                    // Check outdoor liquid rain exposure in Overworld (excluding arid & snowy biomes)
-                    let inRain = false;
-                    if (dimName === 'overworld' && isRainingOverworld && !inWater) {
-                        const top = dim.getTopmostBlock({ x: Math.floor(loc.x), z: Math.floor(loc.z) });
-                        if (!top || top.location.y <= Math.floor(loc.y)) {
-                            const biomeId = dim.getBiome(loc).id;
-                            if (!isNonRainingBiome(biomeId)) {
-                                inRain = true;
+                    try {
+                        if (!itemEnt.isValid || itemEnt.hasTag('effect_processed'))
+                            continue;
+                        const itemComp = itemEnt.getComponent(EntityComponentTypes.Item);
+                        const stack = itemComp?.itemStack;
+                        if (!stack)
+                            continue;
+                        const id = stack.typeId;
+                        const loc = itemEnt.location;
+                        const block = dim.getBlock(loc);
+                        if (!block)
+                            continue;
+                        const bType = block.typeId;
+                        const inWater = bType === 'minecraft:water' || bType === 'minecraft:flowing_water';
+                        const inFire = bType === 'minecraft:fire' ||
+                            bType === 'minecraft:soul_fire' ||
+                            bType === 'minecraft:lava' ||
+                            bType === 'minecraft:flowing_lava';
+                        // Check outdoor liquid rain exposure in Overworld (excluding arid & snowy biomes)
+                        let inRain = false;
+                        if (dimName === 'overworld' && isRainingOverworld && !inWater &&
+                            (id === 'effect:fire_sword' || id === 'effect:sponge_sword')) {
+                            const top = dim.getTopmostBlock({ x: Math.floor(loc.x), z: Math.floor(loc.z) });
+                            if (!top || top.location.y <= Math.floor(loc.y)) {
+                                const biomeId = dim.getBiome(loc).id;
+                                if (!isNonRainingBiome(biomeId)) {
+                                    inRain = true;
+                                }
                             }
                         }
-                    }
-                    // A. Dropped Fire Sword elemental transformations (100% faithful to 2.8.8 item.json!)
-                    if (id === 'effect:fire_sword') {
-                        if (inWater) {
-                            fadingFireSwordTicks.delete(itemEnt.id);
+                        // A. Dropped Fire Sword elemental transformations (100% faithful to 2.8.8 item.json!)
+                        if (id === 'effect:fire_sword') {
+                            if (inWater) {
+                                fadingFireSwordTicks.delete(itemEnt.id);
+                                itemEnt.remove();
+                                dim.spawnItem(new ItemStack('effect:glass_sword', 1), loc);
+                                dim.playSound('random.fizz', loc, { volume: 0.8, pitch: 1.0 });
+                                dim.spawnParticle('minecraft:cauldron_explosion_emitter', loc);
+                                continue;
+                            }
+                            if (inRain) {
+                                // Exact 2.8.8 `fading_fire_sword`: 5s fizzing countdown in rain before turning into Obsidian Sword!
+                                activeRainSwordIds.add(itemEnt.id);
+                                const rainChecks = (fadingFireSwordTicks.get(itemEnt.id) ?? 0) + 1;
+                                fadingFireSwordTicks.set(itemEnt.id, rainChecks);
+                                dim.playSound('random.fizz', loc, { volume: 0.7, pitch: 1.1 });
+                                dim.spawnParticle('minecraft:cauldron_explosion_emitter', loc);
+                                if (rainChecks >= 10) {
+                                    fadingFireSwordTicks.delete(itemEnt.id);
+                                    itemEnt.remove();
+                                    dim.spawnItem(new ItemStack('effect:obsidian_sword', 1), loc);
+                                    dim.playSound('random.fizz', loc, { volume: 1.0, pitch: 0.8 });
+                                }
+                                continue;
+                            }
+                            else {
+                                fadingFireSwordTicks.delete(itemEnt.id);
+                            }
+                            if (bType === 'minecraft:fire' || bType === 'minecraft:soul_fire') {
+                                itemEnt.remove();
+                                block.setType('minecraft:air');
+                                for (const [ox, oz] of [
+                                    [0, 0],
+                                    [1, 1],
+                                    [1, -1],
+                                    [-1, 1],
+                                    [-1, -1],
+                                    [1, 0],
+                                    [0, 1],
+                                    [0, -1],
+                                    [-1, 0],
+                                ]) {
+                                    dim.spawnParticle('minecraft:mobflame_single', {
+                                        x: loc.x + ox,
+                                        y: loc.y + 0.5,
+                                        z: loc.z + oz,
+                                    });
+                                }
+                                for (let i = 0; i < 5; i++) {
+                                    dim.spawnEntity('entity:living_flame', {
+                                        x: loc.x + (Math.random() - 0.5) * 1.5,
+                                        y: loc.y + 0.3,
+                                        z: loc.z + (Math.random() - 0.5) * 1.5,
+                                    }, { spawnEvent: 'hostile_entity' });
+                                }
+                                dim.playSound('mob.wither.spawn', loc, { volume: 1.0, pitch: 2.0 });
+                                continue;
+                            }
+                        }
+                        // B. Dropped Sponge Sword -> Wet Sponge Sword
+                        if (id === 'effect:sponge_sword' && (inWater || inRain)) {
                             itemEnt.remove();
-                            dim.spawnItem(new ItemStack('effect:glass_sword', 1), loc);
+                            if (inWater)
+                                block.setType('minecraft:air');
+                            dim.spawnItem(new ItemStack('effect:wet_sponge_sword', 1), loc);
+                            dim.playSound('random.fizz', loc, { volume: 0.6, pitch: 1.1 });
+                            dim.spawnParticle('minecraft:cauldron_explosion_emitter', loc);
+                            continue;
+                        }
+                        // C. Dropped Ice Sword melts into water in Overworld/End!
+                        if (id === 'effect:ice_sword' && inFire) {
+                            itemEnt.remove();
+                            if (dimName !== 'nether') {
+                                block.setType('minecraft:water');
+                            }
                             dim.playSound('random.fizz', loc, { volume: 0.8, pitch: 1.0 });
                             dim.spawnParticle('minecraft:cauldron_explosion_emitter', loc);
                             continue;
                         }
-                        if (inRain) {
-                            // Exact 2.8.8 `fading_fire_sword`: 5s fizzing countdown in rain before turning into Obsidian Sword!
-                            activeRainSwordIds.add(itemEnt.id);
-                            const rainChecks = (fadingFireSwordTicks.get(itemEnt.id) ?? 0) + 1;
-                            fadingFireSwordTicks.set(itemEnt.id, rainChecks);
-                            dim.playSound('random.fizz', loc, { volume: 0.7, pitch: 1.1 });
-                            dim.spawnParticle('minecraft:cauldron_explosion_emitter', loc);
-                            if (rainChecks >= 10) {
-                                fadingFireSwordTicks.delete(itemEnt.id);
+                        // D. Dropped Lightning Sword in fire summons lightning!
+                        if (id === 'effect:lightning_sword' && inFire) {
+                            itemEnt.remove();
+                            spawnSwordLightning(dim, loc);
+                            continue;
+                        }
+                        // E. Dropped TNT Sword in fire/lava -> Giant Explosion
+                        if (id === 'effect:tnt_sword' && inFire) {
+                            itemEnt.remove();
+                            dim.spawnEntity('entity:instant_giant_explode', loc);
+                            continue;
+                        }
+                        // F. Dropped Nether Star Sword in fire -> Bedrock-carving Ultra Instinct Explosion!
+                        if (id === 'effect:nether_star_sword' && (bType === 'minecraft:fire' || bType === 'minecraft:soul_fire')) {
+                            itemEnt.remove();
+                            block.setType('minecraft:air');
+                            dim.spawnEntity('entity:ultra_instinct_explode', loc);
+                            continue;
+                        }
+                        // F2. Exact 2.8.8 fire/lava reactions for Bedrock Sword (fireproof!), Ender Sword & Wither Sword!
+                        if (id === 'effect:bedrock_sword' && inFire) {
+                            const safeStack = stack.clone();
+                            itemEnt.remove();
+                            const safeItem = dim.spawnItem(safeStack, { x: loc.x, y: loc.y + 1.4, z: loc.z });
+                            safeItem.applyImpulse({ x: (Math.random() - 0.5) * 0.25, y: 0.35, z: (Math.random() - 0.5) * 0.25 });
+                            continue;
+                        }
+                        if (id === 'effect:ender_sword' && inFire) {
+                            itemEnt.remove();
+                            dim.spawnParticle('minecraft:example_linearcurve', loc);
+                            dim.playSound('mob.endermen.death', loc, { volume: 1.0, pitch: 0.5 });
+                            continue;
+                        }
+                        if (id === 'effect:wither_sword' && inFire) {
+                            itemEnt.remove();
+                            dim.spawnParticle('minecraft:example_linearcurve', loc);
+                            dim.playSound('mob.wither.death', loc, { volume: 1.0, pitch: 0.5 });
+                            continue;
+                        }
+                        // G. Desert Well (Fountain of Wishes) in Overworld (100% faithful to item.json wish_1/2/3!)
+                        if (dimName === 'overworld' &&
+                            inWater &&
+                            (id === 'effect:quartz_diamond' ||
+                                id === 'effect99:quartz_diamond_block' ||
+                                id === 'effect:clock_sword')) {
+                            if (isDesertWellWater(dim, loc)) {
+                                const count = stack.amount;
+                                itemEnt.addTag('effect_processed');
                                 itemEnt.remove();
-                                dim.spawnItem(new ItemStack('effect:obsidian_sword', 1), loc);
-                                dim.playSound('random.fizz', loc, { volume: 1.0, pitch: 0.8 });
-                            }
-                            continue;
-                        }
-                        else {
-                            fadingFireSwordTicks.delete(itemEnt.id);
-                        }
-                        if (bType === 'minecraft:fire' || bType === 'minecraft:soul_fire') {
-                            itemEnt.remove();
-                            block.setType('minecraft:air');
-                            for (const [ox, oz] of [
-                                [0, 0],
-                                [1, 1],
-                                [1, -1],
-                                [-1, 1],
-                                [-1, -1],
-                                [1, 0],
-                                [0, 1],
-                                [0, -1],
-                                [-1, 0],
-                            ]) {
-                                dim.spawnParticle('minecraft:mobflame_single', {
-                                    x: loc.x + ox,
-                                    y: loc.y + 0.5,
-                                    z: loc.z + oz,
-                                });
-                            }
-                            for (let i = 0; i < 5; i++) {
-                                dim.spawnEntity('entity:living_flame', {
-                                    x: loc.x + (Math.random() - 0.5) * 1.5,
-                                    y: loc.y + 0.3,
-                                    z: loc.z + (Math.random() - 0.5) * 1.5,
-                                }, { spawnEvent: 'hostile_entity' });
-                            }
-                            dim.playSound('mob.wither.spawn', loc, { volume: 1.0, pitch: 2.0 });
-                            continue;
-                        }
-                    }
-                    // B. Dropped Sponge Sword -> Wet Sponge Sword
-                    if (id === 'effect:sponge_sword' && (inWater || inRain)) {
-                        itemEnt.remove();
-                        if (inWater)
-                            block.setType('minecraft:air');
-                        dim.spawnItem(new ItemStack('effect:wet_sponge_sword', 1), loc);
-                        dim.playSound('random.fizz', loc, { volume: 0.6, pitch: 1.1 });
-                        dim.spawnParticle('minecraft:cauldron_explosion_emitter', loc);
-                        continue;
-                    }
-                    // C. Dropped Ice Sword melts into water in Overworld/End!
-                    if (id === 'effect:ice_sword' && inFire) {
-                        itemEnt.remove();
-                        if (dimName !== 'nether') {
-                            block.setType('minecraft:water');
-                        }
-                        dim.playSound('random.fizz', loc, { volume: 0.8, pitch: 1.0 });
-                        dim.spawnParticle('minecraft:cauldron_explosion_emitter', loc);
-                        continue;
-                    }
-                    // D. Dropped Lightning Sword in fire summons lightning!
-                    if (id === 'effect:lightning_sword' && inFire) {
-                        itemEnt.remove();
-                        dim.spawnEntity('minecraft:lightning_bolt', loc);
-                        continue;
-                    }
-                    // E. Dropped TNT Sword in fire/lava -> Giant Explosion
-                    if (id === 'effect:tnt_sword' && inFire) {
-                        itemEnt.remove();
-                        dim.spawnEntity('entity:instant_giant_explode', loc);
-                        continue;
-                    }
-                    // F. Dropped Nether Star Sword in fire -> Bedrock-carving Ultra Instinct Explosion!
-                    if (id === 'effect:nether_star_sword' && (bType === 'minecraft:fire' || bType === 'minecraft:soul_fire')) {
-                        itemEnt.remove();
-                        block.setType('minecraft:air');
-                        dim.spawnEntity('entity:ultra_instinct_explode', loc);
-                        continue;
-                    }
-                    // F2. Exact 2.8.8 fire/lava reactions for Bedrock Sword (fireproof!), Ender Sword & Wither Sword!
-                    if (id === 'effect:bedrock_sword' && inFire) {
-                        const safeStack = stack.clone();
-                        itemEnt.remove();
-                        const safeItem = dim.spawnItem(safeStack, { x: loc.x, y: loc.y + 1.4, z: loc.z });
-                        safeItem.applyImpulse({ x: (Math.random() - 0.5) * 0.25, y: 0.35, z: (Math.random() - 0.5) * 0.25 });
-                        continue;
-                    }
-                    if (id === 'effect:ender_sword' && inFire) {
-                        itemEnt.remove();
-                        dim.spawnParticle('minecraft:example_linearcurve', loc);
-                        dim.playSound('mob.endermen.death', loc, { volume: 1.0, pitch: 0.5 });
-                        continue;
-                    }
-                    if (id === 'effect:wither_sword' && inFire) {
-                        itemEnt.remove();
-                        dim.spawnParticle('minecraft:example_linearcurve', loc);
-                        dim.playSound('mob.wither.death', loc, { volume: 1.0, pitch: 0.5 });
-                        continue;
-                    }
-                    // G. Desert Well (Fountain of Wishes) in Overworld (100% faithful to item.json wish_1/2/3!)
-                    if (dimName === 'overworld' &&
-                        inWater &&
-                        (id === 'effect:quartz_diamond' ||
-                            id === 'effect99:quartz_diamond_block' ||
-                            id === 'effect:clock_sword')) {
-                        if (isDesertWellWater(dim, loc)) {
-                            const count = stack.amount;
-                            itemEnt.addTag('effect_processed');
-                            itemEnt.remove();
-                            const chancePerItem = id === 'effect:quartz_diamond' ? 0.008 : 0.025;
-                            const isClockWish = id === 'effect:clock_sword';
-                            const rewardId = isClockWish ? 'effect:time_sword' : 'effect:ultra_instinct_sword';
-                            let won = false;
-                            for (let i = 0; i < count; i++) {
-                                if (Math.random() < chancePerItem) {
-                                    won = true;
-                                    dim.spawnItem(new ItemStack(rewardId, 1), { x: loc.x, y: loc.y + 1.2, z: loc.z });
+                                const chancePerItem = id === 'effect:quartz_diamond' ? 0.008 : 0.025;
+                                const isClockWish = id === 'effect:clock_sword';
+                                const rewardId = isClockWish ? 'effect:time_sword' : 'effect:ultra_instinct_sword';
+                                let won = false;
+                                for (let i = 0; i < count; i++) {
+                                    if (Math.random() < chancePerItem) {
+                                        won = true;
+                                        dim.spawnItem(new ItemStack(rewardId, 1), { x: loc.x, y: loc.y + 1.2, z: loc.z });
+                                    }
                                 }
-                            }
-                            if (won) {
-                                if (isClockWish) {
-                                    world.setTimeOfDay((world.getTimeOfDay() + 6000) % 24000);
-                                    convertSurroundingSand(dim, loc, 'minecraft:yellow_concrete_powder');
-                                    dim.spawnParticle('minecraft:knockback_roar_particle', { x: loc.x, y: loc.y + 0.3, z: loc.z });
-                                    dim.playSound('random.levelup', loc, { volume: 1.0, pitch: 0.5 });
+                                if (won) {
+                                    if (isClockWish) {
+                                        world.setTimeOfDay((world.getTimeOfDay() + 6000) % 24000);
+                                        convertSurroundingSand(dim, loc, 'minecraft:yellow_concrete_powder');
+                                        dim.spawnParticle('minecraft:knockback_roar_particle', { x: loc.x, y: loc.y + 0.3, z: loc.z });
+                                        dim.playSound('random.levelup', loc, { volume: 1.0, pitch: 0.5 });
+                                    }
+                                    else {
+                                        convertSurroundingSand(dim, loc, 'minecraft:white_concrete_powder');
+                                        dim.spawnParticle('minecraft:example_flipbook', loc);
+                                        dim.spawnParticle('minecraft:example_flipbook', { x: loc.x, y: loc.y + 1.5, z: loc.z });
+                                        dim.playSound('mob.wither.ambient', loc, { volume: 2.0, pitch: 0.6 });
+                                    }
                                 }
                                 else {
-                                    convertSurroundingSand(dim, loc, 'minecraft:white_concrete_powder');
-                                    dim.spawnParticle('minecraft:example_flipbook', loc);
-                                    dim.spawnParticle('minecraft:example_flipbook', { x: loc.x, y: loc.y + 1.5, z: loc.z });
-                                    dim.playSound('mob.wither.ambient', loc, { volume: 2.0, pitch: 0.6 });
-                                }
-                            }
-                            else {
-                                if (isClockWish) {
-                                    world.setTimeOfDay((world.getTimeOfDay() + 1000) % 24000);
-                                    dim.spawnParticle('minecraft:knockback_roar_particle', { x: loc.x, y: loc.y + 0.3, z: loc.z });
-                                    dim.playSound('random.orb', loc, { volume: 1.0, pitch: 0.5 });
-                                }
-                                else {
-                                    dim.spawnParticle('minecraft:example_flipbook', loc);
+                                    if (isClockWish) {
+                                        world.setTimeOfDay((world.getTimeOfDay() + 1000) % 24000);
+                                        dim.spawnParticle('minecraft:knockback_roar_particle', { x: loc.x, y: loc.y + 0.3, z: loc.z });
+                                        dim.playSound('random.orb', loc, { volume: 1.0, pitch: 0.5 });
+                                    }
+                                    else {
+                                        dim.spawnParticle('minecraft:example_flipbook', loc);
+                                    }
                                 }
                             }
                         }
+                    }
+                    catch {
+                        // One stale entity or unloaded location must not skip other drops in this dimension.
                     }
                 }
                 // Alpha Wolf boss periodic regeneration re-application if NOT yet struck by Silver Sword

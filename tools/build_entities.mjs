@@ -1,17 +1,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const jsonc = require('/tmp/refs/node_modules/jsonc-parser');
+const jsonc = require('jsonc-parser');
 
-const ROOT = '/home/user/swords-and-more-swords-remake';
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BP = path.join(ROOT, 'packs/Swords_B');
 const RP = path.join(ROOT, 'packs/Swords_R');
-const SRC_288_BP = '/tmp/mcaddons/2.8.8/Swords_B';
-const SRC_288_RP = '/tmp/mcaddons/2.8.8/Swords_R';
-const VANILLA_BP = '/tmp/refs/bedrock-samples/behavior_pack';
-const VANILLA_RP = '/tmp/refs/bedrock-samples/resource_pack';
+const SRC_288_BP = path.join(process.env.SAMS_ORIGINAL ?? '/tmp/mcaddons/2.8.8', 'Swords_B');
+const SRC_288_RP = path.join(process.env.SAMS_ORIGINAL ?? '/tmp/mcaddons/2.8.8', 'Swords_R');
+const VANILLA_BP = path.join(process.env.SAMS_SAMPLES ?? '/tmp/refs/bedrock-samples', 'behavior_pack');
+const VANILLA_RP = path.join(process.env.SAMS_SAMPLES ?? '/tmp/refs/bedrock-samples', 'resource_pack');
 
 function writeJson(filePath, data) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -115,14 +116,23 @@ pcDesc.render_controllers.push(
 
 writeJson(path.join(RP, 'entity/player.entity.json'), playerClient);
 
-// A.2 Rebase `enderman.entity.json` & `witch.entity.json` onto Mojang v1.26.60.5
-const endermanClient = readVanillaRP('enderman.entity.json');
-endermanClient['minecraft:client_entity'].description.textures.red_enderman = 'textures/entity/enderman/red_enderman';
-writeJson(path.join(RP, 'entity/enderman.entity.json'), endermanClient);
-
-const witchClient = readVanillaRP('witch.entity.json');
-witchClient['minecraft:client_entity'].description.textures.grass_witch = 'textures/entity/grass_witch';
-writeJson(path.join(RP, 'entity/witch.entity.json'), witchClient);
+// A.2 Rebase vanilla clients while retaining the original variant appearances.
+// Dedicated controllers avoid replacing a vanilla controller globally.
+for (const [kind, alias] of [['enderman', 'red_enderman'], ['witch', 'grass_witch']]) {
+  const client = readVanillaRP(`${kind}.entity.json`);
+  const desc = client['minecraft:client_entity'].description;
+  desc.textures[alias] = kind === 'enderman'
+    ? 'textures/entity/enderman/red_enderman' : 'textures/entity/grass_witch';
+  const source = jsonc.parse(fs.readFileSync(path.join(VANILLA_RP, 'render_controllers', `${kind}.render_controllers.json`), 'utf8'));
+  const controller = source.render_controllers[`controller.render.${kind}`];
+  controller.textures = [`query.variant == 1 ? Texture.${alias} : Texture.default`];
+  const controllerName = `controller.render.effect_${kind}`;
+  desc.render_controllers = [controllerName];
+  writeJson(path.join(RP, 'entity', `${kind}.entity.json`), client);
+  writeJson(path.join(RP, 'render_controllers', `effect_${kind}.render_controllers.json`), {
+    format_version: '1.8.0', render_controllers: { [controllerName]: controller },
+  });
+}
 
 // A.3 Custom visible client entities (copy & clean spawn egg on alpha_wolf)
 const customClientFiles = [
@@ -288,7 +298,7 @@ const SWORD_PLAYER_GROUPS = {
     'minecraft:scale': { value: 1.05 },
     'minecraft:health': { value: 40, max: 40 },
     'minecraft:type_family': { family: ['monster', 'wolf_sword'] },
-    'minecraft:attack': { damage: 20 },
+    'minecraft:attack': { damage: 15 },
     'minecraft:movement': { value: 0.16 },
     'minecraft:knockback_resistance': { value: 0.4 },
   },
@@ -624,21 +634,26 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
     'minecraft:follow_range': { value: 64, max: 64 },
     'minecraft:loot': { table: 'loot_tables/entities/red_enderman.json' },
   };
+  // Preserve vanilla initialization even when the red variant's biome filter
+  // fails (the End / Nether) and for entities that are not riding.
+  const vanillaSpawn = ent.events['minecraft:entity_spawned'];
   ent.events['minecraft:entity_spawned'] = {
-    randomize: [
+    sequence: [
+      vanillaSpawn,
       {
-        weight: 80,
-        add: { component_groups: ['minecraft:enderman_calm', 'effect:default_enderman'] },
-      },
-      {
-        weight: 20,
-        filters: { test: 'has_biome_tag', operator: '==', value: 'overworld' },
-        add: { component_groups: ['minecraft:enderman_calm', 'effect:red_enderman'] },
+        randomize: [
+          { weight: 80, add: { component_groups: ['effect:default_enderman'] } },
+          {
+            weight: 20,
+            filters: { test: 'has_biome_tag', operator: '==', value: 'overworld' },
+            add: { component_groups: ['effect:red_enderman'] },
+          },
+        ],
       },
     ],
   };
   ent.events['red_enderman'] = {
-    add: { component_groups: ['minecraft:enderman_calm', 'effect:red_enderman'] },
+    add: { component_groups: ['minecraft:enderman_calm', 'minecraft:not_riding', 'effect:red_enderman'] },
   };
   writeJson(path.join(BP, 'entities/enderman.json'), data);
 }
@@ -730,15 +745,9 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
 {
   const data = readVanillaBP('ender_crystal.json');
   const ent = data['minecraft:entity'];
-  const origOnHurt = ent.components['minecraft:on_hurt'] || {
-    event: 'minecraft:crystal_explode',
-    target: 'self',
-  };
-  delete ent.components['minecraft:on_hurt'];
-
-  ent.component_groups['effect:default_crystal'] = {
-    'minecraft:on_hurt': origOnHurt,
-  };
+  // Keep vanilla on_hurt in the base components: crystals saved before the pack
+  // was installed will not necessarily receive entity_spawned again on reload.
+  // The sword rider's damage sensor prevents ordinary damage.
   ent.component_groups['effect:spectral_rider'] = {
     'minecraft:type_family': { family: ['ender_crystal', 'spectral_sword', 'effect99_entities'] },
     'minecraft:scale': { value: 0.55 },
@@ -766,9 +775,6 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
     'minecraft:instant_despawn': {},
   };
 
-  ent.events['minecraft:entity_spawned'] = {
-    add: { component_groups: ['effect:default_crystal'] },
-  };
   ent.events['minecraft:crystal_explode'] = {
     sequence: [
       {
@@ -783,11 +789,11 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
     ],
   };
   ent.events['effect:spectral_rider'] = {
-    remove: { component_groups: ['effect:default_crystal', 'effect:ender_crystal_scale'] },
+    remove: { component_groups: ['effect:ender_crystal_scale'] },
     add: { component_groups: ['effect:spectral_rider'] },
   };
   ent.events['effect:end_scale'] = {
-    remove: { component_groups: ['effect:default_crystal', 'effect:ender_crystal_scale'] },
+    remove: { component_groups: ['effect:ender_crystal_scale'] },
     add: { component_groups: ['effect:spectral_rider'] },
     queue_command: {
       command: [
@@ -797,7 +803,7 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
     },
   };
   ent.events['effect:ender_crystal_scale'] = {
-    remove: { component_groups: ['effect:default_crystal', 'effect:spectral_rider'] },
+    remove: { component_groups: ['effect:spectral_rider'] },
     add: { component_groups: ['effect:ender_crystal_scale'] },
   };
   ent.events['effect:despawn'] = {
@@ -1217,6 +1223,16 @@ for (const f of customEntityFiles.sort()) {
     }
   }
 
+  // 1.26 expects a sensor object with triggers, not the old array of
+  // on_environment wrappers used by several 2.8.8 entities.
+  for (const components of [ent.components || {}, ...Object.values(ent.component_groups)]) {
+    const sensor = components['minecraft:environment_sensor'];
+    if (Array.isArray(sensor)) {
+      components['minecraft:environment_sensor'] = {
+        triggers: sensor.map((entry) => entry.on_environment ?? entry),
+      };
+    }
+  }
   walkTransformCommands(ent);
   writeJson(path.join(BP, 'entities', f), raw);
 }

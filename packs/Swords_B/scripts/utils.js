@@ -61,7 +61,11 @@ export function consumeMainhandDurability(player, amount) {
 export function giveOrDropItem(player, itemStack) {
     try {
         const inv = player.getComponent(EntityComponentTypes.Inventory);
-        const leftover = inv?.container?.addItem(itemStack);
+        if (!inv?.container) {
+            player.dimension.spawnItem(itemStack, player.location);
+            return;
+        }
+        const leftover = inv.container.addItem(itemStack);
         if (leftover) {
             player.dimension.spawnItem(leftover, player.location);
         }
@@ -155,40 +159,55 @@ export function safeRandomTeleport(entity, minRadius, maxRadius) {
         const origin = entity.location;
         const heightRange = dim.heightRange;
         for (let attempt = 0; attempt < 24; attempt++) {
-            const angle = Math.random() * Math.PI * 2;
-            const dist = minRadius + Math.random() * (maxRadius - minRadius);
-            const tx = Math.floor(origin.x + Math.cos(angle) * dist);
-            const tz = Math.floor(origin.z + Math.sin(angle) * dist);
-            const startY = Math.min(heightRange.max - 3, Math.floor(origin.y) + 12);
-            const endY = Math.max(heightRange.min + 1, Math.floor(origin.y) - 12);
-            for (let y = startY; y >= endY; y--) {
-                const below = dim.getBlock({ x: tx, y: y - 1, z: tz });
-                const foot = dim.getBlock({ x: tx, y, z: tz });
-                const head = dim.getBlock({ x: tx, y: y + 1, z: tz });
-                if (!below || !foot || !head)
-                    continue;
-                if (!below.isAir &&
-                    !below.isLiquid &&
-                    below.typeId !== 'minecraft:magma' &&
-                    below.typeId !== 'minecraft:cactus' &&
-                    below.typeId !== 'effect99:lightblock' &&
-                    below.typeId !== 'effect99:lightblock2' &&
-                    (foot.isAir ||
-                        foot.typeId === 'minecraft:short_grass' ||
-                        foot.typeId === 'minecraft:snow_layer' ||
-                        foot.typeId === 'effect99:lightblock' ||
-                        foot.typeId === 'effect99:lightblock2') &&
-                    (head.isAir ||
-                        head.typeId === 'effect99:lightblock' ||
-                        head.typeId === 'effect99:lightblock2')) {
-                    dim.spawnParticle('minecraft:portal_directional', entity.location);
-                    dim.playSound('mob.endermen.portal', entity.location, { volume: 1.0, pitch: 1.0 });
-                    entity.teleport({ x: tx + 0.5, y, z: tz + 0.5 });
-                    dim.spawnParticle('minecraft:portal_directional', { x: tx + 0.5, y: y + 1.0, z: tz + 0.5 });
-                    dim.playSound('mob.endermen.portal', { x: tx + 0.5, y, z: tz + 0.5 }, { volume: 1.0, pitch: 1.1 });
-                    return true;
+            try {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = minRadius + Math.random() * (maxRadius - minRadius);
+                const tx = Math.floor(origin.x + Math.cos(angle) * dist);
+                const tz = Math.floor(origin.z + Math.sin(angle) * dist);
+                const startY = Math.min(heightRange.max - 3, Math.floor(origin.y) + 12);
+                const endY = Math.max(heightRange.min + 1, Math.floor(origin.y) - 12);
+                for (let y = startY; y >= endY; y--) {
+                    const below = dim.getBlock({ x: tx, y: y - 1, z: tz });
+                    const foot = dim.getBlock({ x: tx, y, z: tz });
+                    const head = dim.getBlock({ x: tx, y: y + 1, z: tz });
+                    if (!below || !foot || !head)
+                        continue;
+                    if (!below.isAir &&
+                        !below.isLiquid &&
+                        below.typeId !== 'minecraft:magma' &&
+                        below.typeId !== 'minecraft:cactus' &&
+                        below.typeId !== 'effect99:lightblock' &&
+                        below.typeId !== 'effect99:lightblock2' &&
+                        (foot.isAir ||
+                            foot.typeId === 'minecraft:short_grass' ||
+                            foot.typeId === 'minecraft:snow_layer' ||
+                            foot.typeId === 'effect99:lightblock' ||
+                            foot.typeId === 'effect99:lightblock2') &&
+                        (head.isAir ||
+                            head.typeId === 'effect99:lightblock' ||
+                            head.typeId === 'effect99:lightblock2')) {
+                        try {
+                            dim.spawnParticle('minecraft:portal_directional', entity.location);
+                        }
+                        catch { }
+                        try {
+                            dim.playSound('mob.endermen.portal', entity.location, { volume: 1.0, pitch: 1.0 });
+                        }
+                        catch { }
+                        entity.teleport({ x: tx + 0.5, y, z: tz + 0.5 });
+                        try {
+                            dim.spawnParticle('minecraft:portal_directional', { x: tx + 0.5, y: y + 1.0, z: tz + 0.5 });
+                        }
+                        catch { }
+                        try {
+                            dim.playSound('mob.endermen.portal', { x: tx + 0.5, y, z: tz + 0.5 }, { volume: 1.0, pitch: 1.1 });
+                        }
+                        catch { }
+                        return true;
+                    }
                 }
             }
+            catch { } // A single unloaded candidate must not abort the other attempts.
         }
     }
     catch { }

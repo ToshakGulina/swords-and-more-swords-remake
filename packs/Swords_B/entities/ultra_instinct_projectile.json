@@ -70,9 +70,9 @@
         ],
         "reflect_on_hurt": false
       },
-      "minecraft:environment_sensor": [
-        {
-          "on_environment": {
+      "minecraft:environment_sensor": {
+        "triggers": [
+          {
             "filters": {
               "all_of": [
                 {
@@ -83,8 +83,8 @@
             },
             "event": "projectile_particle"
           }
-        }
-      ],
+        ]
+      },
       "minecraft:pushable": {
         "is_pushable": false,
         "is_pushable_by_piston": false

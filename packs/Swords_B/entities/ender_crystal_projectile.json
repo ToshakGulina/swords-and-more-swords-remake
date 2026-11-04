@@ -65,9 +65,9 @@
       },
       "minecraft:fire_immune": true,
       "minecraft:physics": {},
-      "minecraft:environment_sensor": [
-        {
-          "on_environment": {
+      "minecraft:environment_sensor": {
+        "triggers": [
+          {
             "filters": {
               "all_of": [
                 {
@@ -78,8 +78,8 @@
             },
             "event": "projectile_particle"
           }
-        }
-      ]
+        ]
+      }
     },
     "events": {
       "minecraft:crystal_explode": {

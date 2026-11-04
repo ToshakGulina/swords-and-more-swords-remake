@@ -1,5 +1,7 @@
+import { spawnSwordLightning } from './lightningOrigin.js';
 import { BlockPermutation, EntityComponentTypes, EntityDamageCause, EntitySwingSource, EquipmentSlot, GameMode, ItemStack, Player, system, world, } from '@minecraft/server';
-import { isTimeSwordActive } from './passiveEngine.js';
+import { boostClockSword } from './randomTickManager.js';
+import { mountPlayerSlime } from './passiveEngine.js';
 import { consumeMainhandDurability, getMainhandItem, growInstantJungleTree, isFullMoonNight, isProtectedEntity, safeRandomTeleport, shootCustomProjectile, } from './utils.js';
 function checkAndStartCooldown(player, category, seconds) {
     try {
@@ -320,8 +322,7 @@ export function registerItemComponents(registry) {
                         break;
                     }
                     case 'effect:quartz_sword': {
-                        // 600 lethal damage + instant sacrifice of wielder
-                        hitEntity.applyDamage(600, { cause: EntityDamageCause.magic, damagingEntity: attackingEntity });
+                        // The item already deals its native 600 damage; do not apply it twice.
                         dim.spawnParticle('minecraft:knockback_roar_particle', {
                             x: hitEntity.location.x,
                             y: hitEntity.location.y + 1,
@@ -366,7 +367,7 @@ export function registerItemComponents(registry) {
                     case 'effect:wolf_sword': {
                         // Exact 2.8.8: 20 total melee damage during Full Moon night!
                         if (isFullMoonNight()) {
-                            hitEntity.applyDamage(20, { cause: EntityDamageCause.entityAttack, damagingEntity: attackingEntity });
+                            // Damage is supplied by the player's transformed attack component plus the held sword.
                             dim.playSound('mob.wolf.bark', hitEntity.location, { volume: 1.0, pitch: 0.55 });
                         }
                         break;
@@ -413,7 +414,7 @@ export function registerItemComponents(registry) {
                             if (attackingEntity instanceof Player) {
                                 shootCustomProjectile(attackingEntity, 'entity:lightning_projectile', 1.5);
                             }
-                            dim.spawnEntity('minecraft:lightning_bolt', hitEntity.location);
+                            spawnSwordLightning(dim, hitEntity.location);
                         }
                         break;
                     }
@@ -473,19 +474,8 @@ export function registerItemComponents(registry) {
                         break;
                     }
                     case 'effect:slime_sword': {
-                        // Re-mount existing nearby mountable_slime or spawn one if missing
-                        const existing = dim.getEntities({
-                            location: player.location,
-                            maxDistance: 16,
-                            type: 'entity:mountable_slime',
-                        });
-                        const slime = existing[0] ??
-                            dim.spawnEntity('entity:mountable_slime', player.location, {
-                                spawnEvent: 'minecraft:entity_spawned',
-                            });
-                        slime.triggerEvent('default_slime');
-                        const rideable = slime.getComponent(EntityComponentTypes.Rideable);
-                        rideable?.addRider(player);
+                        // Reuse only the caller's tracked companion, never another player's mount.
+                        mountPlayerSlime(player);
                         dim.playSound('mob.slime.big', player.location, { volume: 1.0, pitch: 1.0 });
                         break;
                     }
@@ -503,23 +493,7 @@ export function registerItemComponents(registry) {
                                 catch { }
                             }
                         }
-                        try {
-                            if (!isTimeSwordActive()) {
-                                dim.runCommand('gamerule randomtickspeed 30');
-                                world.setDynamicProperty('effect:random_tick_boosted', true);
-                            }
-                            system.runTimeout(() => {
-                                try {
-                                    const activeTime = isTimeSwordActive();
-                                    world
-                                        .getDimension('overworld')
-                                        .runCommand(`gamerule randomtickspeed ${activeTime ? 300 : 1}`);
-                                    world.setDynamicProperty('effect:random_tick_boosted', activeTime);
-                                }
-                                catch { }
-                            }, 100);
-                        }
-                        catch { }
+                        boostClockSword();
                         dim.playSound('random.orb', player.location, { volume: 1.0, pitch: 0.6 });
                         consumeMainhandDurability(player, 10);
                         break;
@@ -825,7 +799,7 @@ export function registerItemComponents(registry) {
                         LIGHTNING_RING_OFFSETS.forEach(([ox, oy, oz], idx) => {
                             system.runTimeout(() => {
                                 try {
-                                    dim.spawnEntity('minecraft:lightning_bolt', {
+                                    spawnSwordLightning(dim, {
                                         x: origin.x + ox,
                                         y: origin.y + oy,
                                         z: origin.z + oz,

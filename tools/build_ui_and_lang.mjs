@@ -1,13 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const jsonc = require('/tmp/refs/node_modules/jsonc-parser');
+const jsonc = require('jsonc-parser');
 
-const ROOT = '/home/user/swords-and-more-swords-remake';
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const RP = path.join(ROOT, 'packs/Swords_R');
-const SRC_288_RP = '/tmp/mcaddons/2.8.8/Swords_R';
+const SRC_288_RP = path.join(process.env.SAMS_ORIGINAL ?? '/tmp/mcaddons/2.8.8', 'Swords_R');
 
 function writeJson(filePath, data) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -104,11 +105,11 @@ for (const line of srcLangRaw.split('\n')) {
 }
 
 // Update obsolete 1.20 / Holiday Creator Features notice in en_US
-enMap.set('updates_changelog.header.title', '§l§6Changelog §r§fV3.0.3 (1.26.60+ Remake)');
+enMap.set('updates_changelog.header.title', '§l§6Changelog §r§fV3.0.4 (1.26.60+ Remake)');
 enMap.set('effect.updates_changelog.text_0', '• Full remake for Minecraft Bedrock 1.26.60+ (Android & Windows)');
 enMap.set('effect.updates_changelog.text_1', '• Works WITHOUT Holiday Creator Features or any experimental toggles!');
 enMap.set('effect.updates_changelog.text_2', '• Restored all 38 swords, bosses, custom ores (including Deepslate & End), Desert Well wishes, 3D animations & Inventory red-sword Encyclopedia button');
-enMap.set('effect.updates_changelog.text_3', '• Audited & verified all projectiles, air-swing attacks, Shulker shell, Nether Living Flames, Jungle fishing, and Bedrock-shattering explosions');
+enMap.set('effect.updates_changelog.text_3', '• Static checks and targeted gameplay-script tests; in-game verification is still required');
 enMap.set('effect.basic_information.text_0', '§a• No experimental world toggles are needed! Works natively on Minecraft Bedrock 1.26.60+ (Android & Windows).');
 enMap.set('effect.basic_information.text_1', '§e• Press the red Sword icon at the top right of the Inventory screen (next to X, or [?] in the Pause menu) to view all swords, recipes, and bosses.');
 enMap.set('effect.basic_information.text_3', '§6• Complete collection of 38+ legendary swords with unique abilities, bosses, and transformations.');
@@ -147,7 +148,10 @@ enMap.set('effect.cursed_pumpkin_sword.text.3', '-Repairable: true (With pumpkin
 enMap.set('effect.cursed_pumpkin_sword.text.4', '-Special skills:');
 enMap.set('effect.cursed_pumpkin_sword.text.5', '  When attacking, launches glowing cursed pumpkin projectiles with an 80% chance.');
 enMap.set('effect.cursed_pumpkin_sword.text.6', '-How to create or get it:');
-enMap.set('effect.cursed_pumpkin_sword.text.7', '  Break pumpkin blocks in the world (0.5% chance per broken pumpkin).');
+enMap.set('effect.cursed_pumpkin_sword.text.7', '  Break pumpkin blocks in the world (0.5% chance per block, once per player).');
+
+enMap.set('effect.blaze_sword.text.13', '  A snow golem must kill a blaze (2.5% chance).');
+enMap.set('effect.bone_sword.text.9', '  Kill skeletons in a dark desert (0.7% chance).');
 
 // Ensure every `item.effect:*` also has `.name` alias for 100% compatibility
 for (const [k, v] of [...enMap.entries()]) {
@@ -244,7 +248,7 @@ const ruOverrides = {
   'action.hint.exit.spider': 'Нажмите красться, чтобы слезть с паука',
 
   // How-To-Play Headers & Categories
-  'updates_changelog.header.title': '§l§6Список изменений §r§fV3.0.3 (1.26.60+)',
+  'updates_changelog.header.title': '§l§6Список изменений §r§fV3.0.4 (1.26.60+)',
   'basic_information.header.title': '§l§6О моде Swords and More Swords',
   'howtoplay.updates_changelog.title': '§lИнформация',
   'howtoplay.basic_information.title': '§lИнформация',
@@ -271,7 +275,7 @@ const ruOverrides = {
   'effect.basic_information.text_4': '• Команда «/function give» выдаёт все мечи и материалы мода.',
   'effect.basic_information.text_5': '• Все мечи доступны во вкладке «Мечи» творческого инвентаря.',
   'effect.basic_information.text_7': '§7Оригинальный автор идеи и текстур: §bEffect99',
-  'effect.basic_information.text_8': '§7Адаптация под Minecraft Bedrock 1.26.60+ (Android и Windows): версия 3.0.3',
+  'effect.basic_information.text_8': '§7Адаптация под Minecraft Bedrock 1.26.60+ (Android и Windows): версия 3.0.4',
   'basic_information.header.title_1': '  §lСоздатель оригинала: Effect99',
 
   // Blocks & Items Guide
@@ -432,7 +436,7 @@ const ruOverrides = {
   'effect.bone_sword.text.6': '  Посевы в радиусе 2 блоков растут намного быстрее.',
   'effect.bone_sword.text.7': '  Вражеские стрелы в радиусе 8 блоков резко замедляются.',
   'effect.bone_sword.text.8': '-Как получить:',
-  'effect.bone_sword.text.9': '  Убивать скелетов ночью в пустыне (шанс 0.7%).',
+  'effect.bone_sword.text.9': '  Убивать скелетов при слабом освещении в пустыне (шанс 0.7%).',
 
   // 12. Wither Skeleton Sword
   'howtoplay.wither_skeleton_sword': '§lМеч визер-скелета',
@@ -545,7 +549,7 @@ const ruOverrides = {
   'effect.blaze_sword.text.10': '  Вокруг вашего тела вращаются огненные стержни Ифрита.',
   'effect.blaze_sword.text.11': '  Вода наносит вам урон, пока меч в руке.',
   'effect.blaze_sword.text.12': '-Как получить:',
-  'effect.blaze_sword.text.13': '  Снежный голем должен убить Ифрита снежками (шанс 3%).',
+  'effect.blaze_sword.text.13': '  Снежный голем должен убить ифрита (шанс 2.5%).',
 
   // 20. Nether Star Sword
   'howtoplay.nether_star_sword': '§lМеч Звезды Незера',
@@ -864,7 +868,7 @@ const ruOverrides = {
   'effect.cursed_pumpkin_sword.text.4': '-Особые навыки:',
   'effect.cursed_pumpkin_sword.text.5': '  При взмахе и ударе с шансом 80% выпускает светящиеся проклятые тыквенные снаряды.',
   'effect.cursed_pumpkin_sword.text.6': '-Как получить:',
-  'effect.cursed_pumpkin_sword.text.7': '  Ломайте тыквы в мире (шанс 0.5% с каждой сломанной тыквы).',
+  'effect.cursed_pumpkin_sword.text.7': '  Ломайте тыквы в мире (шанс 0.5% с каждой тыквы, один раз на игрока).',
 };
 
 for (const [k, v] of Object.entries(ruOverrides)) {

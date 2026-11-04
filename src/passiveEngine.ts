@@ -17,6 +17,8 @@ import {
 } from '@minecraft/server';
 import { BRIGHT_LIGHT_SWORDS, LIGHT_EMITTING_SWORDS } from './blockComponents.js';
 import { tryConvertSpongeSword } from './swordSkills.js';
+import { recoverRandomTickSpeed, setTimeSwordActive } from './randomTickManager.js';
+import { spawnSwordLightning } from './lightningOrigin.js';
 import {
   getMainhandItem,
   getOffhandItem,
@@ -64,7 +66,6 @@ const airborneSlimeIds = new Set<string>();
 const nextLapisTick = new Map<string, number>();
 const nextBeeFlowerTick = new Map<string, number>();
 const werewolfCursedPlayers = new Set<string>();
-let timeSwordActiveInWorld = false;
 
 const SMALL_FLOWERS = [
   'minecraft:dandelion',
@@ -179,8 +180,19 @@ export function getActiveShulkerShieldOwner(shieldId: string): Player | undefine
   return undefined;
 }
 
-export function isTimeSwordActive(): boolean {
-  return timeSwordActiveInWorld;
+// A mount belongs to one player; never claim an arbitrary nearby player's mount.
+export function mountPlayerSlime(player: Player): void {
+  let slime = playerSlimeMount.get(player.id);
+  if (!slime || !slime.isValid || slime.dimension.id !== player.dimension.id) {
+    cleanupHelperEntity(playerSlimeMount, player.id, 'despawn');
+    slime = player.dimension.spawnEntity('entity:mountable_slime', player.location, {
+      spawnEvent: 'minecraft:entity_spawned',
+    });
+    playerSlimeMount.set(player.id, slime);
+  }
+  slime.triggerEvent('default_slime');
+  const rideable = slime.getComponent(EntityComponentTypes.Rideable) as EntityRideableComponent | undefined;
+  rideable?.addRider(player);
 }
 
 function cleanupAllHelpersForPlayer(playerId: string): void {
@@ -195,13 +207,7 @@ function cleanupAllHelpersForPlayer(playerId: string): void {
 export function startPassiveEngine(): void {
   let tick = 0;
 
-  // Recover `randomtickspeed` if a previous world session closed while Time Sword / Clock Sword boost was active!
-  try {
-    if (world.getDynamicProperty('effect:random_tick_boosted') === true) {
-      world.getDimension('overworld').runCommand('gamerule randomtickspeed 1');
-      world.setDynamicProperty('effect:random_tick_boosted', false);
-    }
-  } catch {}
+  recoverRandomTickSpeed();
 
   // Lifecycle cleanup on disconnect, respawn, world-rejoin, and portal dimension travel
   world.afterEvents.playerLeave.subscribe((ev) => {
@@ -211,6 +217,7 @@ export function startPassiveEngine(): void {
     shulkerToggleCooldown.delete(ev.playerId);
     nextLapisTick.delete(ev.playerId);
     nextBeeFlowerTick.delete(ev.playerId);
+    werewolfCursedPlayers.delete(ev.playerId);
   });
 
   world.afterEvents.playerDimensionChange.subscribe((ev) => {
@@ -227,18 +234,7 @@ export function startPassiveEngine(): void {
     if (!ev.initialSpawn) {
       werewolfCursedPlayers.delete(p.id);
       cleanupAllHelpersForPlayer(p.id);
-    } else {
-      // Remove any leftover spider_mount or shulker_shield saved in chunk around rejoining player
-      try {
-        for (const oldEnt of p.dimension.getEntities({ location: p.location, maxDistance: 6 })) {
-          if (
-            oldEnt.typeId === 'entity:shulker_shield' ||
-            (oldEnt.typeId === 'minecraft:spider' && oldEnt.matches({ families: ['spider_mount'] }))
-          ) {
-            oldEnt.remove();
-          }
-        }
-      } catch {}
+
     }
   });
 
@@ -294,6 +290,8 @@ export function startPassiveEngine(): void {
           }
         } catch {}
 
+        if (prevMainId === 'effect:lapis_sword' && mainId !== prevMainId) nextLapisTick.delete(player.id);
+
         // Werewolf Full Moon transformation howl & particle FX!
         if (equipKey === 'wolf_transformation' && prevKey !== 'wolf_transformation') {
           try {
@@ -323,17 +321,7 @@ export function startPassiveEngine(): void {
         // Auto-summon Baby Slime Mount when equipping Slime Sword!
         if (mainId === 'effect:slime_sword' && prevMainId !== 'effect:slime_sword') {
           try {
-            let slime = playerSlimeMount.get(player.id);
-            if (!slime || !slime.isValid) {
-              slime = dim.spawnEntity('entity:mountable_slime', player.location, {
-                spawnEvent: 'minecraft:entity_spawned',
-              });
-              playerSlimeMount.set(player.id, slime);
-            } else {
-              slime.triggerEvent('default_slime');
-            }
-            const rideable = slime.getComponent(EntityComponentTypes.Rideable) as EntityRideableComponent | undefined;
-            rideable?.addRider(player);
+            mountPlayerSlime(player);
           } catch {}
         }
 
@@ -356,7 +344,7 @@ export function startPassiveEngine(): void {
         if (mainId === 'effect:lightning_sword' && prevMainId !== 'effect:lightning_sword') {
           try {
             const skyY = Math.min(dim.heightRange.max - 2, player.location.y + 45);
-            dim.spawnEntity('minecraft:lightning_bolt', {
+            spawnSwordLightning(dim, {
               x: player.location.x,
               y: skyY,
               z: player.location.z,
@@ -779,9 +767,13 @@ export function startPassiveEngine(): void {
 
           case 'effect:lapis_sword': {
             // Exact description: 5 XP in a random period of between 2.5 and 6 seconds (50..120 ticks)
-            const due = nextLapisTick.get(player.id) ?? tick + 60;
+            let due = nextLapisTick.get(player.id);
+            if (due === undefined) {
+              due = tick + 50 + Math.floor(Math.random() * 71);
+              nextLapisTick.set(player.id, due);
+            }
             if (tick >= due) {
-              nextLapisTick.set(player.id, tick + 50 + Math.floor(Math.random() * 70));
+              nextLapisTick.set(player.id, tick + 50 + Math.floor(Math.random() * 71));
               player.addExperience(5);
               dim.playSound('random.orb', player.location, { volume: 0.3, pitch: 1.0 });
             }
@@ -894,16 +886,9 @@ export function startPassiveEngine(): void {
             if (tick % 10 === 0) {
               let slime = playerSlimeMount.get(player.id);
               if (!slime || !slime.isValid) {
-                const nearby = dim.getEntities({
-                  location: player.location,
-                  maxDistance: 14,
-                  type: 'entity:mountable_slime',
+                slime = dim.spawnEntity('entity:mountable_slime', player.location, {
+                  spawnEvent: 'minecraft:entity_spawned',
                 });
-                slime =
-                  nearby[0] ??
-                  dim.spawnEntity('entity:mountable_slime', player.location, {
-                    spawnEvent: 'minecraft:entity_spawned',
-                  });
                 playerSlimeMount.set(player.id, slime);
               }
               try {
@@ -1198,14 +1183,7 @@ export function startPassiveEngine(): void {
       } catch {}
     }
 
-    // Toggle world randomTickSpeed when Time Sword is held vs released (persisted for crash/reload recovery!)
-    if (anyTimeSword !== timeSwordActiveInWorld) {
-      timeSwordActiveInWorld = anyTimeSword;
-      try {
-        world.getDimension('overworld').runCommand(`gamerule randomtickspeed ${anyTimeSword ? 300 : 1}`);
-        world.setDynamicProperty('effect:random_tick_boosted', anyTimeSword);
-      } catch {}
-    }
+    setTimeSwordActive(anyTimeSword);
 
     // Handle Winged Mountable Slime landing stomp AoE ONLY when landing from a jump while ridden!
     if (tick % 3 === 0) {

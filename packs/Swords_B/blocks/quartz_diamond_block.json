@@ -44,8 +44,7 @@
           "ambient_occlusion": 1,
           "face_dimming": true
         }
-      },
-      "effect99:quartz_diamond_block": {}
+      }
     }
   }
 }

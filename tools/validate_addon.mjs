@@ -1,18 +1,18 @@
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
+import { pathToFileURL } from 'node:url';
 
-const require = createRequire(
-  fs.existsSync('node_modules/jsonc-parser') ? import.meta.url : '/tmp/refs/package.json'
-);
+const require = createRequire(import.meta.url);
 const { parse: parseJsonc, printParseErrorCode } = require('jsonc-parser');
 const Ajv = require('ajv');
 const addFormats = require('ajv-formats');
 
 const BP = 'packs/Swords_B';
 const RP = 'packs/Swords_R';
-const VANILLA_RP = '/tmp/refs/bedrock-samples/resource_pack';
-const VANILLA_BP = '/tmp/refs/bedrock-samples/behavior_pack';
+const VANILLA_RP = path.join(process.env.SAMS_SAMPLES ?? '/tmp/refs/bedrock-samples', 'resource_pack');
+const VANILLA_BP = path.join(process.env.SAMS_SAMPLES ?? '/tmp/refs/bedrock-samples', 'behavior_pack');
+const SCHEMAS = path.resolve(process.env.SAMS_SCHEMAS ?? '/tmp/refs/schemas');
 
 const BUILTIN_VANILLA_TERRAIN_TEXTURES = new Set(['sapling_jungle']);
 const BUILTIN_VANILLA_ENTITY_TEXTURES = new Set([
@@ -88,6 +88,11 @@ function readJsonChecked(filePath, requireStrictJson = false) {
   return data;
 }
 
+// Missing references must not silently turn a partial validation into a pass.
+for (const [label, dir] of [['Mojang behavior samples', VANILLA_BP], ['Mojang resource samples', VANILLA_RP], ['Blockception schemas', SCHEMAS]]) {
+  if (!fs.existsSync(dir)) err(`${label} not found: ${dir}. Set SAMS_SAMPLES / SAMS_SCHEMAS.`);
+}
+
 // 1. Validate all JSON/JSONC files in BP and RP
 const bpJsonFiles = walk(BP, '.json');
 const rpJsonFiles = walk(RP, '.json');
@@ -98,14 +103,14 @@ console.log(`Checked ${bpJsonFiles.length} BP JSON files (strict) and ${rpJsonFi
 // 2. Blockception 1.26.60 JSON Schema Validation on Items & Blocks
 const ajv = new Ajv({ allErrors: false, strict: false, validateFormats: false });
 addFormats(ajv);
-for (const sf of walk('/tmp/refs/schemas', '.json')) {
+for (const sf of walk(SCHEMAS, '.json')) {
   if (sf.includes('/source/')) continue;
   try {
     const schemaObj = JSON.parse(fs.readFileSync(sf, 'utf8'));
     if (schemaObj.$id) {
       ajv.addSchema(schemaObj, schemaObj.$id);
     }
-    const relUri = 'file:///tmp/refs/schemas/' + path.relative('/tmp/refs/schemas', sf);
+    const relUri = pathToFileURL(path.resolve(sf)).href;
     if (!ajv.getSchema(relUri)) {
       ajv.addSchema(schemaObj, relUri);
     }
@@ -128,12 +133,29 @@ function validateWithBlockception(schemaPath, files, label) {
     }
     console.log(`Schema [${label}]: ${passed}/${files.length} valid against Blockception 1.26.60!`);
   } catch (e) {
-    warn(`Could not compile Blockception schema ${label}: ${e.message}`);
+    err(`Could not compile Blockception schema ${label}: ${e.message}`);
   }
 }
 
-validateWithBlockception('/tmp/refs/schemas/behavior/items/items.json', walk(path.join(BP, 'items'), '.json'), 'BP Items 1.26.60');
-validateWithBlockception('/tmp/refs/schemas/behavior/blocks/blocks.json', walk(path.join(BP, 'blocks'), '.json'), 'BP Blocks 1.26.60');
+validateWithBlockception(path.join(SCHEMAS, 'behavior/items/items.json'), walk(path.join(BP, 'items'), '.json'), 'BP Items 1.26.60');
+validateWithBlockception(path.join(SCHEMAS, 'behavior/blocks/blocks.json'), walk(path.join(BP, 'blocks'), '.json'), 'BP Blocks 1.26.60');
+for (const folder of ['recipes', 'features', 'feature_rules', 'spawn_rules']) {
+  validateWithBlockception(path.join(SCHEMAS, 'behavior', folder, `${folder}.json`), walk(path.join(BP, folder), '.json'), `BP ${folder}`);
+}
+// The entity schema is deliberately not counted as a reliable oracle: it
+// rejects valid Mojang vanilla 1.26 entities (including pushable and timers).
+
+
+// Entity sensors in current Bedrock use {triggers: ...}; the original add-on
+// contained legacy arrays of {on_environment: ...} that do not match that shape.
+for (const f of walk(path.join(BP, 'entities'), '.json')) {
+  const entity = readJsonChecked(f, true)?.['minecraft:entity'];
+  if (!entity) continue;
+  for (const components of [entity.components || {}, ...Object.values(entity.component_groups || {})]) {
+    const sensor = components['minecraft:environment_sensor'];
+    if (sensor && (Array.isArray(sensor) || (Object.keys(sensor).length > 0 && !sensor.triggers))) err(`${f} has an invalid environment_sensor shape`);
+  }
+}
 
 // 3. Check 1.26.20 - 1.26.60 breaking-change patterns
 for (const f of [...bpJsonFiles, ...rpJsonFiles]) {

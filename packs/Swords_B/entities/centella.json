@@ -109,17 +109,17 @@
       },
       "minecraft:fire_immune": true,
       "minecraft:physics": {},
-      "minecraft:environment_sensor": [
-        {
-          "on_environment": {
+      "minecraft:environment_sensor": {
+        "triggers": [
+          {
             "filters": {
               "test": "is_family",
               "value": "centella"
             },
             "event": "minecraft:centella"
           }
-        }
-      ]
+        ]
+      }
     },
     "events": {
       "minecraft:entity_spawned": {},

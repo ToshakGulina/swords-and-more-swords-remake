@@ -32,7 +32,7 @@
         }
       ],
       "render_controllers": [
-        "controller.render.witch"
+        "controller.render.effect_witch"
       ],
       "spawn_egg": {
         "texture": "spawn_egg_witch"

@@ -59,9 +59,9 @@
         "height": 0
       },
       "minecraft:physics": {},
-      "minecraft:environment_sensor": [
-        {
-          "on_environment": {
+      "minecraft:environment_sensor": {
+        "triggers": [
+          {
             "filters": {
               "all_of": [
                 {
@@ -72,8 +72,8 @@
             },
             "event": "particle"
           }
-        }
-      ]
+        ]
+      }
     },
     "events": {
       "despawn": {

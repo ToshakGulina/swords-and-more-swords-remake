@@ -56,7 +56,7 @@
         }
       ],
       "render_controllers": [
-        "controller.render.enderman"
+        "controller.render.effect_enderman"
       ],
       "spawn_egg": {
         "texture": "spawn_egg_enderman"
