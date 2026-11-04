@@ -68,6 +68,10 @@ function absorbSpongeWater(player) {
     return removed;
 }
 const spongeWaterTicks = new Map();
+// Reset the soak counter when a player starts a new life.
+export function resetSpongeSwordState(playerId) {
+    spongeWaterTicks.delete(playerId);
+}
 const lastDirectActionTick = new Map();
 function markDirectAction(player) {
     lastDirectActionTick.set(player.id, system.currentTick);

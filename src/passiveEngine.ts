@@ -16,7 +16,7 @@ import {
   world,
 } from '@minecraft/server';
 import { BRIGHT_LIGHT_SWORDS, LIGHT_EMITTING_SWORDS } from './blockComponents.js';
-import { tryConvertSpongeSword } from './swordSkills.js';
+import { resetSpongeSwordState, tryConvertSpongeSword } from './swordSkills.js';
 import { recoverRandomTickSpeed, setTimeSwordActive } from './randomTickManager.js';
 import {
   getMainhandItem,
@@ -255,10 +255,15 @@ export function startPassiveEngine(): void {
     const p = ev.player;
     lastEquipKey.delete(p.id);
     lastMainhandId.delete(p.id);
+    // Timers must restart with the new life; otherwise the first Lapis/Bee tick
+    // after a respawn is measured against a `tick` value from before the death and
+    // the passive appears to hang for one whole interval.
+    nextLapisTick.delete(p.id);
+    nextBeeFlowerTick.delete(p.id);
+    resetSpongeSwordState(p.id);
     if (!ev.initialSpawn) {
       werewolfCursedPlayers.delete(p.id);
       cleanupAllHelpersForPlayer(p.id);
-
     }
   });
 
