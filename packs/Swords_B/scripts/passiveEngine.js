@@ -1097,18 +1097,22 @@ export function startPassiveEngine() {
                         break;
                     }
                     case 'effect:time_sword': {
-                        // Time advances faster, player & all entities move much faster, plants grow much faster!
+                        // Exact 2.8.8 `minecraft:time_sword` event:
+                        //   gamerule randomtickspeed 300, effect @e[type=!player] speed 1 15,
+                        //   time add 30, movement 1. The holder themselves gets no Speed
+                        //   effect — their walk speed comes from the component group.
                         anyTimeSword = true;
                         world.setTimeOfDay((world.getTimeOfDay() + 30) % 24000);
-                        if (tick % 15 === 0) {
-                            player.addEffect('speed', 40, { amplifier: 3, showParticles: false });
-                            for (const e of dim.getEntities({ location: player.location, maxDistance: 24 })) {
-                                if (e.typeId !== 'minecraft:item' && e.typeId !== 'minecraft:xp_orb') {
-                                    try {
-                                        e.addEffect('speed', 40, { amplifier: 2, showParticles: false });
-                                    }
-                                    catch { }
+                        if (tick % 10 === 0) {
+                            for (const e of dim.getEntities({ location: player.location, maxDistance: 32 })) {
+                                if (e.typeId === 'minecraft:player' || e.typeId === 'minecraft:item' || e.typeId === 'minecraft:xp_orb') {
+                                    continue;
                                 }
+                                try {
+                                    // `effect ... speed 1 15 true` = 1 s, amplifier 15.
+                                    e.addEffect('speed', 20, { amplifier: 15, showParticles: false });
+                                }
+                                catch { }
                             }
                         }
                         break;
