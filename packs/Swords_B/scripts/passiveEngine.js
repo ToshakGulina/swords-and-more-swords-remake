@@ -714,7 +714,9 @@ export function startPassiveEngine() {
                             break;
                         }
                         if (tick % 10 === 0) {
-                            if (tick % 30 === 0 && Math.random() < 0.65) {
+                            // The equip event already melts snow/ice and sets nearby mobs alight;
+                            // its `fire_sword_sound` timer only replays the crackle every 0.2–0.7 s.
+                            if (Math.random() < 0.5) {
                                 dim.playSound('fire.fire', player.location, { volume: 0.6, pitch: 1.0 });
                             }
                             for (const e of dim.getEntities({ location: player.location, maxDistance: 2.2 })) {
