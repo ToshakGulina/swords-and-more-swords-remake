@@ -543,38 +543,46 @@ export function startPassiveEngine() {
                         break;
                     }
                     case 'effect:ice_sword': {
-                        // Exact description: "If the player is on fire the sword will turn into water."
+                        // Exact 2.8.8 `minecraft:ice_sword`: in lava the sword is destroyed
+                        // (`setblock ~ ~ ~ flowing_water` in non-Nether biomes first).
                         if (tick % 4 === 0) {
                             const foot = dim.getBlock(player.location);
-                            const onFireComp = player.getComponent('minecraft:onfire');
-                            const inLava = foot && (foot.typeId === 'minecraft:lava' || foot.typeId === 'minecraft:flowing_lava');
-                            if ((onFireComp || inLava) && player.getGameMode() !== GameMode.Creative) {
+                            const inLava = !!foot && (foot.typeId === 'minecraft:lava' || foot.typeId === 'minecraft:flowing_lava');
+                            if (inLava) {
                                 const eq = player.getComponent(EntityComponentTypes.Equippable);
                                 eq?.setEquipment(EquipmentSlot.Mainhand, undefined);
-                                if (dim.id !== 'minecraft:nether' && foot && (foot.isAir || foot.typeId.includes('fire') || inLava)) {
-                                    foot.setType('minecraft:water');
+                                if (dim.id !== 'minecraft:nether' && foot) {
+                                    foot.setType('minecraft:flowing_water');
                                 }
                                 dim.playSound('random.fizz', player.location, { volume: 1.2, pitch: 0.8 });
                                 dim.spawnParticle('minecraft:cauldron_explosion_emitter', player.location);
                                 break;
                             }
-                            // All water under your feet turns to cracking Fake Ice (`from_water: true` preserves source water on melt!)
+                            // Every tick the sword also freezes the water in its footprint:
+                            // a 5x5 square plus the four 3-block arms, all at foot level -1.
                             const px = Math.floor(player.location.x);
                             const py = Math.floor(player.location.y) - 1;
                             const pz = Math.floor(player.location.z);
+                            const freeze = (dx, dz) => {
+                                const b = dim.getBlock({ x: px + dx, y: py, z: pz + dz });
+                                if (!b || (b.typeId !== 'minecraft:water' && b.typeId !== 'minecraft:flowing_water'))
+                                    return;
+                                const isSource = b.typeId === 'minecraft:water' &&
+                                    (b.permutation.getState('liquid_depth') ?? 0) === 0;
+                                b.setPermutation(BlockPermutation.resolve('effect99:fake_ice', {
+                                    'effect99:crack_stage': 0,
+                                    'effect99:from_water': isSource,
+                                }));
+                            };
                             for (let dx = -2; dx <= 2; dx++) {
-                                for (let dz = -2; dz <= 2; dz++) {
-                                    if (dx * dx + dz * dz > 5)
-                                        continue;
-                                    const b = dim.getBlock({ x: px + dx, y: py, z: pz + dz });
-                                    if (b && (b.typeId === 'minecraft:water' || b.typeId === 'minecraft:flowing_water')) {
-                                        const isSource = b.typeId === 'minecraft:water' && (b.permutation.getState('liquid_depth') ?? 0) === 0;
-                                        b.setPermutation(BlockPermutation.resolve('effect99:fake_ice', {
-                                            'effect99:crack_stage': 0,
-                                            'effect99:from_water': isSource,
-                                        }));
-                                    }
-                                }
+                                for (let dz = -2; dz <= 2; dz++)
+                                    freeze(dx, dz);
+                            }
+                            for (let d = -2; d <= 2; d++) {
+                                freeze(3, d);
+                                freeze(-3, d);
+                                freeze(d, 3);
+                                freeze(d, -3);
                             }
                         }
                         break;
