@@ -1163,10 +1163,14 @@ for (const f of customEntityFiles.sort()) {
     };
   }
   if (f === 'lightning_projectile.json') {
-    // Extend flight lifetime for ranged swings & define `particle` event for environment_sensor!
+    // 2.8.8 lifetime is 0.1 s, ticking: the bolt is fired from the player's head
+    // and lands ~2 blocks ahead, so it must vanish instantly on impact and never
+    // linger. None of this entity's own `on_hit` events reach the spark trail,
+    // because `run_command` runs at the world origin — the remake spawns the
+    // sparks from script instead (swordSkills.ts). Keep the component verbatim.
     ent.components['minecraft:timer'] = {
-      time: [1.2, 1.2],
-      looping: false,
+      time: [0.1, 0.1],
+      looping: true,
       time_down_event: { event: 'despawn', target: 'self' },
     };
     if (ent.components['minecraft:projectile']?.on_hit) {
@@ -1200,9 +1204,12 @@ for (const f of customEntityFiles.sort()) {
         command: ['summon entity:objective ~ ~ ~'],
       },
     };
+    // 2.8.8 `nether_star_sword` group: invisible tracer that ticks every 0.1 s
+    // and fires `minecraft:despawn` on each tick, i.e. it dies immediately after
+    // the 0.1 s flight it needs to reach the target.
     if (ent.component_groups?.nether_star_sword?.['minecraft:timer']) {
-      ent.component_groups.nether_star_sword['minecraft:timer'].time = [1.0, 1.0];
-      ent.component_groups.nether_star_sword['minecraft:timer'].looping = false;
+      ent.component_groups.nether_star_sword['minecraft:timer'].time = [0.1, 0.1];
+      ent.component_groups.nether_star_sword['minecraft:timer'].looping = true;
     }
     ent.events['effect:nether_star_tracer'] = {
       add: { component_groups: ['nether_star_sword'] },

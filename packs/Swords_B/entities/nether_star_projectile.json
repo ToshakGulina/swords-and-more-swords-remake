@@ -15,10 +15,10 @@
         },
         "minecraft:timer": {
           "time": [
-            1,
-            1
+            0.1,
+            0.1
           ],
-          "looping": false,
+          "looping": true,
           "time_down_event": {
             "event": "minecraft:despawn",
             "target": "self"

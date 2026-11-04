@@ -51,6 +51,22 @@ assert.equal(levitation.amplifier, 1, '2.8.8 bullet applies Levitation II (ampli
 assert.equal(levitation.durationnormal, 200, '200 ticks on normal difficulty');
 assert.deepEqual(swordBullet.on_hit.impact_damage.damage, { min: 4, max: 4 }, '2.8.8 bullet hits for 4');
 
+
+// --- Projectile lifetimes --------------------------------------------------------
+// 2.8.8 gives both of these a 0.1 s looping timer that fires `despawn`, so the
+// projectile is gone a tenth of a second after it spawns. The remake once let the
+// lightning projectile fly for 1.2 s and the star tracer for 1.0 s, which left a
+// visible bolt/star hanging in the air.
+const lightningTimer = ent('lightning_projectile').components['minecraft:timer'];
+assert.deepEqual(lightningTimer.time, [0.1, 0.1], '2.8.8 lightning projectile lives 0.1 s');
+assert.equal(lightningTimer.looping, true);
+assert.equal(lightningTimer.time_down_event.event, 'despawn');
+
+const starTimer = ent('nether_star_projectile').component_groups.nether_star_sword['minecraft:timer'];
+assert.deepEqual(starTimer.time, [0.1, 0.1], '2.8.8 star tracer lives 0.1 s');
+assert.equal(starTimer.looping, true);
+assert.equal(starTimer.time_down_event.event, 'minecraft:despawn');
+
 // --- Player-launched variants stay boosted ---------------------------------------
 for (const name of ['fireball', 'wither_skull', 'wither_skull_dangerous']) {
   const shot = ent(name).component_groups['effect:player_shot']?.['minecraft:projectile'];
@@ -59,4 +75,4 @@ for (const name of ['fireball', 'wither_skull', 'wither_skull_dangerous']) {
   assert.equal(shot.gravity, 0.02);
 }
 
-console.log('Projectiles: arrow 1-4, fireball catches fire, skulls flat, bullet Levitation II');
+console.log('Projectiles: arrow 1-4, fireball catches fire, skulls flat, bullet Levitation II, 0.1 s timers');

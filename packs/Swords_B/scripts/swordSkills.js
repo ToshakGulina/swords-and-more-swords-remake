@@ -922,6 +922,18 @@ export function registerAirSwingEvents() {
                         fired = true;
                         if (Math.random() < 0.85) {
                             shootCustomProjectile(player, 'entity:lightning_projectile', 1.8);
+                            // 2.8.8 keeps an `electric_spark_particle` environment_sensor on the
+                            // projectile, but its `queue_command` runs at the world origin, so the
+                            // trail never appeared there either. Draw it from script instead.
+                            const sparkAt = player.getHeadLocation();
+                            const sparkDir = player.getViewDirection();
+                            for (let i = 1; i <= 3; i++) {
+                                dim.spawnParticle('minecraft:electric_spark_particle', {
+                                    x: sparkAt.x + sparkDir.x * i * 0.5,
+                                    y: sparkAt.y + sparkDir.y * i * 0.5,
+                                    z: sparkAt.z + sparkDir.z * i * 0.5,
+                                });
+                            }
                         }
                         break;
                     }
