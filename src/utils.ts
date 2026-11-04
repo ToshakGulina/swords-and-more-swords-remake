@@ -327,3 +327,42 @@ export function growInstantJungleTree(dim: Dimension, baseLoc: Vector3): void {
     dim.spawnParticle('minecraft:villager_happy', { x: bx + 0.5, y: by + 1.5, z: bz + 0.5 });
   } catch {}
 }
+
+// Biomes where precipitation falls as snow (or not at all). Used by both the
+// dropped-item rain reaction and the Sponge Sword, matching the original
+// `test: in_water_or_rain` semantics as closely as the script API allows.
+export function isNonRainingBiome(biomeId: string): boolean {
+  const b = biomeId.toLowerCase();
+  return (
+    b.includes('desert') ||
+    b.includes('savanna') ||
+    b.includes('mesa') ||
+    b.includes('badlands') ||
+    b.includes('snow') ||
+    b.includes('frozen') ||
+    b.includes('ice') ||
+    b.includes('cold') ||
+    b.includes('jagged_peaks') ||
+    b.includes('grove')
+  );
+}
+
+// `test: in_water_or_rain` replacement: rain in the Overworld, exposed to the
+// sky, in a biome that actually rains.
+export function isInRain(dimension: Dimension, location: Vector3): boolean {
+  if (dimension.id !== 'minecraft:overworld') return false;
+  let raining = false;
+  try {
+    raining = world.getDynamicProperty('effect:overworld_raining') === true;
+  } catch {
+    return false;
+  }
+  if (!raining) return false;
+  try {
+    const top = dimension.getTopmostBlock({ x: Math.floor(location.x), z: Math.floor(location.z) });
+    if (top && top.location.y > Math.floor(location.y)) return false;
+    return !isNonRainingBiome(dimension.getBiome(location).id);
+  } catch {
+    return false;
+  }
+}

@@ -15,7 +15,7 @@ import {
 import { getActiveShulkerShieldOwner } from './passiveEngine.js';
 import { handleOreBreak } from './blockComponents.js';
 import { registerAirSwingEvents } from './swordSkills.js';
-import { getMainhandItem, isDesertWellWater, safeRandomTeleport } from './utils.js';
+import { getMainhandItem, isDesertWellWater, isNonRainingBiome, safeRandomTeleport } from './utils.js';
 
 let isRainingOverworld = false;
 let lastCentellaDeathTick = -1000;
@@ -23,22 +23,6 @@ let lastCentellaDeathLoc: Vector3 | undefined;
 let lastCentellaDeathDimension: string | undefined;
 const manuallyDroppedBedrock = new Set<string>();
 const fadingFireSwordTicks = new Map<string, number>();
-
-function isNonRainingBiome(biomeId: string): boolean {
-  const b = biomeId.toLowerCase();
-  return (
-    b.includes('desert') ||
-    b.includes('savanna') ||
-    b.includes('mesa') ||
-    b.includes('badlands') ||
-    b.includes('snow') ||
-    b.includes('frozen') ||
-    b.includes('ice') ||
-    b.includes('cold') ||
-    b.includes('jagged_peaks') ||
-    b.includes('grove')
-  );
-}
 
 function convertSurroundingSand(dim: Dimension, center: Vector3, targetBlockId: string): void {
   const cx = Math.floor(center.x);

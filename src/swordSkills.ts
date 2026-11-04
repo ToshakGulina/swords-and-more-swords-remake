@@ -20,6 +20,7 @@ import {
   getMainhandItem,
   growInstantJungleTree,
   isFullMoonNight,
+  isInRain,
   isProtectedEntity,
   safeRandomTeleport,
   shootCustomProjectile,
@@ -35,26 +36,52 @@ function checkAndStartCooldown(player: Player, category: string, seconds: number
   }
 }
 
+// Exact 2.8.8 `minecraft:sponge_sword` event:
+//   fill ~2 ~2 ~2 ~-2 ~-2 ~-2 sponge 0 replace water  (only while in water/rain)
+//   fill ~2 ~2 ~2 ~-2 ~-2 ~-2 air 0 replace sponge
+//   fill ~2 ~2 ~2 ~-2 ~-2 ~-2 air 0 replace seagrass
+// The counter only advances when the player is in water or rain, and the sword
+// turns wet at 150, 155 or 160 depending on where the cadence started.
 function absorbSpongeWater(player: Player): number {
   const dim = player.dimension;
   const px = Math.floor(player.location.x);
   const py = Math.floor(player.location.y);
   const pz = Math.floor(player.location.z);
   let removed = 0;
+  let water = 0;
 
   try {
     for (let dx = -2; dx <= 2; dx++) {
       for (let dy = -2; dy <= 2; dy++) {
         for (let dz = -2; dz <= 2; dz++) {
           const b = dim.getBlock({ x: px + dx, y: py + dy, z: pz + dz });
-          if (
-            b &&
-            (b.typeId === 'minecraft:water' ||
-              b.typeId === 'minecraft:flowing_water' ||
-              b.typeId === 'minecraft:seagrass')
-          ) {
+          if (b && (b.typeId === 'minecraft:water' || b.typeId === 'minecraft:flowing_water')) {
+            water++;
+          }
+        }
+      }
+    }
+    if (water === 0) return 0;
+    if (player.isInWater || isInRain(dim, player.location)) {
+      for (let dx = -2; dx <= 2; dx++) {
+        for (let dy = -2; dy <= 2; dy++) {
+          for (let dz = -2; dz <= 2; dz++) {
+            const b = dim.getBlock({ x: px + dx, y: py + dy, z: pz + dz });
+            if (b && (b.typeId === 'minecraft:water' || b.typeId === 'minecraft:flowing_water')) {
+              b.setType('minecraft:sponge');
+              removed++;
+            }
+          }
+        }
+      }
+    }
+    // The second pass always runs, exactly like the unconditional third command.
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dy = -2; dy <= 2; dy++) {
+        for (let dz = -2; dz <= 2; dz++) {
+          const b = dim.getBlock({ x: px + dx, y: py + dy, z: pz + dz });
+          if (b && (b.typeId === 'minecraft:sponge' || b.typeId === 'minecraft:seagrass')) {
             b.setType('minecraft:air');
-            removed++;
           }
         }
       }
@@ -70,9 +97,17 @@ function markDirectAction(player: Player): void {
   lastDirectActionTick.set(player.id, system.currentTick);
 }
 
+// `scoreboard objectives add sponge_sword dummy` starts every player at 0, and
+// the original converts on reaching 150 — it keeps counting past 160 and simply
+// matches each of the three thresholds in turn.
+const SPONGE_WET_THRESHOLD = 150;
+
 export function tryConvertSpongeSword(player: Player): boolean {
-  const removed = absorbSpongeWater(player);
-  if (removed <= 0) return false;
+  absorbSpongeWater(player);
+  // The counter is advanced by the `in_water_or_rain` branch only; a dry player
+  // triggers the water→sponge commands without ever scoring.
+  const soaking = player.isInWater || isInRain(player.dimension, player.location);
+  if (!soaking) return false;
 
   const prev = (spongeWaterTicks.get(player.id) ?? 0) + 1;
   spongeWaterTicks.set(player.id, prev);
@@ -80,8 +115,8 @@ export function tryConvertSpongeSword(player: Player): boolean {
     player.dimension.playSound('random.fizz', player.location, { volume: 0.5, pitch: 1.1 });
   } catch {}
 
-  // Original description: "after several seconds absorbing water the sword will transform into a wet sponge sword"
-  if (prev < 4) return false;
+  // Exact 2.8.8: the conversion fires when the counter reaches 150, 155 or 160.
+  if (prev < SPONGE_WET_THRESHOLD) return false;
   spongeWaterTicks.delete(player.id);
 
   try {

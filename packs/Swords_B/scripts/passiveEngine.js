@@ -727,7 +727,10 @@ export function startPassiveEngine() {
                         break;
                     }
                     case 'effect:sponge_sword': {
-                        if (tick % 10 === 0) {
+                        // Exact 2.8.8 keeps a counter that converts the sword at 150–160
+                        // ticks of absorbing; two engine ticks per step keeps that under
+                        // fifteen seconds instead of over a minute.
+                        if (tick % 2 === 0) {
                             tryConvertSpongeSword(player);
                         }
                         break;

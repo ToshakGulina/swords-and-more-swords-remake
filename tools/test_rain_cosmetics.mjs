@@ -18,7 +18,9 @@ const empty = { getEntities() { return []; } };
 class ItemStack { constructor(typeId) { this.typeId = typeId; } }
 const ctx = vm.createContext({ ItemStack, EntityComponentTypes: { Item: 'item' }, WeatherType: { Clear: 'clear' },
   world: { afterEvents: signals, getDynamicProperty() { return true; }, getDimension(name) { return name === 'overworld' ? dim : empty; } },
-  system: { afterEvents: signals, runInterval(cb) { loop = cb; } }, registerAirSwingEvents() {} });
+  system: { afterEvents: signals, runInterval(cb) { loop = cb; } }, registerAirSwingEvents() {},
+  // Stripped utils import: the rain check asks whether the biome rains at all.
+  isNonRainingBiome: (id) => /desert|snow|frozen/.test(id) });
 vm.runInContext(`${code}\nthis.start=registerWorldEvents`, ctx); ctx.start();
 for (let i = 0; i < 9; i++) { loop(); assert.deepEqual(drops, []); }
 loop(); assert.deepEqual(drops, ['effect:obsidian_sword']); assert.equal(item.isValid, false);
