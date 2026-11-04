@@ -1,4 +1,3 @@
-give @s effect:swords_guide 1
 give @s effect:blaze_sword 1
 give @s effect:coal_sword 1
 give @s effect:shulker_sword 1

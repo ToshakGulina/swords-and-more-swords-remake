@@ -29,91 +29,13 @@ function writeJson(filePath, data) {
 }
 
 // ---------------------------------------------------------------------------
-// 0. Generate crisp 16x16 pixel-art icon for `swords_guide.png`
-// ---------------------------------------------------------------------------
-function makeGuidebookPng(outPath) {
-  const w = 16, h = 16;
-  // Palette: 0=transparent, 1=dark outline, 2=royal purple cover, 3=rich purple, 4=gold trim, 5=bright gold/sword, 6=parchment pages
-  const pal = {
-    '.': [0, 0, 0, 0],
-    '#': [32, 18, 45, 255],
-    'P': [88, 36, 130, 255],
-    'p': [122, 54, 172, 255],
-    'G': [218, 165, 32, 255],
-    'Y': [255, 230, 95, 255],
-    'W': [245, 238, 218, 255],
-  };
-  const art = [
-    '....#########...',
-    '...#GGGGGGGGG#..',
-    '..#GPPppppppPG#.',
-    '..#GPpppppYppW#.',
-    '..#GPppppYYYpW#.',
-    '..#GPpppYYYppW#.',
-    '..#GPppYYYpppW#.',
-    '..#GPpYYYppppW#.',
-    '..#GPYGYYppppW#.',
-    '..#GPpGGpppppW#.',
-    '..#GPGGpGppppW#.',
-    '..#GYGpppppppW#.',
-    '..#GPPppppppPG#.',
-    '..#GGGGGGGGGGW#.',
-    '...#WWWWWWWWW#..',
-    '....#########...',
-  ];
-  const raw = Buffer.alloc(h * (1 + w * 4));
-  for (let y = 0; y < h; y++) {
-    const rowOff = y * (1 + w * 4);
-    raw[rowOff] = 0; // filter None
-    for (let x = 0; x < w; x++) {
-      const rgba = pal[art[y][x]] || [0, 0, 0, 0];
-      const px = rowOff + 1 + x * 4;
-      raw[px] = rgba[0];
-      raw[px + 1] = rgba[1];
-      raw[px + 2] = rgba[2];
-      raw[px + 3] = rgba[3];
-    }
-  }
-  function crc32(buf) {
-    let c = 0xffffffff;
-    for (let i = 0; i < buf.length; i++) {
-      c ^= buf[i];
-      for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (c & 1 ? 0xedb88320 : 0);
-    }
-    return (c ^ 0xffffffff) >>> 0;
-  }
-  function chunk(type, data) {
-    const t = Buffer.from(type, 'ascii');
-    const len = Buffer.alloc(4);
-    len.writeUInt32BE(data.length, 0);
-    const crc = Buffer.alloc(4);
-    crc.writeUInt32BE(crc32(Buffer.concat([t, data])), 0);
-    return Buffer.concat([len, t, data, crc]);
-  }
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(w, 0);
-  ihdr.writeUInt32BE(h, 4);
-  ihdr[8] = 8; ihdr[9] = 6; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
-  const png = Buffer.concat([
-    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
-    chunk('IHDR', ihdr),
-    chunk('IDAT', zlib.deflateSync(raw)),
-    chunk('IEND', Buffer.alloc(0)),
-  ]);
-  fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  fs.writeFileSync(outPath, png);
-}
-
-makeGuidebookPng(path.join(RP, 'textures/items/swords_guide.png'));
-
-// ---------------------------------------------------------------------------
 // 1. Manifests (Swords_B & Swords_R) — Zero experimental toggles required!
 // ---------------------------------------------------------------------------
 writeJson(path.join(BP, 'manifest.json'), {
   format_version: 2,
   header: {
     name: '§6§lSwords and More Swords §r§a(1.26+ Remake)',
-    description: '§eПолное восстановление всех 38+ мечей, боссов, руд и способностей мода Effect99 для Minecraft Bedrock 1.26.60+ (Android & Windows) без экспериментальных режимов.',
+    description: '§eПолное восстановление всех 38 мечей, боссов, руд и способностей мода Effect99 для Minecraft Bedrock 1.26.60+ (Android & Windows) без экспериментальных режимов.',
     uuid: UUIDS.bp_header,
     version: [3, 0, 0],
     min_engine_version: [1, 26, 20],
@@ -143,10 +65,6 @@ writeJson(path.join(BP, 'manifest.json'), {
       module_name: '@minecraft/server',
       version: '2.6.0',
     },
-    {
-      module_name: '@minecraft/server-ui',
-      version: '2.0.0',
-    },
   ],
   metadata: {
     authors: ['Effect99 (Original Creator)', 'Remake for Bedrock 1.26.60+'],
@@ -157,7 +75,7 @@ writeJson(path.join(RP, 'manifest.json'), {
   format_version: 2,
   header: {
     name: '§6§lSwords and More Swords §r§bResources (1.26+)',
-    description: '§eРесурс-пак мода Swords and More Swords (текстуры, 3D-модели, анимации, звуки и русская/английская энциклопедия) для Minecraft Bedrock 1.26.60+.',
+    description: '§eРесурс-пак мода Swords and More Swords (текстуры, 3D-модели, анимации, звуки и встроенный справочник на русском и английском языках) для Minecraft Bedrock 1.26.60+.',
     uuid: UUIDS.rp_header,
     version: [3, 0, 0],
     min_engine_version: [1, 26, 20],
@@ -243,13 +161,10 @@ writeJson(path.join(RP, 'blocks.json'), {
 });
 
 const itemTex = jsonc.parse(fs.readFileSync(path.join(SRC_288_RP, 'textures/item_texture.json'), 'utf8'));
-itemTex.texture_data.swords_guide = {
-  textures: 'textures/items/swords_guide',
-};
 writeJson(path.join(RP, 'textures/item_texture.json'), itemTex);
 
 // ---------------------------------------------------------------------------
-// 3. Migrate all 42 Original Items + `swords_guide.json` (`format_version: "1.26.0"`)
+// 3. Migrate all 42 Original Items (`format_version: "1.26.0"`)
 // ---------------------------------------------------------------------------
 const FIRE_RESISTANT_ITEMS = new Set([
   'effect:bedrock_sword',
@@ -422,30 +337,6 @@ for (const fileName of fs.readdirSync(path.join(SRC_288_BP, 'items')).sort()) {
     },
   });
 }
-
-// 43rd item: Interactive Guidebook (`effect:swords_guide`)
-writeJson(path.join(BP, 'items/swords_guide.json'), {
-  format_version: '1.26.0',
-  'minecraft:item': {
-    description: {
-      identifier: 'effect:swords_guide',
-      menu_category: {
-        category: 'items',
-      },
-    },
-    components: {
-      'minecraft:icon': {
-        textures: { default: 'swords_guide' },
-      },
-      'minecraft:display_name': {
-        value: 'item.effect:swords_guide',
-      },
-      'minecraft:max_stack_size': 1,
-      'minecraft:glint': { value: true },
-      'effect:guide': {},
-    },
-  },
-});
 
 // ---------------------------------------------------------------------------
 // 4. Custom Blocks (`packs/Swords_B/blocks/*.json`, `format_version: "1.26.0"`)
@@ -734,7 +625,7 @@ writeJson(path.join(BP, 'blocks/spectral_block.json'), {
 });
 
 // ---------------------------------------------------------------------------
-// 5. Modernize all 17 Original Recipes + Add `swords_guide` Recipe (`1.20.10`)
+// 5. Modernize all 17 Original Recipes (`1.20.10`)
 // ---------------------------------------------------------------------------
 for (const fileName of fs.readdirSync(path.join(SRC_288_BP, 'recipes')).sort()) {
   const raw = jsonc.parse(fs.readFileSync(path.join(SRC_288_BP, 'recipes', fileName), 'utf8'));
@@ -787,29 +678,6 @@ for (const fileName of fs.readdirSync(path.join(SRC_288_BP, 'recipes')).sort()) 
 
   writeJson(path.join(BP, 'recipes', fileName), raw);
 }
-
-// Add Shapeless Recipe for Swords Guidebook (`book` + `stick`)
-writeJson(path.join(BP, 'recipes/swords_guide.json'), {
-  format_version: '1.20.10',
-  'minecraft:recipe_shapeless': {
-    description: {
-      identifier: 'effect:swords_guide_recipe',
-    },
-    tags: ['crafting_table'],
-    ingredients: [
-      { item: 'minecraft:book' },
-      { item: 'minecraft:stick' },
-    ],
-    result: {
-      item: 'effect:swords_guide',
-      count: 1,
-    },
-    unlock: [
-      { item: 'minecraft:book' },
-      { item: 'minecraft:stick' },
-    ],
-  },
-});
 
 // ---------------------------------------------------------------------------
 // 6. Modern `1.21.10` Worldgen (`features/` & `feature_rules/`) — Stone, Deepslate & End!
@@ -1032,7 +900,6 @@ const chestInjections = [
   ]],
   ['chests/spawn_bonus_chest.json', 0, [
     { type: 'item', name: 'effect:coal_sword', weight: 5 },
-    { type: 'item', name: 'effect:swords_guide', weight: 10 },
   ]],
   ['chests/stronghold_corridor.json', 0, [
     { type: 'item', name: 'effect:emerald_sword', weight: 2 },
@@ -1225,7 +1092,6 @@ writeJson(path.join(BP, 'spawn_rules/slime_king.json'), {
 // 9. `/function give` (`packs/Swords_B/functions/give.mcfunction`)
 // ---------------------------------------------------------------------------
 const giveLines = [
-  'give @s effect:swords_guide 1',
   'give @s effect:blaze_sword 1',
   'give @s effect:coal_sword 1',
   'give @s effect:shulker_sword 1',

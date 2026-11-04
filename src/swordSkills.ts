@@ -9,7 +9,6 @@ import {
   system,
   world,
 } from '@minecraft/server';
-import { openSwordsGuide } from './guideMenu.js';
 import {
   consumeMainhandDurability,
   getMainhandItem,
@@ -132,13 +131,6 @@ const LIGHTNING_RING_OFFSETS: ReadonlyArray<[number, number, number]> = [
 ];
 
 export function registerItemComponents(registry: ItemComponentRegistry): void {
-  // Interactive Encyclopedia Book
-  registry.registerCustomComponent('effect:guide', {
-    onUse(event) {
-      openSwordsGuide(event.source);
-    },
-  });
-
   // Unified V2 Custom Component for all 38 Swords + 2 Special Sticks
   registry.registerCustomComponent('effect:sword', {
     onBeforeDurabilityDamage(event) {

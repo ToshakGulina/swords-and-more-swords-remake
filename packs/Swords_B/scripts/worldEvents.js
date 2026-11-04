@@ -1,7 +1,6 @@
 import { EntityComponentTypes, EntityDamageCause, GameMode, ItemStack, Player, system, WeatherType, world, } from '@minecraft/server';
-import { openSwordsGuide } from './guideMenu.js';
 import { getActiveShulkerShieldOwner } from './passiveEngine.js';
-import { getMainhandItem, giveOrDropItem, isDesertWellWater, safeRandomTeleport } from './utils.js';
+import { getMainhandItem, isDesertWellWater, safeRandomTeleport } from './utils.js';
 let isRainingOverworld = false;
 function convertSurroundingSand(dim, center, targetBlockId) {
     const cx = Math.floor(center.x);
@@ -26,25 +25,8 @@ export function registerWorldEvents() {
     world.afterEvents.weatherChange.subscribe((ev) => {
         isRainingOverworld = ev.newWeather !== WeatherType.Clear;
     });
-    // 1. Give Swords Encyclopedia on a player's very first join to the world
-    world.afterEvents.playerSpawn.subscribe((ev) => {
-        if (!ev.initialSpawn)
-            return;
-        const player = ev.player;
-        try {
-            if (!player.getDynamicProperty('effect:received_guide')) {
-                player.setDynamicProperty('effect:received_guide', true);
-                giveOrDropItem(player, new ItemStack('effect:swords_guide', 1));
-            }
-        }
-        catch { }
-    });
-    // 2. Handle player.json pre-damage dodges & /scriptevent effect:guide
+    // 1. Handle player.json pre-damage dodges
     system.afterEvents.scriptEventReceive.subscribe((ev) => {
-        if (ev.id === 'effect:guide' && ev.sourceEntity instanceof Player) {
-            openSwordsGuide(ev.sourceEntity);
-            return;
-        }
         if (ev.id === 'effect:dodge' && ev.sourceEntity instanceof Player) {
             const player = ev.sourceEntity;
             if (ev.message === 'ultra_instinct') {

@@ -1,5 +1,4 @@
 import { EntityComponentTypes, EntityDamageCause, GameMode, ItemStack, Player, system, world, } from '@minecraft/server';
-import { openSwordsGuide } from './guideMenu.js';
 import { consumeMainhandDurability, getMainhandItem, growInstantJungleTree, isFullMoonNight, isProtectedEntity, safeRandomTeleport, shootCustomProjectile, } from './utils.js';
 function checkAndStartCooldown(player, category, seconds) {
     try {
@@ -109,12 +108,6 @@ const LIGHTNING_RING_OFFSETS = [
     [38, 0, -38],
 ];
 export function registerItemComponents(registry) {
-    // Interactive Encyclopedia Book
-    registry.registerCustomComponent('effect:guide', {
-        onUse(event) {
-            openSwordsGuide(event.source);
-        },
-    });
     // Unified V2 Custom Component for all 38 Swords + 2 Special Sticks
     registry.registerCustomComponent('effect:sword', {
         onBeforeDurabilityDamage(event) {
