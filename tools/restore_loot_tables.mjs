@@ -88,19 +88,22 @@ for (const rel of files) {
   report.push(`${source.kind}: ${rel}`);
 }
 
-// The jungle fishing table must point at the vanilla treasure table so that
-// its Jungle Sword entry is reachable, and jungle_junk must exist.
-const jungleFishing = path.join(BP, 'loot_tables/gameplay/jungle_fishing.json');
-if (fs.existsSync(jungleFishing)) {
-  const table = JSON.parse(fs.readFileSync(jungleFishing, 'utf8'));
+// The fishing tables must reach the treasure table that carries
+// `effect:jungle_sword`, and no table may point at a table that is not shipped.
+for (const name of ['fishing.json', 'jungle_fishing.json']) {
+  const file = path.join(BP, 'loot_tables/gameplay', name);
+  if (!fs.existsSync(file)) continue;
+  const table = JSON.parse(fs.readFileSync(file, 'utf8'));
+  let changed = false;
   for (const pool of table.pools ?? []) {
     for (const entry of pool.entries ?? []) {
       if (entry.name === 'loot_tables/gameplay/fishing/jungle_treasure.json') {
         entry.name = 'loot_tables/gameplay/fishing/treasure.json';
+        changed = true;
       }
     }
   }
-  fs.writeFileSync(jungleFishing, JSON.stringify(table, null, 2) + '\n', 'utf8');
+  if (changed) fs.writeFileSync(file, JSON.stringify(table, null, 2) + '\n', 'utf8');
 }
 
 console.log(report.join('\n'));

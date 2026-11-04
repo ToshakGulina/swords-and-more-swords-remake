@@ -902,24 +902,29 @@ for (const [rel, data] of Object.entries(customLootTables)) {
   writeJson(path.join(BP, 'loot_tables/entities/grass_witch.json'), grassWitchLoot);
 }
 
-// Remove stale `gameplay/fishing/treasure.json` override so regular Ocean/River fishing stays 100% vanilla,
-// while Jungle biome fishing (`gameplay/jungle_fishing.json` -> `jungle_treasure.json`) drops `effect:jungle_sword`!
-const staleTreasurePath = path.join(BP, 'loot_tables/gameplay/fishing/treasure.json');
-if (fs.existsSync(staleTreasurePath)) {
-  fs.unlinkSync(staleTreasurePath);
-}
+// 2.8.8 ships exactly one treasure table (`gameplay/fishing/treasure.json`, with
+// `effect:jungle_sword` inside) and points BOTH `gameplay/fishing.json` and
+// `gameplay/jungle_fishing.json` at it. Keep that shape: a second table would
+// have to be duplicated here and kept in sync by hand.
 {
-  const jungleTreasure = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/gameplay/fishing/treasure.json'), 'utf8'));
-  jungleTreasure.pools[0].entries.push({ type: 'item', name: 'effect:jungle_sword', weight: 5 });
-  writeJson(path.join(BP, 'loot_tables/gameplay/fishing/jungle_treasure.json'), jungleTreasure);
-
-  const jungleFishing = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/gameplay/jungle_fishing.json'), 'utf8'));
-  for (const entry of jungleFishing.pools[0].entries) {
-    if (entry.name === 'loot_tables/gameplay/fishing/treasure.json') {
-      entry.name = 'loot_tables/gameplay/fishing/jungle_treasure.json';
-    }
+  const staleJungleTreasure = path.join(BP, 'loot_tables/gameplay/fishing/jungle_treasure.json');
+  if (fs.existsSync(staleJungleTreasure)) {
+    fs.unlinkSync(staleJungleTreasure);
   }
-  writeJson(path.join(BP, 'loot_tables/gameplay/jungle_fishing.json'), jungleFishing);
+
+  const treasure = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/gameplay/fishing/treasure.json'), 'utf8'));
+  treasure.pools[0].entries.push({ type: 'item', name: 'effect:jungle_sword', weight: 5 });
+  writeJson(path.join(BP, 'loot_tables/gameplay/fishing/treasure.json'), treasure);
+
+  for (const name of ['fishing.json', 'jungle_fishing.json']) {
+    const fishing = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/gameplay', name), 'utf8'));
+    for (const entry of fishing.pools[0].entries) {
+      if (entry.name === 'loot_tables/gameplay/fishing/jungle_treasure.json') {
+        entry.name = 'loot_tables/gameplay/fishing/treasure.json';
+      }
+    }
+    writeJson(path.join(BP, 'loot_tables/gameplay', name), fishing);
+  }
 }
 
 // 7.2 Rebase ONLY the modified vanilla chest loot tables onto Mojang v1.26.60!

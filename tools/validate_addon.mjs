@@ -584,13 +584,17 @@ for (const f of walk(path.join(BP, 'entities'), '.json')) {
       if (!raw.includes(`"${item}`)) err(`${rel} lost the "${item}" reward`);
     }
   }
-  // The jungle fishing table must not point at a table that does not exist.
-  const jungle = path.join(BP, 'loot_tables/gameplay/jungle_fishing.json');
-  if (fs.existsSync(jungle)) {
-    const raw = fs.readFileSync(jungle, 'utf8');
-    if (raw.includes('jungle_treasure')) {
-      err(`${jungle} references loot_tables/gameplay/fishing/jungle_treasure.json, which does not exist; use treasure.json`);
+  // The 2.8.8 pack ships a single treasure table; a second one drifts out of
+  // sync with the first and one of the two silently loses its Jungle Sword.
+  for (const name of ['fishing.json', 'jungle_fishing.json', 'gameplay/fishing/jungle_fishing.json']) {
+    const file = path.join(BP, 'loot_tables', name);
+    if (!fs.existsSync(file)) continue;
+    if (fs.readFileSync(file, 'utf8').includes('jungle_treasure')) {
+      err(`${file} references loot_tables/gameplay/fishing/jungle_treasure.json; the pack must use the single treasure.json like 2.8.8`);
     }
+  }
+  if (fs.existsSync(path.join(BP, 'loot_tables/gameplay/fishing/jungle_treasure.json'))) {
+    err('loot_tables/gameplay/fishing/jungle_treasure.json must not exist; the Jungle Sword lives in treasure.json');
   }
 }
 
