@@ -17,41 +17,10 @@ function writeJson(filePath, data) {
 
 // 1. Update `how_to_play_screen.json` AND generate `encyclopedia_screen.json` (for 1.20.50-1.26.60 Inventory red-sword button!)
 const htp = jsonc.parse(fs.readFileSync(path.join(SRC_288_RP, 'ui/how_to_play_screen.json'), 'utf8'));
-htp.selector_stack_panel.controls[0].how_to_play_selector_pane.controls.push({
-  'cursed_pumpkin_sword_button@how_to_play.cursed_pumpkin_sword_button': {
-    $toggle_group_forced_index: 40,
-  },
-});
-htp.section_content_panels.controls[0].general_tips_sections.controls.push({
-  'cursed_pumpkin_sword_section@how_to_play.cursed_pumpkin_sword_section': {},
-});
-htp['cursed_pumpkin_sword_button@how_to_play_common.section_toggle_button'] = {
-  $section_topic: 'cursed_pumpkin_sword',
-};
-htp['cursed_pumpkin_sword_section@how_to_play_common.main_sections'] = {
-  bindings: [
-    {
-      binding_type: 'view',
-      source_control_name: 'cursed_pumpkin_sword_button_toggle',
-      source_property_name: '#toggle_state',
-      target_property_name: '#visible',
-    },
-  ],
-  controls: [
-    { 'header_0@how_to_play_common.header': { $text: 'cursed_pumpkin_sword.header.title' } },
-    { 'padding_0@how_to_play_common.padding': {} },
-    { 'image_sword@how_to_play_common.image': { texture: 'textures/items/cursed_pumpkin_sword' } },
-    { 'paragraph_0@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.0' } },
-    { 'paragraph_1@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.1' } },
-    { 'paragraph_2@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.2' } },
-    { 'paragraph_3@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.3' } },
-    { 'paragraph_4@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.4' } },
-    { 'paragraph_5@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.5' } },
-    { 'paragraph_6@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.6' } },
-    { 'paragraph_7@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.7' } },
-    { 'padding_1@how_to_play_common.padding': {} },
-  ],
-};
+// 2.8.8 has no How to Play section for `effect:cursed_pumpkin_sword`; the item only
+// exists as an item + loot entry. Inventing an encyclopedia page was a remake
+// addition, so nothing is appended here.
+
 const selectorPane = htp.selector_stack_panel;
 const contentPanels = htp.section_content_panels;
 delete htp.selector_stack_panel;
@@ -130,7 +99,7 @@ enMap.set('effect.fire_sword.text.13', '  By throwing the fire sword into water,
 enMap.set('effect.fire_sword.text.14', '  By throwing the fire sword out in the rain, it cools after a few seconds into an Obsidian Sword.');
 enMap.set('action.hint.exit.entity:shulker_shield', 'Tap sneak to exit the shulker shell');
 
-// Add `minicreeper`, `centella`, `living_flame`, lightblocks, `sponge_sword.header.title`, and `cursed_pumpkin_sword` encyclopedia entry
+// Add `minicreeper`, `centella`, `living_flame`, lightblocks and `sponge_sword.header.title`
 enMap.set('entity.entity:minicreeper.name', '§aMini Creeper');
 enMap.set('entity.entity:centella.name', '§eCentella');
 enMap.set('entity.entity:living_flame.name', '§6Living Flame');
@@ -138,17 +107,6 @@ enMap.set('sponge_sword.header.title', '§l§eSponge Sword');
 enMap.set('tile.effect99:spectral_block.name', 'Spectral Block');
 enMap.set('tile.effect99:lightblock.name', 'Dynamic Light Block');
 enMap.set('tile.effect99:lightblock2.name', 'Moderate Light Block');
-enMap.set('howtoplay.cursed_pumpkin_sword.title', '§lSwords');
-enMap.set('howtoplay.cursed_pumpkin_sword', '§lCursed Pumpkin Sword');
-enMap.set('cursed_pumpkin_sword.header.title', '§l§6Cursed Pumpkin Sword');
-enMap.set('effect.cursed_pumpkin_sword.text.0', '-Durability: 606');
-enMap.set('effect.cursed_pumpkin_sword.text.1', '-Damage: 5');
-enMap.set('effect.cursed_pumpkin_sword.text.2', '-Enchantable: true');
-enMap.set('effect.cursed_pumpkin_sword.text.3', '-Repairable: true (With honey blocks, honeycomb, or the same sword.)');
-enMap.set('effect.cursed_pumpkin_sword.text.4', '-Special skills:');
-enMap.set('effect.cursed_pumpkin_sword.text.5', '  When attacking, launches glowing cursed pumpkin projectiles with an 80% chance.');
-enMap.set('effect.cursed_pumpkin_sword.text.6', '-How to create or get it:');
-enMap.set('effect.cursed_pumpkin_sword.text.7', '  Break pumpkin blocks in the world (0.5% chance per block, once per player).');
 
 enMap.set('effect.blaze_sword.text.13', '  A snow golem must kill a blaze (2.5% chance; the original text said 0.5%).');
 enMap.set('effect.bone_sword.text.9', '  Kill skeletons in a dark desert (0.7% chance).');
@@ -858,17 +816,6 @@ const ruOverrides = {
   'effect.ultra_instinct_sword.text.11': '  (Кварцево-алмазная руда редко генерируется глубже высоты Y=16 и в Энде.)',
 
   // 38. Cursed Pumpkin Sword
-  'howtoplay.cursed_pumpkin_sword.title': '§lМечи',
-  'howtoplay.cursed_pumpkin_sword': '§lПроклятый тыквенный меч',
-  'cursed_pumpkin_sword.header.title': '§l§6Проклятый тыквенный меч',
-  'effect.cursed_pumpkin_sword.text.0': '-Прочность: 606',
-  'effect.cursed_pumpkin_sword.text.1': '-Урон: 5',
-  'effect.cursed_pumpkin_sword.text.2': '-Зачаровывается: да',
-  'effect.cursed_pumpkin_sword.text.3': '-Починка: да (блоком мёда, сотами или таким же мечом)',
-  'effect.cursed_pumpkin_sword.text.4': '-Особые навыки:',
-  'effect.cursed_pumpkin_sword.text.5': '  При взмахе и ударе с шансом 80% выпускает светящиеся проклятые тыквенные снаряды.',
-  'effect.cursed_pumpkin_sword.text.6': '-Как получить:',
-  'effect.cursed_pumpkin_sword.text.7': '  Ломайте тыквы в мире (шанс 0.5% с каждой тыквы, один раз на игрока).',
 };
 
 for (const [k, v] of Object.entries(ruOverrides)) {
