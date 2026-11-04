@@ -242,6 +242,11 @@
               "ultra_instinct_sword_button@how_to_play.ultra_instinct_sword_button": {
                 "$toggle_group_forced_index": 37
               }
+            },
+            {
+              "cursed_pumpkin_sword_button@how_to_play.cursed_pumpkin_sword_button": {
+                "$toggle_group_forced_index": 40
+              }
             }
           ]
         }
@@ -384,6 +389,9 @@
             },
             {
               "ultra_instinct_sword_section@how_to_play.ultra_instinct_sword_section": {}
+            },
+            {
+              "cursed_pumpkin_sword_section@how_to_play.cursed_pumpkin_sword_section": {}
             }
           ]
         }
@@ -4009,6 +4017,77 @@
       {
         "image_well@how_to_play_common.image": {
           "texture": "textures/ui/well"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "cursed_pumpkin_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "cursed_pumpkin_sword"
+  },
+  "cursed_pumpkin_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "cursed_pumpkin_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "cursed_pumpkin_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/cursed_pumpkin_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.7"
         }
       },
       {

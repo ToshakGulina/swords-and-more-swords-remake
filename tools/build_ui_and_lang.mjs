@@ -17,9 +17,49 @@ function writeJson(filePath, data) {
 
 // 1. Update `how_to_play_screen.json` AND generate `encyclopedia_screen.json` (for 1.20.50-1.26.60 Inventory red-sword button!)
 const htp = jsonc.parse(fs.readFileSync(path.join(SRC_288_RP, 'ui/how_to_play_screen.json'), 'utf8'));
-// 2.8.8 has no How to Play section for `effect:cursed_pumpkin_sword`; the item only
-// exists as an item + loot entry. Inventing an encyclopedia page was a remake
-// addition, so nothing is appended here.
+
+// Secret page: `effect:cursed_pumpkin_sword` is a real 2.8.8 item but the author
+// never documented it anywhere — not in How to Play, not in the changelog. It is
+// earned by breaking pumpkin blocks (0.5 %, once per player) and it shoots cursed
+// pumpkin projectiles on 80 % of swings. Added as the LAST entry of the selector
+// so it reads as an easter egg rather than part of the normal sword list, and its
+// header/paragraphs are written in that voice. Everything else on the page is
+// taken from `items/pumpkin_sword.json` and `scripts/javascript.js`.
+htp.selector_stack_panel.controls[0].how_to_play_selector_pane.controls.push({
+  'cursed_pumpkin_sword_button@how_to_play.cursed_pumpkin_sword_button': {
+    $toggle_group_forced_index: 40,
+  },
+});
+htp.section_content_panels.controls[0].general_tips_sections.controls.push({
+  'cursed_pumpkin_sword_section@how_to_play.cursed_pumpkin_sword_section': {},
+});
+htp['cursed_pumpkin_sword_button@how_to_play_common.section_toggle_button'] = {
+  $section_topic: 'cursed_pumpkin_sword',
+};
+htp['cursed_pumpkin_sword_section@how_to_play_common.main_sections'] = {
+  bindings: [
+    {
+      binding_type: 'view',
+      source_control_name: 'cursed_pumpkin_sword_button_toggle',
+      source_property_name: '#toggle_state',
+      target_property_name: '#visible',
+    },
+  ],
+  controls: [
+    { 'header_0@how_to_play_common.header': { $text: 'cursed_pumpkin_sword.header.title' } },
+    { 'padding_0@how_to_play_common.padding': {} },
+    { 'image_sword@how_to_play_common.image': { texture: 'textures/items/cursed_pumpkin_sword' } },
+    { 'paragraph_0@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.0' } },
+    { 'paragraph_1@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.1' } },
+    { 'paragraph_2@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.2' } },
+    { 'paragraph_3@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.3' } },
+    { 'paragraph_4@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.4' } },
+    { 'paragraph_5@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.5' } },
+    { 'paragraph_6@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.6' } },
+    { 'paragraph_7@how_to_play_common.paragraph': { $text: 'effect.cursed_pumpkin_sword.text.7' } },
+    { 'padding_1@how_to_play_common.padding': {} },
+  ],
+};
 
 const selectorPane = htp.selector_stack_panel;
 const contentPanels = htp.section_content_panels;
@@ -106,6 +146,19 @@ enMap.set('entity.entity:living_flame.name', '§6Living Flame');
 enMap.set('sponge_sword.header.title', '§l§eSponge Sword');
 enMap.set('tile.effect99:spectral_block.name', 'Spectral Block');
 enMap.set('tile.effect99:lightblock.name', 'Dynamic Light Block');
+// Secret page for `effect:cursed_pumpkin_sword`. Numbers come straight from
+// 2.8.8: durability 606, damage 5, enchantable 9/sword, repair with honey block
+// (+400) or honeycomb (+150), 80 % projectile on any swing, 0.5 % pumpkin drop
+// once per player. The author never listed this sword anywhere, hence the voice.
+enMap.set('cursed_pumpkin_sword.header.title', '§l§6??? — Cursed Pumpkin Sword');
+enMap.set('effect.cursed_pumpkin_sword.text.0', '§7You were not supposed to find this page.');
+enMap.set('effect.cursed_pumpkin_sword.text.1', '  The author never wrote it down. It is not in the sword list, not in the changelog — nothing but a line of code buried in the pumpkin handler.');
+enMap.set('effect.cursed_pumpkin_sword.text.2', '-Durability: 606    -Damage: 5');
+enMap.set('effect.cursed_pumpkin_sword.text.3', '-Enchantable: true    -Repairable: true (honey block +400, honeycomb +150, or the same sword)');
+enMap.set('effect.cursed_pumpkin_sword.text.4', '-Special skills:');
+enMap.set('effect.cursed_pumpkin_sword.text.5', '  Every swing has an 80% chance to hurl a glowing cursed pumpkin at whatever you are fighting. One point of durability per swing.');
+enMap.set('effect.cursed_pumpkin_sword.text.6', '-How to create or get it:');
+enMap.set('effect.cursed_pumpkin_sword.text.7', '  Break pumpkin blocks. 0.5% chance, and only the first one you ever break can give it to you. Good luck.');
 enMap.set('tile.effect99:lightblock2.name', 'Moderate Light Block');
 
 enMap.set('effect.blaze_sword.text.13', '  A snow golem must kill a blaze (2.5% chance; the original text said 0.5%).');
@@ -350,6 +403,15 @@ const ruOverrides = {
 
   // 8 & 9. Sponge Sword & Wet Sponge Sword
   'howtoplay.sponge_sword': '§lГубчатый меч',
+  'cursed_pumpkin_sword.header.title': '§l§6??? — Проклятый тыквенный меч',
+  'effect.cursed_pumpkin_sword.text.0': '§7Вы не должны были найти эту страницу.',
+  'effect.cursed_pumpkin_sword.text.1': '  Автор нигде её не описал. Меча нет ни в списке, ни в списке изменений — только строчка кода в обработчике тыкв.',
+  'effect.cursed_pumpkin_sword.text.2': '-Прочность: 606    -Урон: 5',
+  'effect.cursed_pumpkin_sword.text.3': '-Зачаровывается: да    -Починка: да (блок мёда +400, соты +150 или такой же меч)',
+  'effect.cursed_pumpkin_sword.text.4': '-Особые навыки:',
+  'effect.cursed_pumpkin_sword.text.5': '  Каждый взмах с шансом 80% швыряет светящуюся проклятую тыкву в того, с кем вы сражаетесь. Один пункт прочности за взмах.',
+  'effect.cursed_pumpkin_sword.text.6': '-Как получить:',
+  'effect.cursed_pumpkin_sword.text.7': '  Ломайте тыквы. Шанс 0.5%, и только первая тыква в вашей жизни может его выдать. Удачи.',
   'sponge_sword.header.title': '§lГубчатый меч',
   'sponge_sword.header.title.0': '§lГубчатый меч',
   'effect.sponge_sword.text.0': '-Прочность: 128',
