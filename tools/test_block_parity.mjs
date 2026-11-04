@@ -27,6 +27,25 @@ for (const [name, level] of [['lightblock', 15], ['lightblock2', 7]]) {
   assert.equal(comp(name, 'minecraft:destructible_by_mining'), false);
 }
 
+
+// --- destroy time / explosion resistance / light dampening (2.8.8 values) --------
+// The remake once carried invented numbers here (18 s and 15 s for the ores,
+// 12 s / resistance 6 for silver, dampening 2 for fake ice).
+for (const [name, seconds, resistance, dampening] of [
+  ['quartz_diamond_block', 20, 999, 15],
+  ['quartz_diamond_ore', 10, 999, 15],
+  ['silver_ore', 8, 1, 15],
+]) {
+  assert.equal(comp(name, 'minecraft:destructible_by_mining').seconds_to_destroy, seconds,
+    `${name} keeps the 2.8.8 destroy_time`);
+  assert.equal(comp(name, 'minecraft:destructible_by_explosion').explosion_resistance, resistance,
+    `${name} keeps the 2.8.8 explosion_resistance`);
+  assert.equal(comp(name, 'minecraft:light_dampening'), dampening,
+    `${name} keeps the 2.8.8 block_light_absorption`);
+}
+assert.equal(comp('fake_ice', 'minecraft:light_dampening'), 0,
+  '2.8.8 fake_ice has block_light_absorption 0');
+
 // spectral_block: unbreakable (destroy_time 9999), explosion_resistance 999.
 assert.deepEqual(comp('spectral_block', 'minecraft:destructible_by_mining'), { seconds_to_destroy: 9999 });
 assert.deepEqual(comp('spectral_block', 'minecraft:destructible_by_explosion'), { explosion_resistance: 999 });

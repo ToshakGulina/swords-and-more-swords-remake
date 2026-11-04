@@ -11,7 +11,7 @@
     "components": {
       "minecraft:display_name": "tile.effect99:silver_ore.name",
       "minecraft:destructible_by_mining": {
-        "seconds_to_destroy": 12,
+        "seconds_to_destroy": 8,
         "item_specific_speeds": [
           {
             "item": "minecraft:iron_pickaxe",
@@ -32,7 +32,7 @@
         ]
       },
       "minecraft:destructible_by_explosion": {
-        "explosion_resistance": 6
+        "explosion_resistance": 1
       },
       "minecraft:light_dampening": 15,
       "minecraft:light_emission": 0,

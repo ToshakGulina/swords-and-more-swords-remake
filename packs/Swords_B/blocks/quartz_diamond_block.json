@@ -10,7 +10,7 @@
     "components": {
       "minecraft:display_name": "tile.effect99:quartz_diamond_block.name",
       "minecraft:destructible_by_mining": {
-        "seconds_to_destroy": 18,
+        "seconds_to_destroy": 20,
         "item_specific_speeds": [
           {
             "item": "minecraft:iron_pickaxe",

@@ -375,7 +375,8 @@ writeJson(path.join(BP, 'blocks/fake_ice.json'), {
       'minecraft:destructible_by_mining': { seconds_to_destroy: 9999.0 },
       'minecraft:destructible_by_explosion': { explosion_resistance: 10.0 },
       'minecraft:friction': 0.02,
-      'minecraft:light_dampening': 2,
+      // 2.8.8 `minecraft:block_light_absorption: 0`.
+      'minecraft:light_dampening': 0,
       'minecraft:light_emission': 0,
       'minecraft:loot': 'loot_tables/empty.json',
       'minecraft:map_color': '#9fd8ff',
@@ -475,7 +476,9 @@ writeJson(path.join(BP, 'blocks/quartz_diamond_block.json'), {
     components: {
       'minecraft:display_name': 'tile.effect99:quartz_diamond_block.name',
       'minecraft:destructible_by_mining': {
-        seconds_to_destroy: 18.0,
+        // 2.8.8 `minecraft:destroy_time: 20`. `item_specific_speeds` needs the
+        // UpcomingFeatures experiment, so it is a non-experimental no-op.
+        seconds_to_destroy: 20.0,
         item_specific_speeds: [
           { item: 'minecraft:iron_pickaxe', destroy_speed: 2.2 },
           { item: 'minecraft:diamond_pickaxe', destroy_speed: 1.5 },
@@ -515,7 +518,8 @@ writeJson(path.join(BP, 'blocks/quartz_diamond_ore.json'), {
     components: {
       'minecraft:display_name': 'tile.effect99:quartz_diamond_ore.name',
       'minecraft:destructible_by_mining': {
-        seconds_to_destroy: 15.0,
+        // 2.8.8 `minecraft:destroy_time: 10`.
+        seconds_to_destroy: 10.0,
         item_specific_speeds: [
           { item: 'minecraft:iron_pickaxe', destroy_speed: 1.8 },
           { item: 'minecraft:diamond_pickaxe', destroy_speed: 1.3 },
@@ -555,7 +559,8 @@ writeJson(path.join(BP, 'blocks/silver_ore.json'), {
     components: {
       'minecraft:display_name': 'tile.effect99:silver_ore.name',
       'minecraft:destructible_by_mining': {
-        seconds_to_destroy: 12.0,
+        // 2.8.8 `minecraft:destroy_time: 8`; `explosion_resistance: 1`.
+        seconds_to_destroy: 8.0,
         item_specific_speeds: [
           { item: 'minecraft:iron_pickaxe', destroy_speed: 1.3 },
           { item: 'minecraft:diamond_pickaxe', destroy_speed: 0.9 },
@@ -563,7 +568,8 @@ writeJson(path.join(BP, 'blocks/silver_ore.json'), {
           { item: 'effect:bedrock_sword', destroy_speed: 0.05 },
         ],
       },
-      'minecraft:destructible_by_explosion': { explosion_resistance: 6.0 },
+      // 2.8.8 `minecraft:explosion_resistance: 1`.
+      'minecraft:destructible_by_explosion': { explosion_resistance: 1.0 },
       'minecraft:light_dampening': 15,
       'minecraft:light_emission': 0,
       'minecraft:map_color': '#c0c8d0',
