@@ -137,7 +137,8 @@ enMap.set('effect.ultra_instinct_sword.text.2', '-Cooldown: 61 sec');
 // Fix Effect99's swapped water vs rain description on Fire Sword & Shulker exit hint
 enMap.set('effect.fire_sword.text.13', '  By throwing the fire sword into water, it rapidly cools and turns into a Glass Sword.');
 enMap.set('effect.fire_sword.text.14', '  By throwing the fire sword out in the rain, it cools after a few seconds into an Obsidian Sword.');
-enMap.set('action.hint.exit.entity:shulker_shield', 'Tap sneak to exit the shulker shell');
+// 2.8.8 uses the mount's name as the dismount hint, not an instruction sentence.
+enMap.set('action.hint.exit.entity:shulker_shield', '§l§5Shulker Shield');
 
 // Add `minicreeper`, `centella`, `living_flame`, lightblocks and `sponge_sword.header.title`
 enMap.set('entity.entity:minicreeper.name', '§aMini Creeper');
@@ -255,7 +256,7 @@ const ruOverrides = {
   'item.spawn_egg.entity.entity:alpha_wolf.name': 'Призвать: §7Альфа-волк',
   'item.spawn_egg.entity.entity:ghost.name': 'Призвать: §lПризрак',
   'action.hint.exit.entity:mountable_slime': 'Нажмите красться, чтобы слезть со слизня',
-  'action.hint.exit.entity:shulker_shield': 'Нажмите красться, чтобы убрать панцирь шалкера',
+  'action.hint.exit.entity:shulker_shield': '§l§5Панцирь шалкера',
   'action.hint.exit.spider': 'Нажмите красться, чтобы слезть с паука',
 
   // How-To-Play Headers & Categories
