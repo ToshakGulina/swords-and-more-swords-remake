@@ -760,6 +760,55 @@ for (const f of walk(path.join(BP, 'entities'), '.json')) {
   }
 }
 
+// 8j. Recipes: every ingredient, result and unlock item must resolve to a
+// shipped item/block or a minecraft: item, and every shaped recipe pattern row
+// must have the same width — a ragged pattern silently never matches.
+{
+  const known = new Set();
+  for (const f of walk(path.join(BP, 'items'), '.json')) {
+    const id = readJsonChecked(f, true)?.['minecraft:item']?.description?.identifier;
+    if (id) known.add(id);
+  }
+  for (const f of walk(path.join(BP, 'blocks'), '.json')) {
+    const id = readJsonChecked(f, true)?.['minecraft:block']?.description?.identifier;
+    if (id) known.add(id);
+  }
+  const resolves = (id) => known.has(id) || (typeof id === 'string' && id.startsWith('minecraft:'));
+  for (const f of walk(path.join(BP, 'recipes'), '.json')) {
+    const def = readJsonChecked(f, true);
+    const key = Object.keys(def ?? {}).find((k) => k.startsWith('minecraft:recipe'));
+    if (!key) {
+      err(`${f}: no minecraft:recipe_* body`);
+      continue;
+    }
+    const body = def[key];
+    const refs = [];
+    for (const entry of [body.result, body.output, body.input].filter(Boolean)) {
+      refs.push(typeof entry === 'string' ? entry : entry.item);
+    }
+    for (const value of Object.values(body.key ?? {})) {
+      for (const entry of (Array.isArray(value) ? value : [value])) refs.push(entry.item);
+    }
+    for (const entry of body.ingredients ?? []) refs.push(typeof entry === 'string' ? entry : entry.item);
+    for (const entry of body.unlock ?? []) refs.push(entry.item);
+    for (const id of refs) {
+      if (!resolves(id)) err(`${f}: recipe references unknown item "${id}"`);
+    }
+    const pattern = body.pattern;
+    if (Array.isArray(pattern) && pattern.length > 0) {
+      const widths = new Set(pattern.map((row) => row.length));
+      if (widths.size > 1) err(`${f}: shaped recipe rows have different widths ${[...widths].join('/')}`);
+      for (const row of pattern) {
+        for (const symbol of row) {
+          if (symbol !== ' ' && !(body.key ?? {})[symbol]) {
+            err(`${f}: pattern symbol "${symbol}" has no key entry`);
+          }
+        }
+      }
+    }
+  }
+}
+
 // 9. Verify compiled JS imports & custom event names
 for (const f of walk(path.join(BP, 'scripts'), '.js')) {
   const code = fs.readFileSync(f, 'utf8');

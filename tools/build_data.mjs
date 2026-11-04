@@ -634,14 +634,17 @@ for (const fileName of fs.readdirSync(path.join(SRC_288_BP, 'recipes')).sort()) 
 
   if (raw['minecraft:recipe_shaped']) {
     const r = raw['minecraft:recipe_shaped'];
-    // Fix `clock_sword.json` broken key `" "` -> `"X"`
+    // `clock_sword.json` in 2.8.8 draws two "X" cells in the pattern but never
+    // defines an "X" key, so those two cells are empty slots. Spell them as
+    // spaces: the same 5 gold blocks + clock + gold ingot, but a pattern the
+    // engine cannot mistake for a missing-key error. Adding a golden sword (an
+    // earlier attempt here) silently traded a gold block for a whole sword.
     if (fileName === 'clock_sword.json') {
-      r.pattern = ['GGG', 'GCG', 'XSX'];
+      r.pattern = [' ##', '#C#', 'I# '];
       r.key = {
-        G: { item: 'minecraft:gold_block' },
+        '#': { item: 'minecraft:gold_block' },
         C: { item: 'minecraft:clock' },
-        S: { item: 'minecraft:golden_sword' },
-        X: { item: 'minecraft:gold_ingot' },
+        I: { item: 'minecraft:gold_ingot' },
       };
     }
     // Strip legacy `data: 0` from keys & result

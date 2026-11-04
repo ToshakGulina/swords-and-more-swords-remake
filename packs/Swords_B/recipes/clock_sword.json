@@ -8,21 +8,18 @@
       "crafting_table"
     ],
     "pattern": [
-      "GGG",
-      "GCG",
-      "XSX"
+      " ##",
+      "#C#",
+      "I# "
     ],
     "key": {
-      "G": {
+      "#": {
         "item": "minecraft:gold_block"
       },
       "C": {
         "item": "minecraft:clock"
       },
-      "S": {
-        "item": "minecraft:golden_sword"
-      },
-      "X": {
+      "I": {
         "item": "minecraft:gold_ingot"
       }
     },
