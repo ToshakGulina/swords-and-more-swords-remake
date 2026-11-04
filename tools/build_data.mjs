@@ -963,8 +963,20 @@ for (const [rel, data] of Object.entries(customLootTables)) {
   }
 
   const treasure = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/gameplay/fishing/treasure.json'), 'utf8'));
+  // 2.8.8 treasure pool still listed `minecraft:waterlily` at weight 5. The Remake
+  // dropped it from here and instead added a weight-17 lily to the junk pool, which
+  // is the opposite of treasure. Restore the original entry.
+  if (!treasure.pools[0].entries.some((e) => e.name === 'minecraft:waterlily')) {
+    treasure.pools[0].entries.push({ type: 'item', name: 'minecraft:waterlily', weight: 5 });
+  }
   treasure.pools[0].entries.push({ type: 'item', name: 'effect:jungle_sword', weight: 5 });
   writeJson(path.join(BP, 'loot_tables/gameplay/fishing/treasure.json'), treasure);
+
+  // ...and take the invented junk-pool lily back out. `minecraft:ink_sac` is the
+  // modern id of 2.8.8's `minecraft:dye` with `set_data 0`, so it stays.
+  const junk = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/gameplay/fishing/junk.json'), 'utf8'));
+  junk.pools[0].entries = junk.pools[0].entries.filter((e) => e.name !== 'minecraft:waterlily');
+  writeJson(path.join(BP, 'loot_tables/gameplay/fishing/junk.json'), junk);
 
   for (const name of ['fishing.json', 'jungle_fishing.json']) {
     const fishing = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/gameplay', name), 'utf8'));

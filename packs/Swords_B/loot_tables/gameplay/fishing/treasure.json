@@ -70,6 +70,11 @@
         },
         {
           "type": "item",
+          "name": "minecraft:waterlily",
+          "weight": 5
+        },
+        {
+          "type": "item",
           "name": "effect:jungle_sword",
           "weight": 5
         }
