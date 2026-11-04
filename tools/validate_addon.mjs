@@ -694,6 +694,72 @@ for (const f of walk(path.join(BP, 'entities'), '.json')) {
   }
 }
 
+// 8i. Entity/block event wiring: every event an entity or block triggers must
+// be defined on the same definition, otherwise the sensor silently does nothing.
+// Also reject an empty minecraft:damage_sensor (it is a no-op that looks real)
+// and a string deals_damage, which the engine ignores.
+{
+  const DEALS_DAMAGE_STRINGS = new Set(['yes', 'no', 'no_but_side_effects_apply', 'no_but_entity_effects_apply']);
+  const VICTIM_DEFINITIONS = [
+    ...walk(path.join(BP, 'entities'), '.json').map((f) => [f, readJsonChecked(f, true)?.['minecraft:entity']]),
+    ...walk(path.join(BP, 'blocks'), '.json').map((f) => [f, readJsonChecked(f, true)?.['minecraft:block']]),
+  ];
+  for (const [file, body] of VICTIM_DEFINITIONS) {
+    if (!body) continue;
+    const defined = new Set(Object.keys(body.events ?? {}));
+    const containers = [body.components ?? {}, ...Object.values(body.component_groups ?? {})];
+    let triggerCount = 0;
+    for (const components of containers) {
+      const sensor = components['minecraft:damage_sensor'];
+      if (!sensor) continue;
+      const triggers = sensor.triggers;
+      if (triggers === undefined) continue; // `{}` — see the inherited-empty check below
+      for (const trigger of (Array.isArray(triggers) ? triggers : [triggers])) {
+        triggerCount++;
+        // Vanilla accepts both booleans and the string enum ("yes"/"no"/...).
+        if (
+          trigger.deals_damage !== undefined &&
+          typeof trigger.deals_damage !== 'boolean' &&
+          !DEALS_DAMAGE_STRINGS.has(trigger.deals_damage)
+        ) {
+          err(`${file}: deals_damage must be a boolean or one of ${[...DEALS_DAMAGE_STRINGS].join(', ')}, found ${JSON.stringify(trigger.deals_damage)}`);
+        }
+        const onDamage = trigger.on_damage;
+        const event = typeof onDamage === 'string' ? onDamage : onDamage?.event;
+        if (event && !defined.has(event)) {
+          err(`${file}: damage_sensor triggers undefined event "${event}"`);
+        }
+      }
+    }
+    // An empty sensor is a no-op. Vanilla 1.26.60 ships `"minecraft:damage_sensor": {}`
+    // on a few mobs (e.g. witch), so only flag one the pack invented itself.
+    if (body.components?.['minecraft:damage_sensor'] && triggerCount === 0) {
+      const vanilla = readJsonChecked(path.join(VANILLA_BP, 'entities', path.basename(file)), false);
+      const inherited = vanilla?.['minecraft:entity']?.components?.['minecraft:damage_sensor'];
+      if (!inherited || Object.keys(inherited).length > 0) {
+        err(`${file}: minecraft:damage_sensor is empty and does nothing`);
+      }
+    }
+    for (const [name, event] of Object.entries(body.events ?? {})) {
+      const walkEvents = (node) => {
+        if (Array.isArray(node)) return node.forEach(walkEvents);
+        if (!node || typeof node !== 'object') return;
+        for (const [key, value] of Object.entries(node)) {
+          if (key === 'event' && typeof value === 'string' && !value.startsWith('minecraft:') && !defined.has(value)) {
+            err(`${file}: event "${name}" fires undefined event "${value}"`);
+          }
+          if (key === 'event' && typeof value === 'string' && value.startsWith('minecraft:') && !defined.has(value)
+            && value !== 'minecraft:entity_spawned' && value !== 'minecraft:despawn') {
+            err(`${file}: event "${name}" fires undefined event "${value}"`);
+          }
+          walkEvents(value);
+        }
+      };
+      walkEvents(event);
+    }
+  }
+}
+
 // 9. Verify compiled JS imports & custom event names
 for (const f of walk(path.join(BP, 'scripts'), '.js')) {
   const code = fs.readFileSync(f, 'utf8');
