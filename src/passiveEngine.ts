@@ -68,8 +68,9 @@ const nextLapisTick = new Map<string, number>();
 const nextBeeFlowerTick = new Map<string, number>();
 const werewolfCursedPlayers = new Set<string>();
 
+// Exact 2.8.8 `bee_sword_flower`: eight equal-weight `setblock ~ ~ ~ red_flower <0..7>`,
+// i.e. poppy, blue orchid, allium, azure bluet, red, orange, white and pink tulips.
 const SMALL_FLOWERS = [
-  'minecraft:dandelion',
   'minecraft:poppy',
   'minecraft:blue_orchid',
   'minecraft:allium',
@@ -78,9 +79,6 @@ const SMALL_FLOWERS = [
   'minecraft:orange_tulip',
   'minecraft:white_tulip',
   'minecraft:pink_tulip',
-  'minecraft:oxeye_daisy',
-  'minecraft:cornflower',
-  'minecraft:lily_of_the_valley',
 ];
 const SMALL_FLOWER_SET = new Set([...SMALL_FLOWERS, 'minecraft:torchflower']);
 
@@ -493,10 +491,12 @@ export function startPassiveEngine(): void {
       try {
         switch (mainId) {
           case 'effect:bee_sword': {
-            // Flowers appear from time to time (3-8s) when walking on grass!
+            // Exact 2.8.8 `minecraft:bee_sword` timer: `time [3, 8]`, looping,
+            // randomInterval. `bee_sword_flower` then picks one of the eight
+            // `red_flower` data values and only places it on top of grass.
             const due = nextBeeFlowerTick.get(player.id) ?? 0;
             if (tick >= due) {
-              nextBeeFlowerTick.set(player.id, tick + 60 + Math.floor(Math.random() * 100));
+              nextBeeFlowerTick.set(player.id, tick + 60 + Math.floor(Math.random() * 101));
               const below = dim.getBlock({
                 x: Math.floor(player.location.x),
                 y: Math.floor(player.location.y) - 1,
@@ -833,8 +833,12 @@ export function startPassiveEngine(): void {
           }
 
           case 'effect:grass_sword': {
-            // Dirt turns into grass (5x5) + sprouts short_grass + nearby entities within radius 8 on grass are buried by entity:grass!
-            if (tick % 10 === 0) {
+            // Exact 2.8.8 `minecraft:grass_sword` timer (0.2 s = 4 ticks):
+            // `tag @e[tag=grass,rm=9,r=10] remove grass`,
+            // `fill ~2 ~-1 ~2 ~-2 ~-1 ~-2 grass 0 replace dirt` (flat, foot -1),
+            // `detect ~ ~-1 ~ grass` -> `fill ~ ~ ~ ~ ~ ~ tallgrass 0 replace air`,
+            // then the `grass_sword_skills` pass buries mobs up to r=8.
+            if (tick % 4 === 0) {
               const px = Math.floor(player.location.x);
               const py = Math.floor(player.location.y) - 1;
               const pz = Math.floor(player.location.z);
@@ -848,7 +852,9 @@ export function startPassiveEngine(): void {
               }
               const foot = dim.getBlock({ x: px, y: py + 1, z: pz });
               const below = dim.getBlock({ x: px, y: py, z: pz });
-              if (below?.typeId === 'minecraft:grass_block' && foot?.isAir && Math.random() < 0.35) {
+              // `~ ~-1 ~` is the same block the 5x5 fill just turned to grass, so it
+              // is always `grass` here; no chance roll in the original.
+              if (below?.typeId === 'minecraft:grass_block' && foot?.isAir) {
                 foot.setType('minecraft:short_grass');
               }
 
@@ -1160,9 +1166,13 @@ export function startPassiveEngine(): void {
           }
 
           case 'effect:ultra_instinct_sword': {
+            // Exact 2.8.8 `minecraft:ultra_instinct_sword` timer: `time [0.1, 0.2]`,
+            // randomInterval, re-applied continuously — camerashake for everyone
+            // nearby plus removal of eight debuffs from the holder.
             if (tick % 6 === 0) {
-              player.addEffect('speed', 40, { amplifier: 3, showParticles: false });
-              // Exact 2.8.8: cleanse negative debuffs while wielding Ultra Instinct Sword!
+              try {
+                player.runCommand('camerashake add @a[r=32] 0.1 0.016 positional');
+              } catch {}
               for (const debuff of [
                 'hunger',
                 'blindness',
@@ -1171,6 +1181,7 @@ export function startPassiveEngine(): void {
                 'mining_fatigue',
                 'nausea',
                 'wither',
+                'instant_damage',
               ]) {
                 try {
                   player.removeEffect(debuff);

@@ -308,8 +308,9 @@ const SWORD_PLAYER_GROUPS = {
   },
 
   'effect:ultra_instinct_sword': {
+    // Exact 2.8.8 `ultra_instinct_sword_movement` = 0.22.
     'minecraft:type_family': { family: ['player', 'ultra_instinct_sword'] },
-    'minecraft:movement': { value: 0.14 },
+    'minecraft:movement': { value: 0.22 },
     'minecraft:knockback_resistance': { value: 1.0 },
     'minecraft:damage_sensor': {
       triggers: [

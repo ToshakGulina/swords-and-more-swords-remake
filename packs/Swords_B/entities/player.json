@@ -540,7 +540,7 @@
           ]
         },
         "minecraft:movement": {
-          "value": 0.14
+          "value": 0.22
         },
         "minecraft:knockback_resistance": {
           "value": 1
