@@ -9,10 +9,16 @@
     },
     "component_groups": {
       "exploding": {
+        "minecraft:damage_sensor": {
+          "triggers": {
+            "cause": "all",
+            "deals_damage": false
+          }
+        },
         "minecraft:explode": {
-          "fuse_length": 1.2,
+          "fuse_length": 1.5,
           "fuse_lit": true,
-          "power": 1.5,
+          "power": 1,
           "causes_fire": false,
           "destroy_affected_by_griefing": true
         }
@@ -26,11 +32,12 @@
         "family": [
           "creeper",
           "player",
+          "mob",
           "effect99_entities"
         ]
       },
       "minecraft:scale": {
-        "value": 0.35
+        "value": 0.3
       },
       "minecraft:collision_box": {
         "width": 0.3,
@@ -84,32 +91,33 @@
       },
       "minecraft:timer": {
         "time": [
-          6,
-          8
+          10,
+          10
         ],
-        "looping": false,
+        "looping": true,
+        "randomInterval": false,
         "time_down_event": {
           "event": "start_exploding",
           "target": "self"
         }
       },
       "minecraft:damage_sensor": {
-        "triggers": [
-          {
-            "cause": "fall",
-            "deals_damage": false
-          },
-          {
-            "on_damage": {
-              "filters": {
-                "test": "is_family",
-                "subject": "other",
-                "value": "player"
-              }
+        "triggers": {
+          "on_damage": {
+            "filters": {
+              "any_of": [
+                {
+                  "test": "has_damage",
+                  "subject": "self",
+                  "operator": "!=",
+                  "value": "void"
+                }
+              ]
             },
-            "deals_damage": false
-          }
-        ]
+            "event": "start_exploding"
+          },
+          "deals_damage": false
+        }
       }
     },
     "events": {

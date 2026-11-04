@@ -1336,12 +1336,18 @@ writeJson(path.join(BP, 'entities/minicreeper.json'), {
       is_summonable: true,
       is_experimental: false,
     },
+    // Values copied from the `minecraft:minicreeper` group 2.8.8 kept on the
+    // creeper entity: scale 0.3, a 10 s loop timer and a blast of power 1 after a
+    // 1.5 s fuse. The remake had invented sharper numbers (0.35 scale, 6-8 s
+    // fuse timer, power 1.5) and let the mini creeper take damage from everything
+    // except falls and players — 2.8.8 makes it immune to all damage.
     component_groups: {
       exploding: {
+        'minecraft:damage_sensor': { triggers: { cause: 'all', deals_damage: false } },
         'minecraft:explode': {
-          fuse_length: 1.2,
+          fuse_length: 1.5,
           fuse_lit: true,
-          power: 1.5,
+          power: 1,
           causes_fire: false,
           destroy_affected_by_griefing: true,
         },
@@ -1351,8 +1357,8 @@ writeJson(path.join(BP, 'entities/minicreeper.json'), {
       },
     },
     components: {
-      'minecraft:type_family': { family: ['creeper', 'player', 'effect99_entities'] },
-      'minecraft:scale': { value: 0.35 },
+      'minecraft:type_family': { family: ['creeper', 'player', 'mob', 'effect99_entities'] },
+      'minecraft:scale': { value: 0.3 },
       'minecraft:collision_box': { width: 0.3, height: 0.6 },
       'minecraft:health': { value: 10, max: 10 },
       'minecraft:movement': { value: 0.32 },
@@ -1377,18 +1383,19 @@ writeJson(path.join(BP, 'entities/minicreeper.json'), {
         on_inside_range: { event: 'start_exploding', target: 'self' },
       },
       'minecraft:timer': {
-        time: [6.0, 8.0],
-        looping: false,
+        time: [10.0, 10.0],
+        looping: true,
+        randomInterval: false,
         time_down_event: { event: 'start_exploding', target: 'self' },
       },
       'minecraft:damage_sensor': {
-        triggers: [
-          { cause: 'fall', deals_damage: false },
-          {
-            on_damage: { filters: { test: 'is_family', subject: 'other', value: 'player' } },
-            deals_damage: false,
+        triggers: {
+          on_damage: {
+            filters: { any_of: [{ test: 'has_damage', subject: 'self', operator: '!=', value: 'void' }] },
+            event: 'start_exploding',
           },
-        ],
+          deals_damage: false,
+        },
       },
     },
     events: {
