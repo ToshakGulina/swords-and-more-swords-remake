@@ -1198,7 +1198,10 @@ for (const f of customEntityFiles.sort()) {
   }
   if (f === 'slime_king.json') {
     ent.description.is_spawnable = true;
-    // Restore missing loot table link from 2.8.8 so King Slime genuinely drops `effect:slime_sword` (4% + Looting)!
+    // Deliberate fix, not a parity item: `loot_tables/entities/slime_king.json` ships in 2.8.8
+    // (and in every later build) but no entity ever references it, so the Slime Sword never
+    // dropped from the Slime King. The entity inherits `minecraft:slime` loot instead. We wire
+    // the orphaned table up so the 4% (+2% per Looting level) drop finally works as authored.
     ent.components['minecraft:loot'] = { table: 'loot_tables/entities/slime_king.json' };
     ent.events['slime_effects'] = {
       queue_command: {

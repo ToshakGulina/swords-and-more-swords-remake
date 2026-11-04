@@ -1024,25 +1024,45 @@ for (const [rel, pool] of entityPoolAdditions) {
   writeJson(path.join(BP, 'loot_tables', rel), base);
 }
 
-// 7.3 Rebase Master Weaponsmith Trades (`effect:emerald_sword`) onto v1.26.60.5
-const econWeaponsmith = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'trading/economy_trades/weapon_smith_trades.json'), 'utf8'));
-econWeaponsmith.tiers[econWeaponsmith.tiers.length - 1].groups.push({
-  num_to_select: 1,
-  trades: [
+// 7.3 Weaponsmith `effect:emerald_sword` trade, exactly as authored in 2.8.8.
+//
+// The other nine weaponsmith trades stay vanilla on purpose: 2.8.8 shipped a
+// wholesale copy of the v1.13 trades table with its own trader_exp / max_uses
+// values, but none of that touches the swords, so re-creating it would be a
+// regression to stale vanilla numbers for no gameplay gain.
+//
+// The sword trade itself does need the 2.8.8 numbers. It has to sit in the tier
+// whose `total_exp_required` is 310; the 2.8.8 table had that as a fifth tier
+// (0/10/60/160/310) whereas the current vanilla table only reaches 250. We
+// rebuild the sword tier rather than appending to the vanilla 250 tier so that
+// the sword unlocks at the same trader level it did in 2.8.8.
+const econWeaponsmith = jsonc.parse(
+  fs.readFileSync(path.join(VANILLA_BP, 'trading/economy_trades/weapon_smith_trades.json'), 'utf8'),
+);
+econWeaponsmith.tiers = econWeaponsmith.tiers.filter((tier) => tier.total_exp_required !== 310);
+econWeaponsmith.tiers.push({
+  total_exp_required: 310,
+  groups: [
     {
-      wants: [{ item: 'minecraft:emerald_block', quantity: 32, price_multiplier: 0.0 }],
-      gives: [
+      num_to_select: 1,
+      trades: [
         {
-          item: 'effect:emerald_sword',
-          quantity: 1,
-          functions: [
-            { function: 'enchant_with_levels', treasure: false, levels: { min: 5, max: 60 } },
+          wants: [{ item: 'minecraft:emerald_block', quantity: 32, price_multiplier: 0.0 }],
+          gives: [
+            {
+              item: 'effect:emerald_sword',
+              quantity: 1,
+              functions: [
+                { function: 'enchant_with_levels', treasure: false, levels: { min: 5, max: 60 } },
+              ],
+            },
           ],
+          // 2.8.8: trader_exp 0, max_uses 2.
+          trader_exp: 0,
+          max_uses: 2,
+          reward_exp: true,
         },
       ],
-      trader_exp: 30,
-      max_uses: 2,
-      reward_exp: true,
     },
   ],
 });
