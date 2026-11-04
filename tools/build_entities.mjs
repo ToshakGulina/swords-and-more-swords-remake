@@ -876,12 +876,13 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
   writeJson(path.join(BP, 'entities/parrot.json'), data);
 }
 
-// C.7 `tnt.json` — Adds `giant_tnt` (2.5x scale, 8s fuse, power 16 + camera shake) for TNT Sword
+// C.7 `tnt.json` — Adds `giant_tnt` (2x scale, 8 s fuse, power 16 + camera shake) for TNT Sword
 {
   const data = readVanillaBP('tnt.json');
   const ent = data['minecraft:entity'];
+  // 2.8.8 `giant_tnt` group: scale 2 (the remake had invented 2.5), 8 s fuse, power 16.
   ent.component_groups['giant_tnt'] = {
-    'minecraft:scale': { value: 2.5 },
+    'minecraft:scale': { value: 2 },
     'minecraft:explode': {
       fuse_length: 8.0,
       fuse_lit: true,
@@ -968,7 +969,7 @@ for (const projFile of ['fireball.json', 'wither_skull.json', 'wither_skull_dang
   //    damage source in 2.8.8; the added `impact_damage: 6` was a remake invention.
   //  * skulls    — anchor `eye_height`, offset [0,-0.1,0], no direct hit damage.
   const BASE_PROJECTILE = {
-    'fireball.json': { power: 1.6, gravity: 0, anchor: 'eye_height', offset: [0, -0.1, 0], catchFire: true, dropImpactDamage: true },
+    'fireball.json': { power: 1.6, gravity: 0, anchor: 'eye_height', offset: [0, -0.1, 0], catchFire: true, dropImpactDamage: true, collisionBox: 0.31 },
     'wither_skull.json': { power: 1.2, gravity: 0, anchor: 'eye_height', offset: [0, -0.1, 0], dropImpactDamage: true },
     'wither_skull_dangerous.json': { power: 0.6, gravity: 0, anchor: 'eye_height', offset: [0, -0.1, 0], dropImpactDamage: true },
   };
@@ -981,6 +982,10 @@ for (const projFile of ['fireball.json', 'wither_skull.json', 'wither_skull_dang
     base.offset = spec.offset;
     if (spec.catchFire !== undefined) base.catch_fire = spec.catchFire;
     if (spec.dropImpactDamage && base.on_hit) delete base.on_hit.impact_damage;
+    // 2.8.8 hides the fireball inside a 0.31 cube; the vanilla 1.26 box is 1x1.
+    if (spec.collisionBox !== undefined) {
+      ent.components['minecraft:collision_box'] = { width: spec.collisionBox, height: spec.collisionBox };
+    }
   }
   ent.components['minecraft:projectile'] = JSON.parse(JSON.stringify(base));
   const playerProj = JSON.parse(JSON.stringify(base));
@@ -1183,13 +1188,17 @@ for (const f of customEntityFiles.sort()) {
     };
   }
   if (f === 'wither_effect.json') {
+    // 2.8.8 keeps a 0.1 s looping timer that fires `despawn`, and — unlike the
+    // lightning projectile — no `remove_on_hit`, so the withering projectile
+    // survives its first hit. The remake stretched the timer to 0.6 s and added
+    // `remove_on_hit`, which made the shot vanish on contact.
     ent.components['minecraft:timer'] = {
-      time: [0.6, 0.6],
-      looping: false,
+      time: [0.1, 0.1],
+      looping: true,
       time_down_event: { event: 'despawn', target: 'self' },
     };
     if (ent.components['minecraft:projectile']?.on_hit) {
-      ent.components['minecraft:projectile'].on_hit.remove_on_hit = {};
+      delete ent.components['minecraft:projectile'].on_hit.remove_on_hit;
     }
     ent.events.particle = {
       queue_command: {
@@ -1281,13 +1290,13 @@ for (const f of customEntityFiles.sort()) {
     };
   }
   if (f === 'grows_crop.json') {
-    // Fix entity-leak bug: `ageable` requires `is_baby`, plus add guaranteed 0.9s despawn timer!
+    // `minecraft:ageable` needs `minecraft:is_baby` on 1.26 or the grow-up never
+    // fires; that is a migration requirement, not a behaviour change.
     ent.components['minecraft:is_baby'] = {};
-    ent.components['minecraft:timer'] = {
-      time: [0.8, 1.0],
-      looping: false,
-      time_down_event: { event: 'despawn', target: 'self' },
-    };
+    // 2.8.8 has no top-level timer here: the helper is removed by the `ageable`
+    // grow-up event (1 s) plus the `despawn` instant_despawn group. The remake
+    // added a 0.8-1 s backstop timer, which is not in the original.
+    delete ent.components['minecraft:timer'];
   }
   if (f === 'centella.json') {
     if (ent.components?.['minecraft:loot']) {

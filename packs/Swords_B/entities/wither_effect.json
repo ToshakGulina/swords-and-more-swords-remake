@@ -19,10 +19,10 @@
     "components": {
       "minecraft:timer": {
         "time": [
-          0.6,
-          0.6
+          0.1,
+          0.1
         ],
-        "looping": false,
+        "looping": true,
         "time_down_event": {
           "event": "despawn",
           "target": "self"
@@ -42,8 +42,7 @@
             "knockback": true,
             "destroy_on_hit": true
           },
-          "particle_on_hit": {},
-          "remove_on_hit": {}
+          "particle_on_hit": {}
         },
         "power": 2,
         "gravity": 0,

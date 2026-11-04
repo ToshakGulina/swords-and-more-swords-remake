@@ -52,7 +52,7 @@
       },
       "giant_tnt": {
         "minecraft:scale": {
-          "value": 2.5
+          "value": 2
         },
         "minecraft:explode": {
           "fuse_length": 8,

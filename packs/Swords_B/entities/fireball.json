@@ -14,8 +14,8 @@
         ]
       },
       "minecraft:collision_box": {
-        "height": 1,
-        "width": 1
+        "width": 0.31,
+        "height": 0.31
       },
       "minecraft:conditional_bandwidth_optimization": {
         "default_values": {

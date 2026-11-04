@@ -60,18 +60,7 @@
         "has_gravity": false,
         "has_collision": false
       },
-      "minecraft:is_baby": {},
-      "minecraft:timer": {
-        "time": [
-          0.8,
-          1
-        ],
-        "looping": false,
-        "time_down_event": {
-          "event": "despawn",
-          "target": "self"
-        }
-      }
+      "minecraft:is_baby": {}
     },
     "events": {
       "grows_crop_event": {
