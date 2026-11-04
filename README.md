@@ -6,15 +6,15 @@
 
 ---
 
-## 📦 Готовые файлы для установки (GitHub Releases)
+## 📦 Готовые файлы для установки (прямое скачивание и GitHub Releases)
 
-👉 **Скачать последнюю версию в 1 клик можно напрямую из раздела [GitHub Releases (`v3.0.1`)](https://github.com/ToshakGulina/swords-and-more-swords-remake/releases/latest):**
+👉 Страница релиза на GitHub: **[Release `v3.0.1` — Swords and More Swords Remake](https://github.com/ToshakGulina/swords-and-more-swords-remake/releases/tag/v3.0.1)**
 
-| Установочный пакет | Ссылка в Releases | Назначение |
+| Установочный пакет | Прямая ссылка в 1 клик | Назначение |
 |---|---|---|
-| **`SwordsAndMoreSwords_Remake.mcaddon`** | **[Скачать `.mcaddon`](https://github.com/ToshakGulina/swords-and-more-swords-remake/releases/latest/download/SwordsAndMoreSwords_Remake.mcaddon)** | **Основной установочный пакет (Всё-в-одном):** одним нажатием устанавливает и Набор параметров (`Behavior Pack`), и Набор ресурсов (`Resource Pack`). |
-| `SwordsAndMoreSwords_BP.mcpack` | [Скачать `BP.mcpack`](https://github.com/ToshakGulina/swords-and-more-swords-remake/releases/latest/download/SwordsAndMoreSwords_BP.mcpack) | Отдельный **Набор параметров** (`Behavior Pack`), если удобнее импортировать пакеты по отдельности. |
-| `SwordsAndMoreSwords_RP.mcpack` | [Скачать `RP.mcpack`](https://github.com/ToshakGulina/swords-and-more-swords-remake/releases/latest/download/SwordsAndMoreSwords_RP.mcpack) | Отдельный **Набор ресурсов** (`Resource Pack`), если удобнее импортировать пакеты по отдельности. |
+| **`SwordsAndMoreSwords_Remake.mcaddon`** | **[⬇️ Скачать `.mcaddon`](https://github.com/ToshakGulina/swords-and-more-swords-remake/raw/main/SwordsAndMoreSwords_Remake.mcaddon)** | **Основной установочный пакет (Всё-в-одном):** одним нажатием устанавливает и Набор параметров (`Behavior Pack`), и Набор ресурсов (`Resource Pack`). |
+| `SwordsAndMoreSwords_BP.mcpack` | [⬇️ Скачать `BP.mcpack`](https://github.com/ToshakGulina/swords-and-more-swords-remake/raw/main/releases/SwordsAndMoreSwords_BP.mcpack) | Отдельный **Набор параметров** (`Behavior Pack`), если удобнее импортировать пакеты по отдельности. |
+| `SwordsAndMoreSwords_RP.mcpack` | [⬇️ Скачать `RP.mcpack`](https://github.com/ToshakGulina/swords-and-more-swords-remake/raw/main/releases/SwordsAndMoreSwords_RP.mcpack) | Отдельный **Набор ресурсов** (`Resource Pack`), если удобнее импортировать пакеты по отдельности. |
 
 ---
 
