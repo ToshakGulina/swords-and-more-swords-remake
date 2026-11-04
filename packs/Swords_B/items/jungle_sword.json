@@ -61,6 +61,17 @@
           }
         ]
       },
+      "minecraft:block_placer": {
+        "block": "effect99:sapling3",
+        "use_on": [
+          {
+            "name": "minecraft:dirt"
+          },
+          {
+            "name": "minecraft:grass_block"
+          }
+        ]
+      },
       "minecraft:tags": {
         "tags": [
           "minecraft:is_sword",

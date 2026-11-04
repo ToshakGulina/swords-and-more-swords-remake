@@ -306,6 +306,23 @@ for (const fileName of fs.readdirSync(path.join(SRC_288_BP, 'items')).sort()) {
     };
   }
 
+  // Block placer (exact 2.8.8: only the Jungle Sword plants `effect99:sapling3`,
+  // which immediately grows a giant jungle tree; the original restricts it to
+  // dirt and grass).
+  if (oldC['minecraft:block_placer']) {
+    const placer = oldC['minecraft:block_placer'];
+    // 1.16.100 used legacy short names ("dirt", "grass"); current versions want
+    // full block descriptors.
+    const legacyBlockIds = { dirt: 'minecraft:dirt', grass: 'minecraft:grass_block' };
+    components['minecraft:block_placer'] = {
+      block: placer.block,
+      use_on: (Array.isArray(placer.use_on) ? placer.use_on : []).map((bd) => {
+        if (typeof bd === 'string') return { name: legacyBlockIds[bd] ?? bd };
+        return bd;
+      }),
+    };
+  }
+
   // Tags (`minecraft:is_sword`, `minecraft:is_tool`, `minecraft:is_pickaxe` for bedrock_sword)
   if (isSword) {
     const tags = ['minecraft:is_sword', 'minecraft:is_tool'];

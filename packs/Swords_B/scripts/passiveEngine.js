@@ -2,7 +2,6 @@ import { BlockPermutation, EntityComponentTypes, EntityDamageCause, EquipmentSlo
 import { BRIGHT_LIGHT_SWORDS, LIGHT_EMITTING_SWORDS } from './blockComponents.js';
 import { tryConvertSpongeSword } from './swordSkills.js';
 import { recoverRandomTickSpeed, setTimeSwordActive } from './randomTickManager.js';
-import { spawnSwordLightning } from './lightningOrigin.js';
 import { getMainhandItem, getOffhandItem, isFullMoonNight, isProtectedEntity, } from './utils.js';
 const PLAYER_COMPONENT_KEYS = new Set([
     'sea_sword',
@@ -70,6 +69,11 @@ const JUNGLE_VINE_SURFACES = new Set([
     'minecraft:ice',
     'minecraft:netherrack',
     'minecraft:nether_brick',
+    // `jungle_sword.mcfunction` also has `sandstone 0`, `packed_ice 0` and plain
+    // `glass 0` in its list.
+    'minecraft:sandstone',
+    'minecraft:packed_ice',
+    'minecraft:glass',
 ]);
 function cleanupHelperEntity(map, playerId, despawnEvent) {
     const ent = map.get(playerId);
@@ -286,11 +290,12 @@ export function startPassiveEngine() {
                     catch { }
                 }
                 if (mainId === 'effect:lightning_sword' && prevMainId !== 'effect:lightning_sword') {
+                    // Exact 2.8.8: equipping fires `summon lightning_bolt ~ 255 ~
+                    // default_lightning_bolt` — one cosmetic bolt high above the player.
                     try {
-                        const skyY = Math.min(dim.heightRange.max - 2, player.location.y + 45);
-                        spawnSwordLightning(dim, {
+                        dim.spawnEntity('minecraft:lightning_bolt', {
                             x: player.location.x,
-                            y: skyY,
+                            y: Math.min(dim.heightRange.max - 2, 255),
                             z: player.location.z,
                         });
                     }
@@ -461,26 +466,26 @@ export function startPassiveEngine() {
                         break;
                     }
                     case 'effect:sea_sword': {
+                        // Exact 2.8.8 `minecraft:sea_sword`: a 0.5 s timer drives the whole
+                        // group. In water: conduction 1 s renewed every timer tick. Out of
+                        // water: `camerashake` + `conduit_power 0` and the fish flop sound.
+                        // Suffocation and the 0.06/0.07 mermaid speeds come from the
+                        // component group itself, not from damage applied here.
                         if (player.isInWater) {
                             if (tick % 10 === 0) {
-                                player.addEffect('water_breathing', 100, { amplifier: 0, showParticles: false });
-                                player.addEffect('conduit_power', 100, { amplifier: 1, showParticles: false });
-                            }
-                            // Swim as fast as dolphins!
-                            const vel = player.getVelocity();
-                            const dir = player.getViewDirection();
-                            if (Math.hypot(vel.x, vel.z) > 0.08 && tick % 4 === 0) {
-                                player.applyKnockback({ x: dir.x * 0.45, z: dir.z * 0.45 }, dir.y * 0.15);
+                                player.addEffect('conduit_power', 20, { amplifier: 0, showParticles: false });
                             }
                         }
-                        else if (tick % 12 === 0 && player.getGameMode() !== GameMode.Creative) {
-                            // Mermaid jumps like a fish and suffocates on dry land!
-                            const footBlock = dim.getBlock(player.location);
-                            if (!footBlock || !footBlock.typeId.includes('water')) {
-                                player.applyKnockback({ x: (Math.random() - 0.5) * 0.25, z: (Math.random() - 0.5) * 0.25 }, 0.32);
-                                player.applyDamage(1, { cause: EntityDamageCause.drowning });
-                                dim.playSound('mob.fish.flop', player.location, { volume: 1.0, pitch: 0.6 });
+                        else if (tick % 10 === 0) {
+                            try {
+                                player.runCommand('camerashake add @s 0.01 1 positional');
                             }
+                            catch { }
+                            try {
+                                player.removeEffect('conduit_power');
+                            }
+                            catch { }
+                            dim.playSound('mob.fish.flop', player.location, { volume: 1.0, pitch: 0.6 });
                         }
                         break;
                     }
@@ -728,9 +733,13 @@ export function startPassiveEngine() {
                         break;
                     }
                     case 'effect:jungle_sword': {
-                        // 4 max hearts (player.json) + absorption effect + vines placed on nearby blocks (exact 2.8.8 vine_direction_bits)!
-                        if (tick % 30 === 0) {
-                            player.addEffect('absorption', 120, { amplifier: 1, showParticles: false });
+                        // Exact 2.8.8 `minecraft:jungle_sword` event: `effect @s absorption 1
+                        // 2 true` — a one-second Absorption II refreshed by the equip event,
+                        // plus the `jungle_sword` function that grows vines on the four
+                        // blocks around the player (never on blocks that are not in its
+                        // list: no planks/leaves extension, no parrots, no trees).
+                        if (tick % 20 === 0) {
+                            player.addEffect('absorption', 20, { amplifier: 1, showParticles: false });
                             const dirs = [
                                 { x: 1, z: 0, bit: 8 },
                                 { x: -1, z: 0, bit: 2 },
@@ -743,10 +752,9 @@ export function startPassiveEngine() {
                             const pz = Math.floor(player.location.z);
                             const wall = dim.getBlock({ x: px + off.x, y: py, z: pz + off.z });
                             const centerAir = dim.getBlock({ x: px, y: py, z: pz });
-                            if (wall &&
-                                (JUNGLE_VINE_SURFACES.has(wall.typeId) || wall.typeId.includes('planks') || wall.typeId.includes('leaves')) &&
-                                centerAir &&
-                                centerAir.isAir) {
+                            // `jungle_sword.mcfunction` only checks the single block one step
+                            // in the chosen direction and lists plain blocks only.
+                            if (wall && JUNGLE_VINE_SURFACES.has(wall.typeId) && centerAir && centerAir.isAir) {
                                 centerAir.setPermutation(BlockPermutation.resolve('minecraft:vine', { vine_direction_bits: off.bit }));
                             }
                         }

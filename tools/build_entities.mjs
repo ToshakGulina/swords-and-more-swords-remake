@@ -259,23 +259,28 @@ const SWORD_PLAYER_GROUPS = {
   },
 
   'effect:sea_sword': {
+    // Exact 2.8.8 `minecraft:sea_sword` + `mermaid_movement_in_water`/`_out_water`.
     'minecraft:collision_box': { width: 0.6, height: 0.9 },
     'minecraft:breathable': {
-      generates_bubbles: true,
-      inhale_time: 1.5,
-      suffocate_time: -2,
-      total_supply: 15,
+      generates_bubbles: false,
+      inhale_time: 3.75,
+      suffocate_time: -1,
+      total_supply: 2,
       breathes_air: false,
       breathes_water: true,
+      breathes_lava: false,
     },
-    'minecraft:underwater_movement': { value: 0.16 },
-    'minecraft:movement': { value: 0.045 },
+    'minecraft:movement': { value: 0.06 },
+    'minecraft:underwater_movement': { value: 0.07 },
     'minecraft:type_family': { family: ['player', 'sea_sword'] },
   },
 
   'effect:ghost_sword': {
+    // Exact 2.8.8 `minecraft:ghost_sword` (+ `ghost_movement` 0.14): the ghost
+    // has no collision box at all, walks slightly faster and takes no damage
+    // from any source.
     'minecraft:scale': { value: 1.05 },
-    'minecraft:collision_box': { width: 0.6, height: 0.9 },
+    'minecraft:collision_box': { width: 0.0, height: 0.0 },
     'minecraft:breathable': {
       total_supply: 15,
       suffocate_time: 0,
@@ -287,10 +292,10 @@ const SWORD_PLAYER_GROUPS = {
     },
     'minecraft:type_family': { family: ['ghost_sword'] },
     'minecraft:knockback_resistance': { value: 1.0 },
-    'minecraft:movement': { value: 0.15 },
+    'minecraft:movement': { value: 0.14 },
     'minecraft:hurt_on_condition': { damage_conditions: [] },
     'minecraft:damage_sensor': {
-      triggers: [{ cause: 'all', deals_damage: false }],
+      triggers: [{ cause: 'all', deals_damage: 'no' }],
     },
   },
 

@@ -1,7 +1,6 @@
 import { spawnSwordLightning } from './lightningOrigin.js';
 import { BlockPermutation, EntityComponentTypes, EntityDamageCause, EntitySwingSource, EquipmentSlot, GameMode, ItemStack, Player, system, world, } from '@minecraft/server';
 import { boostClockSword } from './randomTickManager.js';
-import { mountPlayerSlime } from './passiveEngine.js';
 import { consumeMainhandDurability, getMainhandItem, growInstantJungleTree, isFullMoonNight, isProtectedEntity, safeRandomTeleport, shootCustomProjectile, } from './utils.js';
 function checkAndStartCooldown(player, category, seconds) {
     try {
@@ -414,12 +413,12 @@ export function registerItemComponents(registry) {
                         break;
                     }
                     case 'effect:lightning_sword': {
-                        // Exact 2.8.8: 85% chance to shoot lightning_projectile / thunder on attack!
-                        if (Math.random() < 0.85) {
-                            if (attackingEntity instanceof Player) {
-                                shootCustomProjectile(attackingEntity, 'entity:lightning_projectile', 1.5);
-                            }
-                            spawnSwordLightning(dim, hitEntity.location);
+                        // Exact 2.8.8 `weapon` event: 85% chance to shoot one
+                        // `entity:lightning_projectile`. The bolt itself is summoned by the
+                        // projectile's own `on_hit` when the projectile lands, never on the
+                        // swing, and never as a ring of 41 bolts.
+                        if (Math.random() < 0.85 && attackingEntity instanceof Player) {
+                            shootCustomProjectile(attackingEntity, 'entity:lightning_projectile', 1.5);
                         }
                         break;
                     }
@@ -474,16 +473,6 @@ export function registerItemComponents(registry) {
             const id = itemStack.typeId;
             try {
                 switch (id) {
-                    case 'effect:sponge_sword': {
-                        tryConvertSpongeSword(player);
-                        break;
-                    }
-                    case 'effect:slime_sword': {
-                        // Reuse only the caller's tracked companion, never another player's mount.
-                        mountPlayerSlime(player);
-                        dim.playSound('mob.slime.big', player.location, { volume: 1.0, pitch: 1.0 });
-                        break;
-                    }
                     case 'effect:clock_sword': {
                         // Exact 2.8.8: advance 1 hour (1000 ticks) & speed up world 10x for 5 seconds! (-10 durability)
                         if (!checkAndStartCooldown(player, 'clock_sword', 30))
@@ -519,30 +508,6 @@ export function registerItemComponents(registry) {
                             }, 30 + shot * 8);
                         }
                         consumeMainhandDurability(player, 10);
-                        break;
-                    }
-                    case 'effect:nether_star_sword': {
-                        if (!checkAndStartCooldown(player, 'nether_star_sword', 8))
-                            return;
-                        const dir = player.getViewDirection();
-                        const origin = player.location;
-                        dim.playSound('mob.wither.shoot', origin, { volume: 1.0, pitch: 1.2 });
-                        shootCustomProjectile(player, 'entity:nether_star_projectile', 1.5, 'effect:nether_star_tracer');
-                        for (let i = 1; i <= 3; i++) {
-                            system.runTimeout(() => {
-                                if (!player.isValid)
-                                    return;
-                                const tx = origin.x + dir.x * (i * 4.5);
-                                const tz = origin.z + dir.z * (i * 4.5);
-                                const ty = Math.min(dim.heightRange.max - 2, origin.y + 18);
-                                try {
-                                    dim.spawnEntity('entity:objective', { x: tx, y: origin.y + 0.5, z: tz });
-                                    dim.spawnEntity('entity:nether_star', { x: tx, y: ty, z: tz });
-                                }
-                                catch { }
-                            }, i * 4);
-                        }
-                        consumeMainhandDurability(player, 4);
                         break;
                     }
                     case 'effect:ice_sword': {
@@ -647,16 +612,6 @@ export function registerItemComponents(registry) {
                         }
                         dim.playSound('mob.shulker.shoot', player.location, { volume: 1.1, pitch: 0.9 });
                         consumeMainhandDurability(player, 8);
-                        break;
-                    }
-                    case 'effect:bee_sword': {
-                        if (!checkAndStartCooldown(player, 'bee_sword', 8))
-                            return;
-                        for (let i = 0; i < 3; i++) {
-                            shootCustomProjectile(player, 'entity:bee_sword', 1.1, undefined, 1.5, 0.2);
-                        }
-                        dim.playSound('mob.bee.aggressive', player.location, { volume: 1.0, pitch: 1.0 });
-                        consumeMainhandDurability(player, 4);
                         break;
                     }
                     case 'effect:ghost_sword': {
