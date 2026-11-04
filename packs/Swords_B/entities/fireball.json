@@ -27,9 +27,9 @@
       "minecraft:dimension_bound": {},
       "minecraft:physics": {},
       "minecraft:projectile": {
-        "anchor": "middle",
+        "anchor": "eye_height",
         "gravity": 0,
-        "catch_fire": false,
+        "catch_fire": true,
         "spread_fire": false,
         "inertia": 1,
         "liquid_inertia": 1,
@@ -40,19 +40,11 @@
               "event": "minecraft:explode",
               "target": "self"
             }
-          },
-          "impact_damage": {
-            "apply_knockback_to_blocking_targets": true,
-            "damage": {
-              "min": 6,
-              "max": 6
-            },
-            "knockback": false
           }
         },
         "offset": [
           0,
-          -1.5,
+          -0.1,
           0
         ],
         "power": 1.6,
@@ -77,9 +69,9 @@
       },
       "effect:player_shot": {
         "minecraft:projectile": {
-          "anchor": "middle",
+          "anchor": "eye_height",
           "gravity": 0.02,
-          "catch_fire": false,
+          "catch_fire": true,
           "spread_fire": false,
           "inertia": 1,
           "liquid_inertia": 1,
@@ -90,19 +82,11 @@
                 "event": "minecraft:explode",
                 "target": "self"
               }
-            },
-            "impact_damage": {
-              "apply_knockback_to_blocking_targets": true,
-              "damage": {
-                "min": 6,
-                "max": 6
-              },
-              "knockback": false
             }
           },
           "offset": [
             0,
-            -1.5,
+            -0.1,
             0
           ],
           "power": 1.8,

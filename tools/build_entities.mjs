@@ -911,6 +911,16 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
 
 // C.8 Projectiles (`arrow`, `small_fireball`, `fireball`, `shulker_bullet`, `snowball`, `wither_skull`, `wither_skull_dangerous`)
 // All custom-spawned projectiles MUST have `is_summonable: true` so `dimension.spawnEntity(...)` succeeds in 1.26.60!
+// 2.8.8 projectile damage. The vanilla 1.26 arrow/small-fireball carry
+// `damage: {min: 0, max: 0}` and derive the real hit from the shooting bow, which
+// does not exist for a scripted `spawnEntity`. Without restoring the numbers, a
+// Bone Sword arrow and a Blaze Sword small fireball hit for nothing. Values are
+// the ones 2.8.8 shipped in its own copies of these two entities.
+const PROJECTILE_DAMAGE = {
+  'arrow.json': { damage: [1, 4], power: 1.6 },
+  'small_fireball.json': { damage: 5, anchor: 'middle', offset: [0, 0.5, 0] },
+};
+
 for (const projFile of ['arrow.json', 'small_fireball.json']) {
   const data = readVanillaBP(projFile);
   const ent = data['minecraft:entity'];
@@ -918,6 +928,18 @@ for (const projFile of ['arrow.json', 'small_fireball.json']) {
   const baseProj = JSON.parse(JSON.stringify(ent.components['minecraft:projectile']));
   baseProj.inertia = 0.05;
   baseProj.liquid_inertia = 0.05;
+  const dmg = PROJECTILE_DAMAGE[projFile];
+  if (dmg) {
+    if (!baseProj.on_hit) baseProj.on_hit = {};
+    if (!baseProj.on_hit.impact_damage) baseProj.on_hit.impact_damage = {};
+    baseProj.on_hit.impact_damage.damage = Array.isArray(dmg.damage)
+      ? { min: dmg.damage[0], max: dmg.damage[1] }
+      : dmg.damage;
+    if (dmg.power !== undefined) baseProj.power = dmg.power;
+    if (dmg.anchor !== undefined) baseProj.anchor = dmg.anchor;
+    if (dmg.offset !== undefined) baseProj.offset = dmg.offset;
+  }
+  ent.components['minecraft:projectile'] = JSON.parse(JSON.stringify(baseProj));
   ent.component_groups = ent.component_groups || {};
   ent.component_groups['minecraft:inertia_disable'] = {
     'minecraft:projectile': baseProj,
@@ -939,7 +961,29 @@ for (const projFile of ['fireball.json', 'wither_skull.json', 'wither_skull_dang
   const data = readVanillaBP(projFile);
   const ent = data['minecraft:entity'];
   ent.description.is_summonable = true;
-  const playerProj = JSON.parse(JSON.stringify(ent.components['minecraft:projectile']));
+  // 2.8.8 base projectile values. The remake previously kept the newer vanilla
+  // ones, which changed how the projectile spawns and what it does on hit:
+  //  * fireball  — `catch_fire: true`, anchor `eye_height`, offset [0,-0.1,0] and
+  //    `on_hit` = definition_event only. The blast (power 1, causes_fire) is the
+  //    damage source in 2.8.8; the added `impact_damage: 6` was a remake invention.
+  //  * skulls    — anchor `eye_height`, offset [0,-0.1,0], no direct hit damage.
+  const BASE_PROJECTILE = {
+    'fireball.json': { power: 1.6, gravity: 0, anchor: 'eye_height', offset: [0, -0.1, 0], catchFire: true, dropImpactDamage: true },
+    'wither_skull.json': { power: 1.2, gravity: 0, anchor: 'eye_height', offset: [0, -0.1, 0], dropImpactDamage: true },
+    'wither_skull_dangerous.json': { power: 0.6, gravity: 0, anchor: 'eye_height', offset: [0, -0.1, 0], dropImpactDamage: true },
+  };
+  const base = JSON.parse(JSON.stringify(ent.components['minecraft:projectile']));
+  const spec = BASE_PROJECTILE[projFile];
+  if (spec) {
+    base.power = spec.power;
+    base.gravity = spec.gravity;
+    base.anchor = spec.anchor;
+    base.offset = spec.offset;
+    if (spec.catchFire !== undefined) base.catch_fire = spec.catchFire;
+    if (spec.dropImpactDamage && base.on_hit) delete base.on_hit.impact_damage;
+  }
+  ent.components['minecraft:projectile'] = JSON.parse(JSON.stringify(base));
+  const playerProj = JSON.parse(JSON.stringify(base));
   playerProj.gravity = 0.02;
   playerProj.power = 1.8;
   ent.component_groups = ent.component_groups || {};
@@ -962,6 +1006,15 @@ for (const projFile of ['fireball.json', 'wither_skull.json', 'wither_skull_dang
   swordProj.gravity = 0.01;
   swordProj.power = 1.8;
   swordProj.destroy_on_hurt = false;
+  // 2.8.8 Shulker Sword bullet: `levitation` at amplifier 1 (= Levitation II) for
+  // 200 ticks on every difficulty. The vanilla bullet the remake starts from uses
+  // amplifier 0, which is one level too weak.
+  const effect = swordProj.on_hit?.mob_effect;
+  if (effect?.effects?.[0]) {
+    effect.effects[0].amplifier = 1;
+  } else if (effect) {
+    effect.amplifier = 1;
+  }
   ent.component_groups = ent.component_groups || {};
   ent.component_groups['effect:shulker_sword'] = {
     'minecraft:projectile': swordProj,

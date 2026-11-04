@@ -94,7 +94,7 @@
             "mob_effect": {
               "effects": [
                 {
-                  "amplifier": 0,
+                  "amplifier": 1,
                   "durationhard": 200,
                   "effect": "levitation",
                   "durationeasy": 200,

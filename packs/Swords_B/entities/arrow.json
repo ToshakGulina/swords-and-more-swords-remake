@@ -40,7 +40,7 @@
       "minecraft:projectile": {
         "anchor": "eye_height",
         "gravity": 0.05,
-        "power": 1.1,
+        "power": 1.6,
         "hit_sound": "bow.hit",
         "on_hit": {
           "arrow_effect": {
@@ -49,8 +49,8 @@
           "impact_damage": {
             "apply_knockback_to_blocking_targets": true,
             "damage": {
-              "min": 0,
-              "max": 0
+              "min": 1,
+              "max": 4
             },
             "power_multiplier": 2,
             "ceil_pre_critical_damage": true,
@@ -69,7 +69,9 @@
         "should_bounce": "if_no_damage_dealt",
         "uncertainty_base": 16,
         "uncertainty_multiplier": 4,
-        "isolated_physics": false
+        "isolated_physics": false,
+        "inertia": 0.05,
+        "liquid_inertia": 0.05
       },
       "minecraft:pushable_by_block": {}
     },
@@ -223,7 +225,7 @@
         "minecraft:projectile": {
           "anchor": "eye_height",
           "gravity": 0.05,
-          "power": 1.1,
+          "power": 1.6,
           "hit_sound": "bow.hit",
           "on_hit": {
             "arrow_effect": {
@@ -232,8 +234,8 @@
             "impact_damage": {
               "apply_knockback_to_blocking_targets": true,
               "damage": {
-                "min": 0,
-                "max": 0
+                "min": 1,
+                "max": 4
               },
               "power_multiplier": 2,
               "ceil_pre_critical_damage": true,
