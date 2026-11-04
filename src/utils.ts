@@ -1,4 +1,5 @@
 import {
+  BlockPermutation,
   Dimension,
   Entity,
   EntityComponentTypes,
@@ -249,19 +250,30 @@ export function growInstantJungleTree(dim: Dimension, baseLoc: Vector3): void {
       }
     }
 
-    // Add hanging vines around the outer canopy
+    // Add hanging vines around the outer canopy, anchored to adjacent canopy leaves (`vine_direction_bits`)
     for (let dx = -4; dx <= 5; dx++) {
       for (let dz = -4; dz <= 5; dz++) {
-        const dist = Math.hypot(dx - 0.5, dz - 0.5);
-        if (dist >= 3.2 && dist <= 4.3 && Math.random() < 0.45) {
-          const vineLen = 2 + Math.floor(Math.random() * 4);
-          for (let vy = 0; vy < vineLen; vy++) {
-            const vb = dim.getBlock({ x: bx + dx, y: by + height - 3 - vy, z: bz + dz });
-            if (vb && vb.isAir) {
-              vb.setType('minecraft:vine');
-            } else {
-              break;
-            }
+        const vx = bx + dx;
+        const topY = by + height - 3;
+        const vz = bz + dz;
+        const topBlock = dim.getBlock({ x: vx, y: topY, z: vz });
+        if (!topBlock || !topBlock.isAir || Math.random() >= 0.45) continue;
+
+        let dirBits = 0;
+        if (dim.getBlock({ x: vx, y: topY, z: vz + 1 })?.typeId === 'minecraft:jungle_leaves') dirBits |= 1; // South (+Z)
+        if (dim.getBlock({ x: vx - 1, y: topY, z: vz })?.typeId === 'minecraft:jungle_leaves') dirBits |= 2; // West (-X)
+        if (dim.getBlock({ x: vx, y: topY, z: vz - 1 })?.typeId === 'minecraft:jungle_leaves') dirBits |= 4; // North (-Z)
+        if (dim.getBlock({ x: vx + 1, y: topY, z: vz })?.typeId === 'minecraft:jungle_leaves') dirBits |= 8; // East (+X)
+        if (dirBits === 0) continue;
+
+        const vinePerm = BlockPermutation.resolve('minecraft:vine', { vine_direction_bits: dirBits });
+        const vineLen = 2 + Math.floor(Math.random() * 4);
+        for (let vy = 0; vy < vineLen; vy++) {
+          const vb = dim.getBlock({ x: vx, y: topY - vy, z: vz });
+          if (vb && vb.isAir) {
+            vb.setPermutation(vinePerm);
+          } else {
+            break;
           }
         }
       }

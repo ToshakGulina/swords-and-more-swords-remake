@@ -6,7 +6,7 @@
         "default": {
           "transitions": [
             {
-              "despawn": "!q.has_rider"
+              "despawn": "q.life_time > 0.25 && !q.has_rider"
             }
           ]
         },
@@ -48,7 +48,7 @@
         "default": {
           "transitions": [
             {
-              "despawn2": "!q.is_riding"
+              "despawn2": "q.life_time > 0.25 && !q.is_riding"
             }
           ]
         },

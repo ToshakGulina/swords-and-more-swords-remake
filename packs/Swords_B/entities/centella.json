@@ -155,7 +155,7 @@
       "centella_death": {
         "queue_command": {
           "command": [
-            "summon lightning_bolt ~~~"
+            "summon lightning_bolt ~ ~ ~"
           ]
         }
       },

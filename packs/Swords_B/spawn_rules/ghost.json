@@ -49,6 +49,9 @@
           "max": 7,
           "adjust_for_weather": true
         },
+        "minecraft:spawn_event": {
+          "event": "ghost_wailing"
+        },
         "minecraft:difficulty_filter": {
           "min": "easy",
           "max": "hard"

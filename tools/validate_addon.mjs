@@ -2,7 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
 
-const require = createRequire('/tmp/refs/package.json');
+const require = createRequire(
+  fs.existsSync('node_modules/jsonc-parser') ? import.meta.url : '/tmp/refs/package.json'
+);
 const { parse: parseJsonc, printParseErrorCode } = require('jsonc-parser');
 const Ajv = require('ajv');
 const addFormats = require('ajv-formats');
@@ -148,6 +150,9 @@ for (const f of [...bpJsonFiles, ...rpJsonFiles]) {
   if (raw.includes('"minecraft:render_offsets"')) {
     err(`${f} uses removed "minecraft:render_offsets"!`);
   }
+  if (raw.includes('~~~')) {
+    err(`${f} contains legacy concatenated "~~~" tilde coordinates (breaks in modern Bedrock command parser)!`);
+  }
   const matches = raw.match(/query\.get_equipped_item_name(?!\s*\()/g);
   if (matches) {
     err(`${f} uses 0-arg query.get_equipped_item_name (must pass slot arg in modern Bedrock)!`);
@@ -254,6 +259,7 @@ for (const f of walk(path.join(RP, 'models'), '.json')) {
 
 // 8. Verify all BP entities & RP client entities
 const bpEntityEvents = new Map();
+const bpEntitySummonable = new Map();
 const rpEntityIds = new Set();
 
 for (const f of walk(path.join(RP, 'entity'), '.json')) {
@@ -266,6 +272,9 @@ for (const f of walk(path.join(RP, 'entity'), '.json')) {
   rpEntityIds.add(desc.identifier);
   if (desc.spawn_egg && 'texture_index' in desc.spawn_egg) {
     err(`${f} uses deprecated spawn_egg.texture_index!`);
+  }
+  if (j.format_version === '1.10.0' && 'animation_controllers' in desc) {
+    err(`${f} (format_version 1.10.0) contains legacy 1.8.0 description.animation_controllers!`);
   }
   for (const [, texPath] of Object.entries(desc.textures || {})) {
     if (BUILTIN_VANILLA_ENTITY_TEXTURES.has(texPath)) continue;
@@ -291,8 +300,41 @@ for (const f of walk(path.join(BP, 'entities'), '.json')) {
     continue;
   }
   bpEntityEvents.set(id, new Set(Object.keys(ent.events || {})));
+  bpEntitySummonable.set(id, Boolean(ent.description?.is_summonable));
   if (!id.startsWith('minecraft:') && !rpEntityIds.has(id)) {
     err(`Custom BP entity "${id}" (${f}) has NO matching RP client_entity!`);
+  }
+  const definedGroups = new Set(Object.keys(ent.component_groups || {}));
+  const checkEventObj = (evObj, evName) => {
+    if (!evObj || typeof evObj !== 'object') return;
+    for (const g of evObj.add?.component_groups || []) {
+      if (!definedGroups.has(g)) err(`${f} event "${evName}" adds undefined component_group "${g}"!`);
+    }
+    for (const g of evObj.remove?.component_groups || []) {
+      if (!definedGroups.has(g)) err(`${f} event "${evName}" removes undefined component_group "${g}"!`);
+    }
+    if (Array.isArray(evObj.sequence)) evObj.sequence.forEach((s) => checkEventObj(s, evName));
+    if (Array.isArray(evObj.randomize)) evObj.randomize.forEach((s) => checkEventObj(s, evName));
+  };
+  for (const [evName, evObj] of Object.entries(ent.events || {})) {
+    checkEventObj(evObj, evName);
+  }
+  // Verify 1.21.40+ (`1.26.x`) entities never use boolean `deals_damage` in `minecraft:damage_sensor`
+  const fvParts = String(j.format_version || '1.0.0').split('.').map(Number);
+  const isModern12140 =
+    fvParts[0] > 1 || (fvParts[0] === 1 && (fvParts[1] > 21 || (fvParts[1] === 21 && (fvParts[2] || 0) >= 40)));
+  if (isModern12140) {
+    const allContainers = [ent.components || {}, ...Object.values(ent.component_groups || {})];
+    for (const cObj of allContainers) {
+      const ds = cObj['minecraft:damage_sensor'];
+      if (!ds) continue;
+      const trigs = Array.isArray(ds.triggers) ? ds.triggers : [ds.triggers];
+      for (const trig of trigs) {
+        if (trig && typeof trig.deals_damage === 'boolean') {
+          err(`${f} (format_version ${j.format_version}) uses boolean deals_damage=${trig.deals_damage} instead of "yes"/"no"!`);
+        }
+      }
+    }
   }
   const raw = JSON.stringify(ent);
   for (const m of raw.matchAll(/"table"\s*:\s*"([^"]+)"/g)) {
@@ -326,6 +368,7 @@ const expectedPlayerEvents = [
   'effect:equip_wolf_transformation',
   'effect:equip_ultra_instinct_sword',
   'effect:equip_ender_sword',
+  'effect:equip_nether_star_sword',
   'effect:equip_obsidian_sword',
   'effect:equip_blaze_sword',
   'effect:equip_fire_sword',
@@ -336,6 +379,7 @@ const expectedPlayerEvents = [
   'effect:equip_jungle_sword',
   'effect:equip_tnt_sword',
   'effect:equip_shulker_sword',
+  'effect:equip_shulker_hiding',
   'effect:equip_slime_sword',
   'effect:equip_spider_sword',
 ];
@@ -359,6 +403,147 @@ for (const f of walk(path.join(BP, 'blocks'), '.json')) {
   const key = j?.['minecraft:block']?.components?.['minecraft:display_name'];
   if (key && !enLang.includes(`${key}=`)) err(`Missing "${key}" in en_US.lang!`);
   if (key && !ruLang.includes(`${key}=`)) err(`Missing "${key}" in ru_RU.lang!`);
+}
+
+// 11. Verify spawn_rules spawn_event integrity
+for (const f of walk(path.join(BP, 'spawn_rules'), '.json')) {
+  const j = readJsonChecked(f, true);
+  const sr = j?.['minecraft:spawn_rules'];
+  const targetId = sr?.description?.identifier;
+  for (const cond of sr?.conditions || []) {
+    const sev = cond?.['minecraft:spawns_with_event']?.event || cond?.spawn_event?.event;
+    if (sev && bpEntityEvents.has(targetId) && !bpEntityEvents.get(targetId).has(sev)) {
+      err(`Spawn rule ${f} triggers missing spawn_event "${sev}" on "${targetId}"!`);
+    }
+  }
+}
+
+// 12. Verify all spawnEntity / shootCustomProjectile / spawnParticle / playSound calls in compiled JS
+const knownParticles = new Set();
+for (const dir of [path.join(RP, 'particles'), path.join(VANILLA_RP, 'particles')]) {
+  for (const f of walk(dir, '.json')) {
+    const j = readJsonChecked(f, false);
+    const pid = j?.particle_effect?.description?.identifier;
+    if (pid) knownParticles.add(pid);
+  }
+}
+// Built-in engine particle emitters not stored as standalone files in bedrock-samples
+for (const builtinP of [
+  'minecraft:critical_hit_emitter',
+  'minecraft:cauldron_explosion_emitter',
+  'minecraft:egg_destroy_emitter',
+  'minecraft:huge_explosion_emitter',
+  'minecraft:knockback_roar_particle',
+  'minecraft:mobflame_single',
+  'minecraft:balloon_gas_particle',
+  'minecraft:villager_happy',
+  'minecraft:totem_particle',
+]) {
+  knownParticles.add(builtinP);
+}
+
+const knownSounds = new Set();
+for (const sf of [
+  path.join(RP, 'sounds/sound_definitions.json'),
+  path.join(VANILLA_RP, 'sounds/sound_definitions.json'),
+]) {
+  if (fs.existsSync(sf)) {
+    const sj = readJsonChecked(sf, false);
+    const defs = sj?.sound_definitions || sj || {};
+    for (const k of Object.keys(defs)) {
+      if (k !== 'format_version' && k !== '__use_legacy_max_distance') knownSounds.add(k);
+    }
+  }
+}
+
+if (fs.existsSync(VANILLA_BP)) {
+  for (const f of walk(path.join(VANILLA_BP, 'entities'), '.json')) {
+    if (bpEntitySummonable.size > 0) {
+      const j = readJsonChecked(f, false);
+      const ent = j?.['minecraft:entity'];
+      const id = ent?.description?.identifier;
+      if (id && !bpEntitySummonable.has(id)) {
+        bpEntitySummonable.set(id, Boolean(ent.description?.is_summonable));
+        bpEntityEvents.set(id, new Set(Object.keys(ent.events || {})));
+      }
+    }
+  }
+}
+
+for (const f of walk(path.join(BP, 'scripts'), '.js')) {
+  const code = fs.readFileSync(f, 'utf8');
+  for (const m of code.matchAll(/spawnEntity\(\s*['"]([^'"]+)['"](?:,\s*[^,)]+,\s*\{\s*spawnEvent:\s*['"]([^'"]+)['"]\s*\})?/g)) {
+    const [, entId, spawnEv] = m;
+    if (bpEntitySummonable.has(entId) && !bpEntitySummonable.get(entId)) {
+      err(`${f} calls spawnEntity('${entId}') on an entity with is_summonable: false!`);
+    }
+    if (spawnEv && bpEntityEvents.has(entId) && !bpEntityEvents.get(entId).has(spawnEv)) {
+      err(`${f} calls spawnEntity('${entId}') with non-existent spawnEvent '${spawnEv}'!`);
+    }
+  }
+  for (const m of code.matchAll(/shootCustomProjectile\(\s*[^,]+,\s*['"]([^'"]+)['"](?:,\s*[^,)]+)?(?:,\s*['"]([^'"]+)['"])?/g)) {
+    const [, entId, spawnEv] = m;
+    if (bpEntitySummonable.has(entId) && !bpEntitySummonable.get(entId)) {
+      err(`${f} calls shootCustomProjectile('${entId}') on an entity with is_summonable: false!`);
+    }
+    if (spawnEv && bpEntityEvents.has(entId) && !bpEntityEvents.get(entId).has(spawnEv)) {
+      err(`${f} calls shootCustomProjectile('${entId}') with non-existent spawnEvent '${spawnEv}'!`);
+    }
+  }
+  for (const m of code.matchAll(/spawnParticle\(\s*['"]([^'"]+)['"]/g)) {
+    const pid = m[1];
+    if (!knownParticles.has(pid)) {
+      err(`${f} calls spawnParticle('${pid}') with unknown particle identifier!`);
+    }
+  }
+  if (knownSounds.size > 50) {
+    for (const m of code.matchAll(/playSound\(\s*['"]([^'"]+)['"]/g)) {
+      const sid = m[1];
+      if (!knownSounds.has(sid)) {
+        err(`${f} calls playSound('${sid}') with unknown sound identifier!`);
+      }
+    }
+  }
+}
+
+// 13. Verify 100% UI Encyclopedia localization coverage & 100% Russian translation coverage
+const parseLangMap = (raw) => {
+  const m = new Map();
+  for (const line of raw.split(/\r?\n/)) {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) continue;
+    const idx = line.indexOf('=');
+    if (idx > 0) m.set(line.slice(0, idx).trim(), line.slice(idx + 1).trim());
+  }
+  return m;
+};
+const enMap = parseLangMap(enLang);
+const ruMap = parseLangMap(ruLang);
+
+const uiScreenPath = path.join(RP, 'ui/encyclopedia_screen.json');
+if (fs.existsSync(uiScreenPath)) {
+  const uiRaw = fs.readFileSync(uiScreenPath, 'utf8');
+  for (const m of uiRaw.matchAll(/"(?:\$button_text|text)"\s*:\s*"((?:ui\.swords|howtoplay|tile|item|entity)\.[^"]+)"/g)) {
+    const key = m[1];
+    if (!enMap.has(key)) err(`UI screen references missing key "${key}" in en_US.lang!`);
+    if (!ruMap.has(key)) err(`UI screen references missing key "${key}" in ru_RU.lang!`);
+  }
+}
+
+const ALLOWED_IDENTICAL_PROPER_NOUNS = new Set(['howtoplay.the_swords.button.discord']);
+for (const [k, enVal] of enMap.entries()) {
+  if (!ruMap.has(k)) {
+    err(`Missing key "${k}" in ru_RU.lang!`);
+    continue;
+  }
+  const ruVal = ruMap.get(k);
+  if (
+    ruVal === enVal &&
+    /[A-Za-z]{3,}/.test(enVal) &&
+    !ALLOWED_IDENTICAL_PROPER_NOUNS.has(k)
+  ) {
+    err(`Untranslated English value in ru_RU.lang: ${k}=${ruVal}`);
+  }
 }
 
 console.log(`\nValidation Summary: ${errors} errors, ${warnings} warnings.`);

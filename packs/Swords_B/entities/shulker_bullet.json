@@ -3,7 +3,7 @@
   "minecraft:entity": {
     "description": {
       "identifier": "minecraft:shulker_bullet",
-      "is_summonable": false,
+      "is_summonable": true,
       "is_spawnable": false,
       "spawn_category": "misc"
     },

@@ -471,14 +471,24 @@
         }
       },
       "effect:ghost_sword": {
+        "minecraft:scale": {
+          "value": 1.05
+        },
         "minecraft:collision_box": {
           "width": 0.6,
           "height": 0.9
         },
+        "minecraft:breathable": {
+          "total_supply": 15,
+          "suffocate_time": 0,
+          "inhale_time": 3.75,
+          "generates_bubbles": false,
+          "breathes_water": true,
+          "breathes_air": true,
+          "breathes_lava": true
+        },
         "minecraft:type_family": {
           "family": [
-            "monster",
-            "undead",
             "ghost_sword"
           ]
         },
@@ -495,7 +505,7 @@
           "triggers": [
             {
               "cause": "all",
-              "deals_damage": false
+              "deals_damage": "no"
             }
           ]
         }
@@ -515,7 +525,7 @@
           ]
         },
         "minecraft:attack": {
-          "damage": 16
+          "damage": 20
         },
         "minecraft:movement": {
           "value": 0.16
@@ -558,51 +568,51 @@
                 },
                 "event": "effect:ui_dodge"
               },
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "entity_attack",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "projectile",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "entity_explosion",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "block_explosion",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "fire",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "fire_tick",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "lava",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "hot_floor",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "fall",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "wither",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "magic",
-              "deals_damage": false
+              "deals_damage": "no"
             }
           ]
         }
@@ -642,14 +652,14 @@
           "triggers": [
             {
               "cause": "projectile",
-              "deals_damage": false,
+              "deals_damage": "no",
               "on_damage": {
                 "event": "effect:ender_dodge"
               }
             },
             {
               "cause": "entity_attack",
-              "deals_damage": true,
+              "deals_damage": "yes",
               "on_damage": {
                 "event": "effect:ender_melee_dodge"
               }
@@ -663,7 +673,7 @@
                 },
                 "event": "effect:ender_dodge"
               },
-              "deals_damage": true
+              "deals_damage": "yes"
             }
           ]
         }
@@ -685,7 +695,7 @@
                   "value": "nether_star_projectile"
                 }
               },
-              "deals_damage": false
+              "deals_damage": "no"
             }
           ]
         }
@@ -704,11 +714,11 @@
           "triggers": [
             {
               "cause": "entity_explosion",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "block_explosion",
-              "deals_damage": false
+              "deals_damage": "no"
             }
           ]
         }
@@ -727,19 +737,19 @@
           "triggers": [
             {
               "cause": "fire",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "fire_tick",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "lava",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "hot_floor",
-              "deals_damage": false
+              "deals_damage": "no"
             }
           ]
         }
@@ -758,19 +768,19 @@
           "triggers": [
             {
               "cause": "fire",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "fire_tick",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "lava",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "hot_floor",
-              "deals_damage": false
+              "deals_damage": "no"
             }
           ]
         }
@@ -786,11 +796,11 @@
           "triggers": [
             {
               "cause": "hot_floor",
-              "deals_damage": false
+              "deals_damage": "no"
             },
             {
               "cause": "fire_tick",
-              "deals_damage": false
+              "deals_damage": "no"
             }
           ]
         }
@@ -806,7 +816,7 @@
           "triggers": [
             {
               "cause": "lightning",
-              "deals_damage": false
+              "deals_damage": "no"
             }
           ]
         }
@@ -822,7 +832,7 @@
           "triggers": [
             {
               "cause": "wither",
-              "deals_damage": false
+              "deals_damage": "no"
             }
           ]
         },
@@ -836,9 +846,10 @@
             {
               "position": [
                 0,
-                2.1,
+                0.4,
                 0
-              ]
+              ],
+              "lock_rider_rotation": 0
             }
           ]
         }
@@ -861,9 +872,10 @@
             {
               "position": [
                 0,
-                2.4,
+                0.4,
                 0
-              ]
+              ],
+              "lock_rider_rotation": 0
             }
           ]
         }
@@ -897,12 +909,15 @@
                   "value": "effect99_entities"
                 }
               },
-              "deals_damage": false
+              "deals_damage": "no"
             }
           ]
         }
       },
       "effect:shulker_sword": {
+        "minecraft:scale": {
+          "value": 1
+        },
         "minecraft:type_family": {
           "family": [
             "player",
@@ -919,7 +934,26 @@
                   "value": true
                 }
               },
-              "deals_damage": false
+              "deals_damage": "no"
+            }
+          ]
+        }
+      },
+      "effect:shulker_hiding": {
+        "minecraft:scale": {
+          "value": 0.7
+        },
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "shulker_sword"
+          ]
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "all",
+              "deals_damage": "no"
             }
           ]
         }
@@ -935,7 +969,17 @@
           "triggers": [
             {
               "cause": "fall",
-              "deals_damage": false
+              "deals_damage": "no"
+            },
+            {
+              "on_damage": {
+                "filters": {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "tamed_slime"
+                }
+              },
+              "deals_damage": "no"
             }
           ]
         }
@@ -951,7 +995,7 @@
           "triggers": [
             {
               "cause": "fall",
-              "deals_damage": false
+              "deals_damage": "no"
             }
           ]
         }
@@ -1010,6 +1054,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1038,6 +1083,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1067,6 +1113,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1096,6 +1143,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1125,6 +1173,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1154,6 +1203,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1183,6 +1233,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1212,6 +1263,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1241,6 +1293,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1270,6 +1323,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1299,6 +1353,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1328,6 +1383,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1357,6 +1413,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1386,6 +1443,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1415,6 +1473,7 @@
             "effect:spectral_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1444,6 +1503,7 @@
             "effect:spectral_sword",
             "effect:jungle_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1473,6 +1533,7 @@
             "effect:spectral_sword",
             "effect:jungle_sword",
             "effect:tnt_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword",
             "effect:spider_sword"
           ]
@@ -1481,6 +1542,36 @@
           "component_groups": [
             "effect:default_stats",
             "effect:shulker_sword"
+          ]
+        }
+      },
+      "effect:equip_shulker_hiding": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:slime_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:shulker_hiding"
           ]
         }
       },
@@ -1503,6 +1594,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:spider_sword"
           ]
         },
@@ -1532,6 +1624,7 @@
             "effect:jungle_sword",
             "effect:tnt_sword",
             "effect:shulker_sword",
+            "effect:shulker_hiding",
             "effect:slime_sword"
           ]
         },

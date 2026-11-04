@@ -6,6 +6,12 @@ const ORIGIN_MAP = {
     netherrack: 'minecraft:netherrack',
     end_stone: 'minecraft:end_stone',
 };
+const VALID_ORE_MINING_TOOLS = new Set([
+    'minecraft:iron_pickaxe',
+    'minecraft:diamond_pickaxe',
+    'minecraft:netherite_pickaxe',
+    'effect:bedrock_sword',
+]);
 export const LIGHT_EMITTING_SWORDS = new Set([
     'effect:glowstone_sword',
     'effect:fire_sword',
@@ -16,7 +22,7 @@ export const LIGHT_EMITTING_SWORDS = new Set([
     'effect:spectral_sword',
 ]);
 export function registerBlockComponents(registry) {
-    // 1. Fake Ice (cracking temporary ice cage from Ice Sword, melts after ~8s)
+    // 1. Fake Ice (cracking temporary ice cage / Frost Walker ice from Ice Sword, melts after ~8s)
     registry.registerCustomComponent('effect99:fake_ice', {
         onTick(event) {
             const { block, dimension } = event;
@@ -33,7 +39,7 @@ export function registerBlockComponents(registry) {
             catch { }
         },
     });
-    // 2. Dynamic Light Blocks (Glowstone, Fire, Time, Lightning, Wither, Spectral Swords)
+    // 2. Dynamic Light Blocks (Glowstone, Fire, Blaze, Time, Lightning, Wither, Spectral Swords & Centella)
     registry.registerCustomComponent('effect99:lightblock', {
         onTick(event) {
             const { block, dimension } = event;
@@ -93,31 +99,93 @@ export function registerBlockComponents(registry) {
             catch { }
         },
     });
-    // 5. Quartz-Diamond Ore (Close-range magic sting + XP + Fortune bonus)
+    // 5. Silver Ore (Exact 2.8.8: requires Iron/Diamond/Netherite Pickaxe or Bedrock Sword to drop)
+    registry.registerCustomComponent('effect99:silver_ore', {
+        onPlayerBreak(event) {
+            const { block, dimension, player } = event;
+            if (!player || player.getGameMode() === GameMode.Creative)
+                return;
+            try {
+                const tool = getMainhandItem(player);
+                if (!tool || !VALID_ORE_MINING_TOOLS.has(tool.typeId))
+                    return;
+                const center = { x: block.location.x + 0.5, y: block.location.y + 0.5, z: block.location.z + 0.5 };
+                dimension.spawnItem(new ItemStack('effect99:silver_ore', 1), center);
+            }
+            catch { }
+        },
+    });
+    // 6. Quartz-Diamond Block (Exact 2.8.8: requires Iron+ Pickaxe / Bedrock Sword + 6-block arcane shockwave!)
+    registry.registerCustomComponent('effect99:quartz_diamond_block', {
+        onPlayerBreak(event) {
+            const { block, dimension, player } = event;
+            if (!player || player.getGameMode() === GameMode.Creative)
+                return;
+            try {
+                const tool = getMainhandItem(player);
+                if (!tool || !VALID_ORE_MINING_TOOLS.has(tool.typeId))
+                    return;
+                const center = { x: block.location.x + 0.5, y: block.location.y + 0.5, z: block.location.z + 0.5 };
+                dimension.spawnItem(new ItemStack('effect99:quartz_diamond_block', 1), center);
+                dimension.spawnParticle('minecraft:knockback_roar_particle', {
+                    x: center.x,
+                    y: center.y + 0.5,
+                    z: center.z,
+                });
+                dimension.playSound('damage.thorns', center, { volume: 1.0, pitch: 0.9 });
+                const dist = Math.hypot(player.location.x - center.x, player.location.y + 0.9 - center.y, player.location.z - center.z);
+                if (dist <= 6.0) {
+                    player.applyDamage(6, { cause: EntityDamageCause.magic });
+                }
+            }
+            catch { }
+        },
+    });
+    // 7. Quartz-Diamond Ore (Exact 2.8.8: Iron+ Pickaxe / Bedrock Sword, 89/10/1 drop table, Silk Touch & Fortune, 6 XP orbs, arcane shockwave!)
     registry.registerCustomComponent('effect99:quartz_diamond_ore', {
         onPlayerBreak(event) {
             const { block, dimension, player } = event;
-            if (!player)
+            if (!player || player.getGameMode() === GameMode.Creative)
                 return;
             try {
+                const tool = getMainhandItem(player);
+                if (!tool || !VALID_ORE_MINING_TOOLS.has(tool.typeId))
+                    return;
                 const center = { x: block.location.x + 0.5, y: block.location.y + 0.5, z: block.location.z + 0.5 };
-                const dist = Math.hypot(player.location.x - center.x, player.location.y + 0.9 - center.y, player.location.z - center.z);
-                // Original Effect99 mechanic: mining Quartz-Diamond Ore at close range shocks the miner with magic damage!
-                if (player.getGameMode() !== GameMode.Creative && dist < 3.4) {
-                    player.applyDamage(6, { cause: EntityDamageCause.magic });
-                    dimension.playSound('mob.guardian.attack', center, { volume: 0.9, pitch: 1.3 });
-                    dimension.spawnParticle('minecraft:elec_hit_emitter', center);
+                const ench = tool.getComponent(ItemComponentTypes.Enchantable);
+                const silkTouch = ench?.getEnchantment('silk_touch')?.level ?? 0;
+                if (silkTouch > 0) {
+                    dimension.spawnItem(new ItemStack('effect99:quartz_diamond_ore', 1), center);
                 }
-                if (player.getGameMode() !== GameMode.Creative) {
-                    const tool = getMainhandItem(player);
-                    const ench = tool?.getComponent(ItemComponentTypes.Enchantable);
+                else {
+                    // Exact 2.8.8 loot weights: 89% -> 1, 10% -> 1..2, 1% -> 2..4
+                    const r = Math.random() * 100;
+                    let count = 1;
+                    if (r >= 99) {
+                        count = 2 + Math.floor(Math.random() * 3);
+                    }
+                    else if (r >= 89) {
+                        count = 1 + Math.floor(Math.random() * 2);
+                    }
                     const fortune = ench?.getEnchantment('fortune')?.level ?? 0;
                     if (fortune > 0 && Math.random() < fortune * 0.25) {
-                        dimension.spawnItem(new ItemStack('effect:quartz_diamond', 1 + Math.floor(Math.random() * fortune)), center);
+                        count += 1 + Math.floor(Math.random() * fortune);
                     }
-                    for (let i = 0; i < 3; i++) {
+                    dimension.spawnItem(new ItemStack('effect:quartz_diamond', count), center);
+                    for (let i = 0; i < 6; i++) {
                         dimension.spawnEntity('minecraft:xp_orb', center);
                     }
+                }
+                // Exact 2.8.8: knockback_roar_particle + 6 magic damage within r=6
+                dimension.spawnParticle('minecraft:knockback_roar_particle', {
+                    x: center.x,
+                    y: center.y + 0.5,
+                    z: center.z,
+                });
+                dimension.playSound('damage.thorns', center, { volume: 1.0, pitch: 1.2 });
+                const dist = Math.hypot(player.location.x - center.x, player.location.y + 0.9 - center.y, player.location.z - center.z);
+                if (dist <= 6.0) {
+                    player.applyDamage(6, { cause: EntityDamageCause.magic });
                 }
             }
             catch { }

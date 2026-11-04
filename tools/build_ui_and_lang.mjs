@@ -14,7 +14,7 @@ function writeJson(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n', 'utf8');
 }
 
-// 1. Update `how_to_play_screen.json` AND generate `encyclopedia_screen.json` (for 1.20.50-1.26.60 Inventory [?] button!)
+// 1. Update `how_to_play_screen.json` AND generate `encyclopedia_screen.json` (for 1.20.50-1.26.60 Inventory red-sword button!)
 const htp = jsonc.parse(fs.readFileSync(path.join(SRC_288_RP, 'ui/how_to_play_screen.json'), 'utf8'));
 htp.selector_stack_panel.controls[0].how_to_play_selector_pane.controls.push({
   'cursed_pumpkin_sword_button@how_to_play.cursed_pumpkin_sword_button': {
@@ -91,7 +91,7 @@ for (const state of ['default', 'hover', 'pressed']) {
 // 2. `languages.json`
 writeJson(path.join(RP, 'texts/languages.json'), ['en_US', 'ru_RU']);
 
-// 3. Build `en_US.lang` (preserving all 2.8.8 entries + updating 1.26 info + adding `.name` aliases + `cursed_pumpkin_sword`)
+// 3. Build `en_US.lang` (preserving all 2.8.8 entries + filling all 9 missing UI keys + fixing swapped water/rain text + 1.26 info)
 const srcLangRaw = fs.readFileSync(path.join(SRC_288_RP, 'texts/en_US.lang'), 'utf8').replace(/\r\n/g, '\n');
 const enMap = new Map();
 for (const line of srcLangRaw.split('\n')) {
@@ -104,14 +104,30 @@ for (const line of srcLangRaw.split('\n')) {
 }
 
 // Update obsolete 1.20 / Holiday Creator Features notice in en_US
-enMap.set('updates_changelog.header.title', '§l§6Changelog §r§fV3.0.1 (1.26.60+ Remake)');
+enMap.set('updates_changelog.header.title', '§l§6Changelog §r§fV3.0.2 (1.26.60+ Remake)');
 enMap.set('effect.updates_changelog.text_0', '• Full remake for Minecraft Bedrock 1.26.60+ (Android & Windows)');
 enMap.set('effect.updates_changelog.text_1', '• Works WITHOUT Holiday Creator Features or any experimental toggles!');
 enMap.set('effect.updates_changelog.text_2', '• Restored all 38 swords, bosses, custom ores (including Deepslate & End), Desert Well wishes, 3D animations & Inventory red-sword Encyclopedia button');
-enMap.set('effect.updates_changelog.text_3', '• Fixed Clock Sword crafting recipe, Bedrock Sword mining tags, and Spectral Sword Deepslate restoration');
+enMap.set('effect.updates_changelog.text_3', '• Audited & verified all projectiles, air-swing attacks, Shulker shell, Nether Living Flames, Jungle fishing, and Bedrock-shattering explosions');
 enMap.set('effect.basic_information.text_0', '§a• No experimental world toggles are needed! Works natively on Minecraft Bedrock 1.26.60+ (Android & Windows).');
 enMap.set('effect.basic_information.text_1', '§e• Press the red Sword icon at the top right of the Inventory screen (next to X, or [?] in the Pause menu) to view all swords, recipes, and bosses.');
 enMap.set('effect.basic_information.text_3', '§6• Complete collection of 38+ legendary swords with unique abilities, bosses, and transformations.');
+
+// Fill all 9 missing keys referenced in how_to_play_screen.json / encyclopedia_screen.json
+enMap.set('effect.obsidian_sword.text.2', '-Blast & Knockback Immunity: true');
+enMap.set('effect.nether_star_sword.text.1', '-Enchanted Glint: true');
+enMap.set('effect.ice_sword.text.8', '  (Snowballs deal bonus damage and coat the ground in snow.)');
+enMap.set('effect.ghost_sword.text.2', '-Cooldown: 2 sec');
+enMap.set('effect.creeper_sword.text.2', '-Cooldown: 3 sec');
+enMap.set('effect.spectral_sword.text.2', '-Cooldown: 18 sec');
+enMap.set('effect.bedrock_sword.text.2', '-Fire & Lava Resistant: true');
+enMap.set('effect.wither_sword.text.2', '-Cooldown: 3 sec');
+enMap.set('effect.ultra_instinct_sword.text.2', '-Cooldown: 61 sec');
+
+// Fix Effect99's swapped water vs rain description on Fire Sword & Shulker exit hint
+enMap.set('effect.fire_sword.text.13', '  By throwing the fire sword into water, it rapidly cools and turns into a Glass Sword.');
+enMap.set('effect.fire_sword.text.14', '  By throwing the fire sword out in the rain, it cools after a few seconds into an Obsidian Sword.');
+enMap.set('action.hint.exit.entity:shulker_shield', 'Tap sneak to exit the shulker shell');
 
 // Add `minicreeper` and `cursed_pumpkin_sword` encyclopedia entry
 enMap.set('entity.entity:minicreeper.name', '§aMini Creeper');
@@ -138,8 +154,15 @@ for (const [k, v] of [...enMap.entries()]) {
 const enLines = [...enMap.entries()].map(([k, v]) => `${k}=${v}`);
 fs.writeFileSync(path.join(RP, 'texts/en_US.lang'), enLines.join('\n') + '\n', 'utf8');
 
-// 4. Build Complete Russian Localization (`ru_RU.lang`)
-const ruMap = new Map(enMap); // start from enMap so zero keys can ever be missing, then translate all keys!
+// 4. Build 100% Complete Russian Localization (`ru_RU.lang`) — ZERO untranslated English lines!
+const ruMap = new Map(enMap);
+
+// Translate all `howtoplay.<sword>.title` sidebar headers
+for (const [k, v] of ruMap.entries()) {
+  if (k.startsWith('howtoplay.') && k.endsWith('.title') && v.includes('Swords')) {
+    ruMap.set(k, '§lМечи');
+  }
+}
 
 const ruOverrides = {
   // Blocks
@@ -210,11 +233,11 @@ const ruOverrides = {
   'item.spawn_egg.entity.entity:alpha_wolf.name': 'Призвать: §7Альфа-волк',
   'item.spawn_egg.entity.entity:ghost.name': 'Призвать: §lПризрак',
   'action.hint.exit.entity:mountable_slime': 'Нажмите красться, чтобы слезть со слизня',
-  'action.hint.exit.entity:shulker_shield': 'Перестаньте красться, чтобы убрать панцирь шалкера',
+  'action.hint.exit.entity:shulker_shield': 'Нажмите красться, чтобы убрать панцирь шалкера',
   'action.hint.exit.spider': 'Нажмите красться, чтобы слезть с паука',
 
   // How-To-Play Headers & Categories
-  'updates_changelog.header.title': '§l§6Список изменений §r§fV3.0.1 (1.26.60+)',
+  'updates_changelog.header.title': '§l§6Список изменений §r§fV3.0.2 (1.26.60+)',
   'basic_information.header.title': '§l§6О моде Swords and More Swords',
   'howtoplay.updates_changelog.title': '§lИнформация',
   'howtoplay.basic_information.title': '§lИнформация',
@@ -231,289 +254,608 @@ const ruOverrides = {
   'sword_mobs.header.title': '§l§6Мобы и боссы мода',
 
   'effect.updates_changelog.text_0': '• Полный ремейк для актуального Minecraft Bedrock 1.26.60+ (Android и Windows)',
-  'effect.updates_changelog.text_1': '• Работает БЕЗ «Возможностей создателя праздника» (Holiday Creator Features) и без экспериментальных настроек!',
+  'effect.updates_changelog.text_1': '• Работает БЕЗ «Возможностей создателя праздника» и без экспериментальных настроек!',
   'effect.updates_changelog.text_2': '• Восстановлены все 38 мечей, боссы, руды (включая глубинный сланец и Энд), колодец желаний, 3D-анимации и кнопка-меч справочника в инвентаре',
-  'effect.updates_changelog.text_3': '• Исправлен крафт Часового меча, копание Бедроковым мечом и восстановление сланца Спектральным мечом',
+  'effect.updates_changelog.text_3': '• Проверены и отлажены все снаряды, дальние взмахи мечей, панцирь Шалкера, Живое пламя в Незере, рыбалка в джунглях и разрушение бедрока',
 
-  'effect.basic_information.text_0': '§a• Никакие экспериментальные переключатели больше не требуются! Просто активируйте наборы в мире.',
-  'effect.basic_information.text_1': '§e• Нажмите на красную иконку меча в правом верхнем углу экрана Инвентаря (рядом с крестиком X, либо [?] в меню паузы), чтобы открыть справочник мечей, руд и боссов.',
+  'effect.basic_information.text_0': '§a• Никакие экспериментальные переключатели не требуются! Просто активируйте наборы в мире.',
+  'effect.basic_information.text_1': '§e• Нажмите на красную иконку меча в правом верхнем углу экрана Инвентаря (рядом с крестиком X, либо [?] в меню паузы), чтобы открыть энциклопедию мечей, руд и боссов.',
   'effect.basic_information.text_3': '§6• Полный набор из 38+ уникальных мечей со способностями, боссами и превращениями.',
   'effect.basic_information.text_4': '• Команда «/function give» выдаёт все мечи и материалы мода.',
   'effect.basic_information.text_5': '• Все мечи доступны во вкладке «Мечи» творческого инвентаря.',
   'effect.basic_information.text_7': '§7Оригинальный автор идеи и текстур: §bEffect99',
-  'effect.basic_information.text_8': '§7Адаптация под Minecraft Bedrock 1.26.60+ (Android & Windows): Remake v3.0.0',
+  'effect.basic_information.text_8': '§7Адаптация под Minecraft Bedrock 1.26.60+ (Android и Windows): версия 3.0.2',
   'basic_information.header.title_1': '  §lСоздатель оригинала: Effect99',
 
   // Blocks & Items Guide
   'blocks_and_items.header.title_1': '§lКварцево-алмазная руда',
-  'effect.blocks_and_items.text_0': 'Редко генерируется ниже высоты Y=16 (в камне и глубинном сланце до -63), а также в нижних слоях Энда. Ранит магией, если ломать её вплотную!',
+  'effect.blocks_and_items.text_0': 'Редко генерируется ниже высоты Y=16 (в камне и глубинном сланце до -63), а также в нижних слоях Энда. Добывается железной киркой или лучше и ранит магией при разрушении вблизи!',
   'blocks_and_items.header.title_2': '§lКварцевый алмаз',
   'blocks_and_items.header.title_3': '§lКварцево-алмазная палка',
   'blocks_and_items.header.title_7': '§lКварцево-алмазный блок',
   'effect.blocks_and_items.text_1': 'Прочность: 20, Урон: 24. Наносит обратный магический урон владельцу при ударе. Крафтится как обычная палка из 2 кварцевых алмазов.',
   'blocks_and_items.header.title_4': '§lСеребряная руда',
-  'effect.blocks_and_items.text_2': 'Часто встречается под землёй ниже высоты Y=35. Переплавьте в печи, чтобы получить серебряный слиток.',
+  'effect.blocks_and_items.text_2': 'Генерируется под землёй ниже высоты Y=35 (добывается железной киркой или лучше). Переплавьте в печи, чтобы получить серебряный слиток.',
   'blocks_and_items.header.title_5': '§lСеребряный слиток',
   'blocks_and_items.header.title_6': '§lБедроковая палка',
   'effect.blocks_and_items.text_3': 'Прочность: Неразрушимая, Урон: 6. Крафтится из 2 блоков бедрока.',
 
   // Mobs Guide
-  'sword_mobs.header.title.1': '§lПризрак (Ghost)',
+  'sword_mobs.header.title.1': '§lПризрак',
   'effect.sword_mobs.text_0': 'Появляется ночью и в тёмных пещерах. Не атакует игрока и неуязвим, но при касании/ударе с шансом 0.3% роняет Призрачный меч и с шансом 1% телепортируется. Исчезает на ярком свету.',
-  'sword_mobs.header.title.2': '§lТравяная ведьма (Grass Witch)',
-  'effect.sword_mobs.text_1': 'Особый вид ведьмы (20% шанс вместо обычной). Атакует травяными корнями, утягивающими под землю. При смерти с шансом 20% роняет Травяной меч. Здоровье: 32.',
-  'sword_mobs.header.title.3': '§lАльфа-волк (Alpha Wolf)',
-  'effect.sword_mobs.text_2': 'Босс тайги (появляется ночью, особенно в полнолуние — вы услышите далёкий вой). Обладает мощной регенерацией, которую пробивает только Серебряный меч! При убийстве Серебряным мечом с шансом 10% роняет Волчий меч. Урон: 8, Здоровье: 480.',
+  'sword_mobs.header.title.2': '§lТравяная ведьма',
+  'effect.sword_mobs.text_1': 'Особый вид ведьмы (20% шанс появления). Атакует травяными корнями, утягивающими врагов и игроков под землю. При смерти с шансом 20% роняет Травяной меч. Здоровье: 32.',
+  'sword_mobs.header.title.3': '§lАльфа-волк',
+  'effect.sword_mobs.text_2': 'Босс тайги (появляется ночью в полнолуние — вы услышите далёкий вой). Обладает мощной регенерацией, которую пробивает только Серебряный меч! При убийстве Серебряным мечом с шансом 10% роняет Волчий меч. Урон: 8, Здоровье: 480.',
   'sword_mobs.header.title.4': '§lКрасноглазый Эндермен',
   'effect.sword_mobs.text_3': 'Крупный агрессивный Эндермен с красными глазами в Верхнем мире. При убийстве с шансом 2.5% роняет Меч Эндера. Урон: 12, Здоровье: 120.',
-  'sword_mobs.header.title.5': '§lКороль Слизней (Slime King)',
+  'sword_mobs.header.title.5': '§lКороль Слизней',
   'effect.sword_mobs.text_4': 'Гигантский босс болот (появляется ночью в болотах и манграх). Быстрый и сокрушительный в прыжке. Роняет Слизневый меч с шансом 4%. Здоровье: 300.',
-  'sword_mobs.header.title.6': '§lШаровая молния (Centella)',
+  'sword_mobs.header.title.6': '§lШаровая молния (Сентелла)',
   'effect.sword_mobs.text_5': 'Загадочная сфера энергии, появляющаяся с шансом 20% на месте удара молнии в грозу. Живёт от 10 до 60 секунд, бьёт током вблизи и имеет 200 ОЗ. Если успеть убить — с шансом 2% выпадет Меч Молнии.',
   'sword_mobs.header.title.7': '§lРучной крылатый слизень',
   'effect.sword_mobs.text_6': 'Призывается, когда вы держите Слизневый меч. На нём можно ездить и высоко прыгать, раздавливая врагов при приземлении! Если спешиться, слизень переходит в режим охраны и атакует монстров.',
 
-  // Swords Sidebar Titles & Sections
+  // 1. Coal Sword
   'howtoplay.coal_sword': '§lУгольный меч',
   'coal_sword.header.title': '§lУгольный меч',
   'effect.coal_sword.text.0': '-Прочность: 121',
   'effect.coal_sword.text.1': '-Урон: 4',
   'effect.coal_sword.text.2': '-Зачаровывается: да',
-  'effect.coal_sword.text.3': '-Починка: углём, палками или таким же мечом',
-  'effect.coal_sword.text.4': '-Способности: Можно использовать как мощное топливо в печи (360 сек).',
+  'effect.coal_sword.text.3': '-Починка: да (углём, палками или таким же мечом)',
+  'effect.coal_sword.text.4': '-Способности: Можно использовать как мощное топливо в печи (360 сек.).',
   'effect.coal_sword.text.5': '-Как получить:',
   'effect.coal_sword.text.6': '  Крафт из 2 угольных блоков и палки (или в бонусном сундуке).',
 
+  // 2. Silver Sword
   'howtoplay.silver_sword': '§lСеребряный меч',
   'silver_sword.header.title': '§lСеребряный меч',
   'effect.silver_sword.text.0': '-Прочность: 1800',
   'effect.silver_sword.text.1': '-Урон: 6 (повышенный урон по Альфа-волкам)',
   'effect.silver_sword.text.2': '-Зачаровывается: да',
-  'effect.silver_sword.text.3': '-Починка: серебряным слитком или таким же мечом',
-  'effect.silver_sword.text.4': '-Способности:',
-  'effect.silver_sword.text.5': '  Снимает неуязвимость/регенерацию Альфа-волка и наносит ему повышенный урон.',
+  'effect.silver_sword.text.3': '-Починка: да (серебряным слитком или таким же мечом)',
+  'effect.silver_sword.text.4': '-Особые навыки:',
+  'effect.silver_sword.text.5': '  Снимает регенерацию и защиту Альфа-волка и наносит ему сокрушительный урон.',
   'effect.silver_sword.text.6': '-Как получить:',
-  'effect.silver_sword.text.7': '  Переплавьте серебряную руду в слитки и скрафтите меч на верстаке.',
+  'effect.silver_sword.text.7': '  Переплавьте серебряную руду в слитки и выкуйте меч на верстаке.',
 
+  // 3. Lapis Sword
   'howtoplay.lapis_sword': '§lЛазуритовый меч',
   'lapis_sword.header.title': '§lЛазуритовый меч',
   'effect.lapis_sword.text.0': '-Прочность: 528',
   'effect.lapis_sword.text.1': '-Урон: 5',
   'effect.lapis_sword.text.2': '-Зачаровывается: да',
-  'effect.lapis_sword.text.3': '-Починка: лазуритом или таким же мечом',
-  'effect.lapis_sword.text.4': '-Способности:',
+  'effect.lapis_sword.text.3': '-Починка: да (лазуритом или таким же мечом)',
+  'effect.lapis_sword.text.4': '-Особые навыки:',
   'effect.lapis_sword.text.5': '  Пока меч в руке, даёт +5 очков опыта каждые 2.5–6 секунд.',
   'effect.lapis_sword.text.6': '-Как получить:',
-  'effect.lapis_sword.text.7': '  В сундуках Крепости (Stronghold) и Аванпоста разбойников.',
+  'effect.lapis_sword.text.7': '  В сундуках Крепости и Аванпоста разбойников.',
 
+  // 4. Glowstone Sword
   'howtoplay.glowstone_sword': '§lСветокаменный меч',
   'glowstone_sword.header.title': '§lСветокаменный меч',
   'effect.glowstone_sword.text.0': '-Прочность: 128',
   'effect.glowstone_sword.text.1': '-Урон: 4',
   'effect.glowstone_sword.text.2': '-Зачаровывается: да',
-  'effect.glowstone_sword.text.3': '-Починка: светокамнем, светокаменной пылью или таким же мечом',
-  'effect.glowstone_sword.text.4': '-Способности:',
+  'effect.glowstone_sword.text.3': '-Починка: да (светокамнем, светокаменной пылью или таким же мечом)',
+  'effect.glowstone_sword.text.4': '-Особые навыки:',
   'effect.glowstone_sword.text.5': '  Ярко освещает пространство вокруг и может браться во вторую (левую) руку!',
   'effect.glowstone_sword.text.6': '-Как получить:',
   'effect.glowstone_sword.text.7': '  Крафт из 2 блоков светокамня и огненного стержня.',
 
+  // 5. Glass Sword
   'howtoplay.glass_sword': '§lСтеклянный меч',
   'glass_sword.header.title': '§lСтеклянный меч',
   'effect.glass_sword.text.0': '-Прочность: 1',
   'effect.glass_sword.text.1': '-Урон: 33',
   'effect.glass_sword.text.2': '-Зачаровывается: да',
-  'effect.glass_sword.text.3': '-Починка: стеклом или таким же мечом',
-  'effect.glass_sword.text.4': '-Способности: Огромный разовый урон, но разбивается после одного удара.',
+  'effect.glass_sword.text.3': '-Починка: да (стеклом или таким же мечом)',
+  'effect.glass_sword.text.4': '-Особые навыки: Огромный разовый урон, но разбивается после одного удара.',
   'effect.glass_sword.text.5': '-Как получить:',
   'effect.glass_sword.text.6': '  Бросьте Огненный меч в воду.',
 
+  // 6. Jungle Sword
   'howtoplay.jungle_sword': '§lМеч Джунглей',
   'jungle_sword.header.title': '§lМеч Джунглей',
   'effect.jungle_sword.text.0': '-Прочность: 128',
   'effect.jungle_sword.text.1': '-Урон: 4',
   'effect.jungle_sword.text.2': '-Зачаровывается: да',
-  'effect.jungle_sword.text.3': '-Починка: таким же мечом',
-  'effect.jungle_sword.text.4': '-Способности:',
+  'effect.jungle_sword.text.3': '-Починка: да (только таким же мечом)',
+  'effect.jungle_sword.text.4': '-Особые навыки:',
   'effect.jungle_sword.text.5': '  Макс. здоровье снижается до 4 сердец, но даётся эффект Поглощения.',
-  'effect.jungle_sword.text.6': '  Покрывает соседние блоки лианами, привлекает попугаев, а нажатие по земле мгновенно выращивает огромное тропическое дерево!',
+  'effect.jungle_sword.text.6': '  Покрывает соседние блоки лианами, привлекает попугаев, а нажатие по земле мгновенно выращивает тропическое дерево!',
   'effect.jungle_sword.text.7': '-Как получить:',
-  'effect.jungle_sword.text.8': '  В сундуках Храма в джунглях или при рыбалке (редкое сокровище).',
+  'effect.jungle_sword.text.8': '  В сундуках храма в джунглях или при рыбалке в биоме джунглей.',
 
+  // 7. Cactus Sword
   'howtoplay.cactus_sword': '§lКактусовый меч',
   'cactus_sword.header.title': '§lКактусовый меч',
   'effect.cactus_sword.text.0': '-Прочность: 125',
   'effect.cactus_sword.text.1': '-Урон: 6',
   'effect.cactus_sword.text.2': '-Зачаровывается: да',
-  'effect.cactus_sword.text.3': '-Починка: таким же мечом',
-  'effect.cactus_sword.text.4': '-Способности:',
+  'effect.cactus_sword.text.3': '-Починка: да (только таким же мечом)',
+  'effect.cactus_sword.text.4': '-Особые навыки:',
   'effect.cactus_sword.text.5': '  Шипастая аура: все существа вплотную к вам получают урон от колючек.',
   'effect.cactus_sword.text.6': '-Как получить:',
   'effect.cactus_sword.text.7': '  Крафт из 2 кактусов и палки.',
 
+  // 8 & 9. Sponge Sword & Wet Sponge Sword
   'howtoplay.sponge_sword': '§lГубчатый меч',
   'sponge_sword.header.title': '§lГубчатый меч',
-  'effect.sponge_sword.text.4': '-Способности:',
-  'effect.sponge_sword.text.5': '  Впитывает воду в радиусе 2 блоков; после насыщения водой превращается в Мокрый губчатый меч.',
+  'sponge_sword.header.title.0': '§lГубчатый меч',
+  'effect.sponge_sword.text.0': '-Прочность: 128',
+  'effect.sponge_sword.text.1': '-Урон: 5',
+  'effect.sponge_sword.text.2': '-Зачаровывается: да',
+  'effect.sponge_sword.text.3': '-Починка: да (губкой или таким же мечом)',
+  'effect.sponge_sword.text.4': '-Особые навыки:',
+  'effect.sponge_sword.text.5': '  Впитывает воду в радиусе 2 блоков; намокнув, превращается в Мокрый губчатый меч.',
   'effect.sponge_sword.text.6': '-Как получить:',
-  'effect.sponge_sword.text.7': '  Убить Древнего стража (шанс 6.5%) или высушить Мокрый губчатый меч в печи.',
+  'effect.sponge_sword.text.7': '  Убить Древнего стража (шанс 6.5%).',
+  'effect.sponge_sword.text.8': '  Либо просушить Мокрый губчатый меч в печи.',
+  'sponge_sword.header.title.1': '§lМокрый губчатый меч',
+  'effect.sponge_sword.text.9': '-Прочность: 64',
+  'effect.sponge_sword.text.10': '-Урон: 3',
+  'effect.sponge_sword.text.11': '-Зачаровывается: нет',
+  'effect.sponge_sword.text.12': '-Починка: да (губками или таким же мечом)',
+  'effect.sponge_sword.text.13': '-Особые навыки: нет',
+  'effect.sponge_sword.text.14': '-Как получить:',
+  'effect.sponge_sword.text.15': '  Намочить Губчатый меч в воде.',
 
+  // 10. Emerald Sword
   'howtoplay.emerald_sword': '§lИзумрудный меч',
   'emerald_sword.header.title': '§lИзумрудный меч',
-  'effect.emerald_sword.text.4': '-Способности:',
-  'effect.emerald_sword.text.5': '  Даёт эффект «Герой деревни» в деревнях и накладывает Сопротивление на жителей в радиусе 64 блоков.',
+  'effect.emerald_sword.text.0': '-Прочность: 2300',
+  'effect.emerald_sword.text.1': '-Урон: 7',
+  'effect.emerald_sword.text.2': '-Зачаровывается: да',
+  'effect.emerald_sword.text.3': '-Починка: да (только таким же мечом)',
+  'effect.emerald_sword.text.4': '-Особые навыки:',
+  'effect.emerald_sword.text.5': '  Даёт эффект «Герой деревни» и накладывает Сопротивление на всех жителей в радиусе 64 блоков.',
   'effect.emerald_sword.text.6': '-Как получить:',
   'effect.emerald_sword.text.7': '  Купить у мастера-оружейника или найти в Крепости, Лесном особняке и Аванпосте.',
 
+  // 11. Bone Sword
   'howtoplay.bone_sword': '§lКостяной меч скелета',
   'bone_sword.header.title': '§lКостяной меч скелета',
-  'effect.bone_sword.text.4': '-Способности:',
-  'effect.bone_sword.text.5': '  20% шанс выпустить стрелу при ударе; ускоряет рост посевов рядом; замедляет вражеские стрелы в радиусе 8 блоков.',
+  'effect.bone_sword.text.0': '-Прочность: 820',
+  'effect.bone_sword.text.1': '-Урон: 5',
+  'effect.bone_sword.text.2': '-Зачаровывается: да',
+  'effect.bone_sword.text.3': '-Починка: да (костями, костной мукой, костным блоком или таким же мечом)',
+  'effect.bone_sword.text.4': '-Особые навыки:',
+  'effect.bone_sword.text.5': '  20% шанс выпустить стрелу при взмахе или ударе.',
+  'effect.bone_sword.text.6': '  Посевы в радиусе 2 блоков растут намного быстрее.',
+  'effect.bone_sword.text.7': '  Вражеские стрелы в радиусе 8 блоков резко замедляются.',
   'effect.bone_sword.text.8': '-Как получить:',
   'effect.bone_sword.text.9': '  Убивать скелетов ночью в пустыне (шанс 0.7%).',
 
+  // 12. Wither Skeleton Sword
   'howtoplay.wither_skeleton_sword': '§lМеч визер-скелета',
   'wither_skeleton_sword.header.title': '§lМеч визер-скелета',
-  'effect.wither_skeleton_sword.text.5': '  Накладывает иссушение на атакуемых врагов.',
+  'effect.wither_skeleton_sword.text.0': '-Прочность: 128',
+  'effect.wither_skeleton_sword.text.1': '-Урон: 4',
+  'effect.wither_skeleton_sword.text.2': '-Зачаровывается: да',
+  'effect.wither_skeleton_sword.text.3': '-Починка: да (углём, палками или таким же мечом)',
+  'effect.wither_skeleton_sword.text.4': '-Особые навыки:',
+  'effect.wither_skeleton_sword.text.5': '  Накладывает эффект Иссушения на атакуемых врагов.',
+  'effect.wither_skeleton_sword.text.6': '-Как получить:',
   'effect.wither_skeleton_sword.text.7': '  Выпадает из визер-скелетов с шансом 2.5%.',
 
+  // 13. Slime Sword
   'howtoplay.slime_sword': '§lСлизневый меч',
   'slime_sword.header.title': '§lСлизневый меч',
+  'effect.slime_sword.text.0': '-Прочность: 675',
+  'effect.slime_sword.text.1': '-Урон: 6',
+  'effect.slime_sword.text.2': '-Зачаровывается: да',
+  'effect.slime_sword.text.3': '-Починка: да (слизью, блоками слизи или таким же мечом)',
+  'effect.slime_sword.text.4': '-Особые навыки:',
   'effect.slime_sword.text.5': '  Призывает ручного крылатого слизня для верховой езды и высоких прыжков.',
-  'effect.slime_sword.text.6': '  Если спешиться, бессмертный слизень защищает вас от монстров.',
+  'effect.slime_sword.text.6': '  Если спешиться, бессмертный слизень переходит в режим охраны и атакует монстров.',
+  'effect.slime_sword.text.7': '  Приземление верхом на слизне после прыжка наносит урон врагам рядом!',
+  'effect.slime_sword.text.8': '-Как получить:',
   'effect.slime_sword.text.9': '  Убить Короля Слизней ночью на болоте (шанс 4%).',
 
+  // 14. Obsidian Sword
   'howtoplay.obsidian_sword': '§lОбсидиановый меч',
   'obsidian_sword.header.title': '§lОбсидиановый меч',
-  'effect.obsidian_sword.text.6': '  Полный иммунитет к взрывам и сопротивление отбрасыванию.',
+  'effect.obsidian_sword.text.0': '-Прочность: 3000',
+  'effect.obsidian_sword.text.1': '-Урон: 8',
+  'effect.obsidian_sword.text.2': '-Иммунитет к взрывам и отбрасыванию: да',
+  'effect.obsidian_sword.text.3': '-Зачаровывается: да',
+  'effect.obsidian_sword.text.4': '-Починка: да (обсидианом или таким же мечом)',
+  'effect.obsidian_sword.text.5': '-Особые навыки:',
+  'effect.obsidian_sword.text.6': '  Полный иммунитет к взрывам и 100% сопротивление отбрасыванию.',
+  'effect.obsidian_sword.text.7': '-Описание:',
+  'effect.obsidian_sword.text.8': '  При ударе меч теряет 1 ед. прочности с шансом 55%, 2 ед. с шансом 30% или 3 ед. с шансом 15%.',
+  'effect.obsidian_sword.text.9': '-Как получить:',
   'effect.obsidian_sword.text.10': '  Бросьте Огненный меч под дождь и подождите несколько секунд.',
 
+  // 15. Magma Sword
   'howtoplay.magma_sword': '§lМагмовый меч',
   'magma_sword.header.title': '§lМагмовый меч',
-  'effect.magma_sword.text.5': '  Блоки магмы не наносят вам урона; лава под ногами превращается в магму.',
+  'effect.magma_sword.text.0': '-Прочность: 1316',
+  'effect.magma_sword.text.1': '-Урон: 7.2',
+  'effect.magma_sword.text.2': '-Зачаровывается: да',
+  'effect.magma_sword.text.3': '-Починка: да (блоками магмы или таким же мечом)',
+  'effect.magma_sword.text.4': '-Особые навыки:',
+  'effect.magma_sword.text.5': '  Блоки магмы не наносят вам урона и вы не горите после выхода из огня.',
+  'effect.magma_sword.text.6': '  Огонь ранит только если стоять прямо в пламени.',
+  'effect.magma_sword.text.7': '  Лава под вашими ногами превращается в блоки магмы.',
+  'effect.magma_sword.text.8': '-Как получить:',
   'effect.magma_sword.text.9': '  В сундуках больших подводных руин.',
 
+  // 16. Clock Sword
   'howtoplay.clock_sword': '§lЧасовой меч',
   'clock_sword.header.title': '§lЧасовой меч',
-  'effect.clock_sword.text.5': '  При активации ускоряет ход времени и рост растений в 10 раз на 5 секунд (+1 игровой час).',
+  'effect.clock_sword.text.0': '-Прочность: 4800',
+  'effect.clock_sword.text.1': '-Урон: 7',
+  'effect.clock_sword.text.2': '-Зачаровывается: да',
+  'effect.clock_sword.text.3': '-Починка: да (материалами крафта или таким же мечом)',
+  'effect.clock_sword.text.4': '-Особые навыки:',
+  'effect.clock_sword.text.5': '  При активации ускоряет ход времени, движение и рост растений на 5 секунд (+1 игровой час, перезарядка 30 сек.).',
   'effect.clock_sword.text.6': '-Как получить: Крафт из золотых блоков, часов, золотого меча и золотых слитков.',
 
+  // 17. Grass Sword
   'howtoplay.grass_sword': '§lТравяной меч',
   'grass_sword.header.title': '§lТравяной меч',
-  'effect.grass_sword.text.5': '  Призывает травяные корни, которые опутывают и утягивают врагов в радиусе 8 блоков под землю. Превращает землю в дёрн.',
+  'effect.grass_sword.text.0': '-Прочность: 250',
+  'effect.grass_sword.text.1': '-Урон: 8',
+  'effect.grass_sword.text.2': '-Зачаровывается: да',
+  'effect.grass_sword.text.3': '-Починка: да (только таким же мечом)',
+  'effect.grass_sword.text.4': '-Особые навыки:',
+  'effect.grass_sword.text.5': '  Призывает травяные корни, которые опутывают и утягивают врагов в радиусе 8 блоков под землю.',
+  'effect.grass_sword.text.6': '  Блоки земли вокруг вас зарастают травой.',
+  'effect.grass_sword.text.7': '-Как получить:',
   'effect.grass_sword.text.8': '  Выпадает из Травяной ведьмы с шансом 20%.',
 
+  // 18. Sea Sword
   'howtoplay.sea_sword': '§lМорской меч',
   'sea_sword.header.title': '§lМорской меч',
-  'effect.sea_sword.text.5': '  Превращает вас в русалку: огромная скорость плавания и дыхание под водой, но на суше вы задыхаетесь и подпрыгиваете как рыба!',
-  'effect.sea_sword.text.11': '  В зарытых сундуках с сокровищами.',
+  'effect.sea_sword.text.0': '-Прочность: 1356',
+  'effect.sea_sword.text.1': '-Урон: 7',
+  'effect.sea_sword.text.2': '-Зачаровывается: да',
+  'effect.sea_sword.text.3': '-Починка: да (Сердцем моря или таким же мечом)',
+  'effect.sea_sword.text.4': '-Особые навыки:',
+  'effect.sea_sword.text.5': '  Огромная скорость плавания и ночное зрение под водой.',
+  'effect.sea_sword.text.6': '  Превращает вас в русалку (с 3D-хвостом!).',
+  'effect.sea_sword.text.7': '  Вы дышите под водой, но задыхаетесь на воздухе.',
+  'effect.sea_sword.text.8': '-Описание:',
+  'effect.sea_sword.text.9': '  На суше вы беспомощно подпрыгиваете, как рыба без воды.',
+  'effect.sea_sword.text.10': '-Как получить:',
+  'effect.sea_sword.text.11': '  В зарытых сундуках с сокровищами (шанс 35%).',
 
+  // 19. Blaze Sword
   'howtoplay.blaze_sword': '§lМеч Ифрита',
   'blaze_sword.header.title': '§lМеч Ифрита',
-  'effect.blaze_sword.text.5': '  Активация (ПКМ / удержание экрана): поднимает вас в воздух и выпускает очередь огненных шаров по направлению взгляда! Даёт иммунитет к огню и останавливает малые фаерболы в радиусе 7 блоков.',
-  'effect.blaze_sword.text.13': '  Снежный голем должен убить Ифрита (шанс выпадения 2.5%).',
+  'effect.blaze_sword.text.0': '-Прочность: 2300',
+  'effect.blaze_sword.text.1': '-Урон: 6',
+  'effect.blaze_sword.text.2': '-Зачаровывается: да',
+  'effect.blaze_sword.text.3': '-Починка: да (только таким же мечом)',
+  'effect.blaze_sword.text.4': '-Особые навыки:',
+  'effect.blaze_sword.text.5': '  Активация (перезарядка 20 сек., -10 прочности): поднимает вас в воздух и выпускает очередь огненных шаров!',
+  'effect.blaze_sword.text.6': '  Полный иммунитет к огню и лаве.',
+  'effect.blaze_sword.text.7': '  При взмахе и ударе выпускает огненные шары.',
+  'effect.blaze_sword.text.8': '  Вражеские малые фаерболы останавливаются в радиусе 7 блоков.',
+  'effect.blaze_sword.text.9': '-Описание:',
+  'effect.blaze_sword.text.10': '  Вокруг вашего тела вращаются огненные стержни Ифрита.',
+  'effect.blaze_sword.text.11': '  Вода наносит вам урон, пока меч в руке.',
+  'effect.blaze_sword.text.12': '-Как получить:',
+  'effect.blaze_sword.text.13': '  Снежный голем должен убить Ифрита снежками (шанс 3%).',
 
+  // 20. Nether Star Sword
   'howtoplay.nether_star_sword': '§lМеч Звезды Незера',
   'nether_star_sword.header.title': '§lМеч Звезды Незера',
-  'effect.nether_star_sword.text.6': '  При ударе по врагу с неба обрушивается звездопад Звёзд Незера (по 6 ед. урона каждая). Если бросить меч в огонь — мощнейший взрыв расколет даже бедрок!',
+  'effect.nether_star_sword.text.13': '-Прочность: 3256',
+  'effect.nether_star_sword.text.0': '-Урон: 7 (+ звездопад по 6 ед. урона за каждую звезду)',
+  'effect.nether_star_sword.text.1': '-Магическое свечение: да',
+  'effect.nether_star_sword.text.2': '-Исчезает на земле: нет',
+  'effect.nether_star_sword.text.3': '-Зачаровывается: да',
+  'effect.nether_star_sword.text.4': '-Починка: да (Звездой Незера или таким же мечом)',
+  'effect.nether_star_sword.text.5': '-Особые навыки:',
+  'effect.nether_star_sword.text.6': '  При взмахе или ударе с неба обрушиваются Звёзды Незера, нанося по 6 ед. урона.',
+  'effect.nether_star_sword.text.7': '-Описание:',
+  'effect.nether_star_sword.text.8': '  При убийстве Иссушителя этим мечом повышен шанс получить Меч Иссушителя (25%).',
+  'effect.nether_star_sword.text.9': '  Если бросить меч в огонь — мощнейший взрыв расколет даже блоки бедрока!',
+  'effect.nether_star_sword.text.10': '  Слегка нестабилен: с шансом 0.01% при атаке может устроить гигантский взрыв.',
+  'effect.nether_star_sword.text.11': '-Как получить:',
   'effect.nether_star_sword.text.12': '  Крафт из алмазного меча и Звезды Незера.',
 
+  // 21. Ice Sword
   'howtoplay.ice_sword': '§lЛедяной меч',
   'ice_sword.header.title': '§lЛедяной меч',
-  'effect.ice_sword.text.5': '  Замораживает воду под ногами; кидает снежки при атаке; активация заковывает всех существ в радиусе 12 блоков в ледяные клетки! Тает в лаве.',
-  'effect.ice_sword.text.13': '  В сундуках иглу и снежных деревень.',
+  'effect.ice_sword.text.0': '-Прочность: 500',
+  'effect.ice_sword.text.1': '-Урон: 8.5',
+  'effect.ice_sword.text.2': '-Зачаровывается: да',
+  'effect.ice_sword.text.3': '-Починка: да (льдом, плотным/синим льдом или таким же мечом)',
+  'effect.ice_sword.text.4': '-Особые навыки:',
+  'effect.ice_sword.text.5': '  Замедляет поражённых врагов ледяным холодом.',
+  'effect.ice_sword.text.6': '  Вода под вашими ногами замерзает в хрупкий лёд.',
+  'effect.ice_sword.text.7': '  При атаке запускает во врагов ледяные снежки.',
+  'effect.ice_sword.text.8': '  (Снежки наносят урон и покрывают место попадания снегом.)',
+  'effect.ice_sword.text.9': '  Активация (перезарядка 5 сек., -6 прочности): заковывает существ в радиусе 12 блоков в ледяные клетки!',
+  'effect.ice_sword.text.10': '-Описание:',
+  'effect.ice_sword.text.11': '  Если игрок загорится или войдёт в лаву, меч растает и превратится в воду!',
+  'effect.ice_sword.text.12': '-Как получить:',
+  'effect.ice_sword.text.13': '  В сундуках иглу и домов снежных деревень.',
 
+  // 22. Quartz Sword
   'howtoplay.quartz_sword': '§lКварцево-алмазный меч',
   'quartz_sword.header.title': '§lКварцево-алмазный меч',
-  'effect.quartz_sword.text.6': '  Урон 600 ед., прочность 1! Взятие и убирание меча ранит владельца на 7 сердец, а удар уничтожает как врага, так и самого владельца (у всего есть цена).',
+  'effect.quartz_sword.text.0': '-Прочность: 1',
+  'effect.quartz_sword.text.1': '-Урон: 600',
+  'effect.quartz_sword.text.2': '-Зачаровывается: нет',
+  'effect.quartz_sword.text.3': '-Починка: нет',
+  'effect.quartz_sword.text.4': '-Особые навыки: нет',
+  'effect.quartz_sword.text.5': '-Описание:',
+  'effect.quartz_sword.text.6': '  Взятие меча в руку и убирание его из руки наносит владельцу сильный магический урон (7 сердец).',
+  'effect.quartz_sword.text.7': '  Удар высвобождает такую мощь, что мгновенно уничтожает и врага, и самого владельца (у всего есть цена).',
+  'effect.quartz_sword.text.8': '-Как получить:',
   'effect.quartz_sword.text.9': '  Крафт из 2 кварцево-алмазных блоков и кварцево-алмазной палки.',
+  'effect.quartz_sword.text.10': '  (Кварцево-алмазная руда редко встречается глубже высоты Y=16 и в Энде.)',
 
+  // 23. Spider Sword
   'howtoplay.spider_sword': '§lПаучий меч',
   'spider_sword.header.title': '§lПаучий меч',
-  'effect.spider_sword.text.5': '  Призывает ездового паука, умеющего лазать по стенам! Активация выпускает очередь паутины.',
+  'effect.spider_sword.text.0': '-Прочность: 628',
+  'effect.spider_sword.text.1': '-Урон: 5',
+  'effect.spider_sword.text.2': '-Зачаровывается: да',
+  'effect.spider_sword.text.3': '-Починка: да (паутиной, паучьими глазами или таким же мечом)',
+  'effect.spider_sword.text.4': '-Особые навыки:',
+  'effect.spider_sword.text.5': '  Полный иммунитет к урону от падения.',
+  'effect.spider_sword.text.6': '  При взмахе или ударе с шансом 5% выстреливает липкой паутиной.',
+  'effect.spider_sword.text.7': '  Когда меч в руке, призывает ручного ездового паука!',
+  'effect.spider_sword.text.8': '  Активация (перезарядка 28 сек., -8 прочности): выпускает залп паутины.',
+  'effect.spider_sword.text.9': '-Как получить:',
   'effect.spider_sword.text.10': '  В сундуках заброшенных шахт.',
 
+  // 24. TNT Sword
   'howtoplay.tnt_sword': '§lТНТ-меч',
   'tnt_sword.header.title': '§lТНТ-меч',
-  'effect.tnt_sword.text.5': '  Взрывает врагов при ударе, а активация призывает Гигантский ТНТ (взрыв через 8 сек).',
+  'effect.tnt_sword.text.0': '-Прочность: 64',
+  'effect.tnt_sword.text.1': '-Урон: 4',
+  'effect.tnt_sword.text.2': '-Зачаровывается: да',
+  'effect.tnt_sword.text.3': '-Починка: да (блоками ТНТ или таким же мечом)',
+  'effect.tnt_sword.text.4': '-Особые навыки:',
+  'effect.tnt_sword.text.5': '  При взмахе или ударе с шансом 90% запускает динамит (не ранит владельца).',
+  'effect.tnt_sword.text.6': '  Активация (перезарядка 10 сек., -18 прочности): призывает Супер-ТНТ, взрывающийся через 8 секунд!',
+  'effect.tnt_sword.text.7': '-Описание:',
+  'effect.tnt_sword.text.8': '  При попадании в огонь или лаву меч детонирует мощнейшим взрывом!',
+  'effect.tnt_sword.text.9': '-Как получить:',
   'effect.tnt_sword.text.10': '  В сундуках храма в пустыне.',
 
+  // 25. Wolf Sword
   'howtoplay.wolf_sword': '§lВолчий меч',
   'wolf_sword.header.title': '§lВолчий меч',
-  'effect.wolf_sword.text.5': '  В ночь полнолуния превращает вас в оборотня: урон 20 ед., высокая скорость, красное зрение, монстры принимают вас за своего!',
+  'effect.wolf_sword.text.0': '-Урон: 5 (20 ед. в ночь полнолуния!)',
+  'effect.wolf_sword.text.1': '-Зачаровывается: нет (прочность 2800)',
+  'effect.wolf_sword.text.2': '-Починка: да (только таким же мечом)',
+  'effect.wolf_sword.text.3': '-Особые навыки:',
+  'effect.wolf_sword.text.4': '  -В ночь полнолуния:',
+  'effect.wolf_sword.text.5': '    Превращает вас в свирепого оборотня (20 ОЗ -> 40 ОЗ, урон 20 ед.)!',
+  'effect.wolf_sword.text.6': '    Резко повышает скорость бега и сопротивление отбрасыванию.',
+  'effect.wolf_sword.text.7': '    Монстры не атакуют вас, принимая за своего.',
+  'effect.wolf_sword.text.8': '-Описание:',
+  'effect.wolf_sword.text.9': '  -Особенности проклятия оборотня:',
+  'effect.wolf_sword.text.10': '    В полнолуние от первого лица зрение окрашивается в кроваво-красный цвет.',
+  'effect.wolf_sword.text.11': '    Если убрать меч из руки до рассвета полнолуния, вы получите тяжёлые негативные эффекты до утра.',
+  'effect.wolf_sword.text.12': '    Перед закатом накануне полнолуния у владельца начинается головокружение.',
+  'effect.wolf_sword.text.13': '-Как получить:',
   'effect.wolf_sword.text.14': '  Убить Альфа-волка Серебряным мечом (шанс 10%).',
+  'effect.wolf_sword.text.15': '  (Альфа-волки выходят на охоту в тайге в ночь полнолуния — их выдаёт далёкий вой.)',
 
+  // 26. Shulker Sword
   'howtoplay.shulker_sword': '§lМеч Шалкера',
   'shulker_sword.header.title': '§lМеч Шалкера',
-  'effect.shulker_sword.text.5': '  Активация поднимает врагов в воздух левитацией. Приседание прячет вас в защитный панцирь шалкера!',
-  'effect.shulker_sword.text.10': '  Выпадает из шалкеров с шансом 4.5%.',
+  'effect.shulker_sword.text.0': '-Прочность: 2609',
+  'effect.shulker_sword.text.1': '-Урон: 6',
+  'effect.shulker_sword.text.2': '-Зачаровывается: да',
+  'effect.shulker_sword.text.3': '-Починка: да (только таким же мечом)',
+  'effect.shulker_sword.text.4': '-Особые навыки:',
+  'effect.shulker_sword.text.5': '  10% шанс выпустить снаряд шалкера при взмахе или атаке.',
+  'effect.shulker_sword.text.6': '  Активация (перезарядка 8 сек., -8 прочности): подбрасывает всех вокруг в радиусе 6 блоков левитацией.',
+  'effect.shulker_sword.text.7': '  Полный иммунитет к эффекту левитации.',
+  'effect.shulker_sword.text.8': '  Нажмите «Красться», чтобы спрятаться в панцирь шалкера (повторное нажатие — выйти). Панцирь защищает от атак, но если враги разобьют его с вами внутри — вы погибнете!',
+  'effect.shulker_sword.text.9': '-Как получить:',
+  'effect.shulker_sword.text.10': '  Выпадает при убийстве шалкеров с шансом 4.5%.',
 
+  // 27. Bee Sword
   'howtoplay.bee_sword': '§lПчелиное жало',
   'bee_sword.header.title': '§lПчелиное жало',
-  'effect.bee_sword.text.5': '  При ударе призывает боевых пчёл-защитников, а на траве вокруг вас распускаются цветы.',
-  'effect.bee_sword.text.9': '  Когда пчела жалит вас, с шансом 2% выпадает её жало.',
+  'effect.bee_sword.text.0': '-Прочность: 1080',
+  'effect.bee_sword.text.1': '-Урон: 5',
+  'effect.bee_sword.text.2': '-Зачаровывается: да',
+  'effect.bee_sword.text.3': '-Починка: да (сотами, блоком мёда или таким же мечом)',
+  'effect.bee_sword.text.4': '-Особые навыки:',
+  'effect.bee_sword.text.5': '  При взмахе или ударе с шансом 30% выпускает боевых пчёл, жалящих врагов.',
+  'effect.bee_sword.text.6': '-Описание:',
+  'effect.bee_sword.text.7': '  Когда вы идёте по траве с мечом в руке, вокруг распускаются цветы.',
+  'effect.bee_sword.text.8': '-Как получить:',
+  'effect.bee_sword.text.9': '  Когда пчела жалит вас, с шансом 2% выпадает Пчелиное жало.',
 
+  // 28. Ghost Sword
   'howtoplay.ghost_sword': '§lПризрачный меч',
   'ghost_sword.header.title': '§lПризрачный меч',
-  'effect.ghost_sword.text.7': '  Превращает вас в бессмертного призрака! Полёт при приседании, телепортация по взгляду (ПКМ / нажатие), монстры не трогают, но и вы не можете наносить урон.',
-  'effect.ghost_sword.text.18': '  Прикоснитесь/ударьте Призрака ночью или в пещере (шанс 0.3%).',
+  'effect.ghost_sword.text.0': '-Прочность: 3333',
+  'effect.ghost_sword.text.1': '-Урон: -666 (призрак не может ранить живых существ)',
+  'effect.ghost_sword.text.2': '-Перезарядка способности: 2 сек.',
+  'effect.ghost_sword.text.3': '-Исчезает на земле: нет',
+  'effect.ghost_sword.text.4': '-Зачаровывается: нет',
+  'effect.ghost_sword.text.5': '-Починка: нет',
+  'effect.ghost_sword.text.6': '-Особые навыки:',
+  'effect.ghost_sword.text.7': '  Взяв меч в руку, вы теряете ноги и превращаетесь в бесплотного призрака!',
+  'effect.ghost_sword.text.8': '  Полная неуязвимость: ни огонь, ни лава, ни взрывы, ни удушье не могут вам навредить.',
+  'effect.ghost_sword.text.9': '  Активация (-6 прочности): телепортирует вас по направлению взгляда, в том числе сквозь стены в соседние пещеры!',
+  'effect.ghost_sword.text.10': '  Подойдя вплотную к стене, можно телепортироваться сквозь породу в ближайшую полость.',
+  'effect.ghost_sword.text.11': '  Удерживайте «Красться», чтобы плавно взлетать вверх (свободный полёт).',
+  'effect.ghost_sword.text.12': '  Повышенная скорость передвижения и плавное падение.',
+  'effect.ghost_sword.text.13': '  Монстры полностью игнорируют вас — теперь вы один из них.',
+  'effect.ghost_sword.text.14': '-Описание:',
+  'effect.ghost_sword.text.15': '  Зрение игрока приобретает призрачную белую дымку.',
+  'effect.ghost_sword.text.16': '  В облике призрака нельзя наносить урон существам.',
+  'effect.ghost_sword.text.17': '-Как получить:',
+  'effect.ghost_sword.text.18': '  Коснитесь или ударьте Призрака ночью либо в тёмной пещере (шанс выпадения 0.3%, шанс побега телепортацией 1%).',
 
+  // 29. Creeper Sword
   'howtoplay.creeper_sword': '§lМеч Крипера',
   'creeper_sword.header.title': '§lМеч Крипера',
-  'effect.creeper_sword.text.6': '  20% шанс выпустить мини-крипера при атаке. Активация раздувает игрока как Крипера и устраивает мощный самоподрыв!',
-  'effect.creeper_sword.text.9': '  Подожгите заряженного крипера зажигалкой (шанс 5%).',
+  'effect.creeper_sword.text.0': '-Прочность: 1500',
+  'effect.creeper_sword.text.1': '-Урон: 6',
+  'effect.creeper_sword.text.2': '-Перезарядка способности: 3 сек.',
+  'effect.creeper_sword.text.3': '-Зачаровывается: да',
+  'effect.creeper_sword.text.4': '-Починка: да (порохом или таким же мечом)',
+  'effect.creeper_sword.text.5': '-Особые навыки:',
+  'effect.creeper_sword.text.6': '  20% шанс выпустить мини-крипера при взмахе или ударе.',
+  'effect.creeper_sword.text.7': '  Активация (-1 прочности): игрок раздувается как Крипер и устраивает мощный самоподрыв!',
+  'effect.creeper_sword.text.8': '-Как получить:',
+  'effect.creeper_sword.text.9': '  Подожгите заряженного крипера огнивом (шанс выпадения 5%).',
 
+  // 30. Fire Sword
   'howtoplay.fire_sword': '§lОгненный меч',
   'fire_sword.header.title': '§lОгненный меч',
-  'effect.fire_sword.text.5': '  Иммунитет к огню, плавит лёд и снег, запускает Живое пламя при ударе, а активация вызывает «Огненный дождь»! В воде превращается в Стеклянный меч, под дождём — в Обсидиановый.',
-  'effect.fire_sword.text.16': '  Убивайте Живое пламя в Незере.',
+  'effect.fire_sword.text.0': '-Прочность: 2000',
+  'effect.fire_sword.text.1': '-Урон: 6 (поджигает всех атакуемых врагов)',
+  'effect.fire_sword.text.2': '-Зачаровывается: да',
+  'effect.fire_sword.text.3': '-Починка: да (огненным порошком/стержнем или таким же мечом)',
+  'effect.fire_sword.text.4': '-Особые навыки:',
+  'effect.fire_sword.text.5': '  Полный иммунитет к огню и лаве.',
+  'effect.fire_sword.text.6': '  При взмахе и ударе запускает сгустки пламени (85%) и призывает ручное Живое пламя (15%), атакующее монстров.',
+  'effect.fire_sword.text.7': '  Активация (перезарядка 25 сек., -20 прочности): способность «Огненный дождь» обрушивает ливень фаерболов вокруг вас!',
+  'effect.fire_sword.text.8': '  Враги вплотную к вам загораются.',
+  'effect.fire_sword.text.9': '  Лёд и снег вокруг вас тают.',
+  'effect.fire_sword.text.10': '-Описание:',
+  'effect.fire_sword.text.11': '  Вода наносит вам урон, пока Огненный меч в руке.',
+  'effect.fire_sword.text.12': '  Меч ярко освещает пространство вокруг.',
+  'effect.fire_sword.text.13': '  Если бросить Огненный меч в воду — он закалится в Стеклянный меч.',
+  'effect.fire_sword.text.14': '  Если бросить Огненный меч под дождь — через несколько секунд он остынет в Обсидиановый меч.',
+  'effect.fire_sword.text.15': '-Как получить:',
+  'effect.fire_sword.text.16': '  Убивайте враждебное Живое пламя в Незере (шанс выпадения 15%).',
 
+  // 31. Spectral Sword
   'howtoplay.spectral_sword': '§lСпектральный меч',
   'spectral_sword.header.title': '§lСпектральный меч',
-  'effect.spectral_sword.text.7': '  Делает камень/сланец, незерак или эндерняк вокруг вас прозрачным (рентген пещер и руд!), над головой парит кристалл Эндера, а активация стреляет взрывным кристаллом.',
-  'effect.spectral_sword.text.14': '  Взорвите кристалл Эндера в Незере (2%) или убейте Гаста его же отражённым шаром (6%).',
+  'effect.spectral_sword.text.0': '-Прочность: 3256',
+  'effect.spectral_sword.text.1': '-Урон: 9',
+  'effect.spectral_sword.text.2': '-Перезарядка способности: 18 сек.',
+  'effect.spectral_sword.text.3': '-Исчезает на земле: нет',
+  'effect.spectral_sword.text.4': '-Зачаровывается: нет',
+  'effect.spectral_sword.text.5': '-Починка: да (кристаллом Эндера, Звездой Незера или таким же мечом)',
+  'effect.spectral_sword.text.6': '-Особые навыки:',
+  'effect.spectral_sword.text.7': '  Делает основной камень измерения прозрачным вокруг вас (Верхний мир: камень и глубинный сланец; Незер: незерак; Энд: эндерняк).',
+  'effect.spectral_sword.text.8': '  Активация (-15 прочности): выпускает мощный взрывной кристалл Эндера.',
+  'effect.spectral_sword.text.9': '-Описание:',
+  'effect.spectral_sword.text.10': '  Слегка нестабилен: с шансом 1% при ударе вызывает взрыв кристалла.',
+  'effect.spectral_sword.text.11': '  Излучает мягкий свет.',
+  'effect.spectral_sword.text.12': '  Над вашей головой парит и следует за вами кристалл Эндера.',
+  'effect.spectral_sword.text.13': '-Как получить:',
+  'effect.spectral_sword.text.14': '  Взорвите кристалл Эндера в Незере (шанс 2%).',
+  'effect.spectral_sword.text.15': '  Либо убейте Гаста его же отражённым огненным шаром (шанс 6%).',
 
+  // 32. Bedrock Sword
   'howtoplay.bedrock_sword': '§lБедроковый меч',
   'bedrock_sword.header.title': '§lБедроковый меч',
   'effect.bedrock_sword.text.0': '-Прочность: Бесконечная (неразрушимый)',
   'effect.bedrock_sword.text.1': '-Урон: 18',
-  'effect.bedrock_sword.text.6': '-Описание: Также работает как сверхскоростная мульти-кирка!',
-  'effect.bedrock_sword.text.8': '  Крафт из 2 блоков бедрока и бедроковой палки (бедрок добывается снарядом Меча Ультра Инстинкта или броском Меча Звезды Незера в огонь!).',
+  'effect.bedrock_sword.text.2': '-Не сгорает в огне и лаве: да',
+  'effect.bedrock_sword.text.3': '-Исчезает на земле: нет',
+  'effect.bedrock_sword.text.4': '-Зачаровывается: нет',
+  'effect.bedrock_sword.text.5': '-Особые навыки: Мгновенно ломает почти любые блоки (работает как сверхскоростная кирка).',
+  'effect.bedrock_sword.text.6': '-Описание: Абсолютное неразрушимое оружие и мульти-инструмент.',
+  'effect.bedrock_sword.text.7': '-Как получить:',
+  'effect.bedrock_sword.text.8': '  Крафт из 2 блоков бедрока и бедроковой палки.',
+  'effect.bedrock_sword.text.9': '  (Блоки бедрока добываются снарядом Меча Ультра Инстинкта или броском Меча Звезды Незера в огонь!)',
 
+  // 33. Ender Sword
   'howtoplay.ender_sword': '§lМеч Эндера',
   'ender_sword.header.title': '§lМеч Эндера',
-  'effect.ender_sword.text.5': '  Автоматически уклоняется от любых снарядов телепортацией, 50% уклонение в ближнем бою, телепорт на 16–32 блока по нажатию! Боится воды.',
-  'effect.ender_sword.text.11': '  Выпадает из Красноглазого Эндермена (2.5%).',
+  'effect.ender_sword.text.0': '-Прочность: 1256',
+  'effect.ender_sword.text.1': '-Урон: 9',
+  'effect.ender_sword.text.2': '-Зачаровывается: да',
+  'effect.ender_sword.text.3': '-Починка: да (жемчугом Эндера, оком Эндера или таким же мечом)',
+  'effect.ender_sword.text.4': '-Особые навыки:',
+  'effect.ender_sword.text.5': '  100% автоматическое уклонение телепортацией от любых летящих снарядов!',
+  'effect.ender_sword.text.6': '  50% шанс уклониться телепортацией при получении удара в ближнем бою.',
+  'effect.ender_sword.text.7': '  Вода и дождь ранят владельца и вызывают случайную телепортацию.',
+  'effect.ender_sword.text.8': '  Активация (-5 прочности): случайный телепорт в радиусе от 16 до 32 блоков.',
+  'effect.ender_sword.text.9': '  Перезарядка способности: 2 сек.',
+  'effect.ender_sword.text.10': '-Как получить:',
+  'effect.ender_sword.text.11': '  Выпадает из Красноглазого Эндермена с шансом 2.5%.',
 
+  // 34. Lightning Sword
   'howtoplay.lightning_sword': '§lМеч Молнии',
   'lightning_sword.header.title': '§lМеч Молнии',
-  'effect.lightning_sword.text.5': '  Бьёт молниями при атаке, иммунитет к молниям, а активация обрушивает кольцо из 41 молнии вокруг вас!',
+  'effect.lightning_sword.text.0': '-Прочность: 2012',
+  'effect.lightning_sword.text.1': '-Урон: 8',
+  'effect.lightning_sword.text.2': '-Зачаровывается: да',
+  'effect.lightning_sword.text.3': '-Починка: да (только таким же мечом)',
+  'effect.lightning_sword.text.4': '-Особые навыки:',
+  'effect.lightning_sword.text.5': '  При взмахе или ударе с шансом 85% поражает цель молнией.',
+  'effect.lightning_sword.text.6': '  Активация (перезарядка 12 сек., -9 прочности): обрушивает 41 молнию кольцами вокруг вас!',
+  'effect.lightning_sword.text.7': '  Полный иммунитет к урону от ударов молнии.',
+  'effect.lightning_sword.text.8': '-Описание:',
+  'effect.lightning_sword.text.9': '  Меч освещает пространство вокруг.',
+  'effect.lightning_sword.text.10': '-Как получить:',
   'effect.lightning_sword.text.11': '  Убить Шаровую молнию (Сентеллу) во время грозы (шанс 2%).',
 
+  // 35. Wither Sword
   'howtoplay.wither_sword': '§lМеч Иссушителя',
   'wither_sword.header.title': '§lМеч Иссушителя',
-  'effect.wither_sword.text.7': '  Иммунитет к иссушению, превращает цветы вокруг в розы визера, стреляет черепами Иссушителя (ПКМ — синий разрушительный череп)!',
-  'effect.wither_sword.text.16': '  Победить босса Иссушителя (повышенный шанс при добивании Мечом Звезды Незера).',
+  'effect.wither_sword.text.0': '-Прочность: 3856',
+  'effect.wither_sword.text.1': '-Урон: 10',
+  'effect.wither_sword.text.2': '-Перезарядка способности: 3 сек.',
+  'effect.wither_sword.text.3': '-Исчезает на земле: нет',
+  'effect.wither_sword.text.4': '-Зачаровывается: нет',
+  'effect.wither_sword.text.5': '-Починка: да (только таким же мечом)',
+  'effect.wither_sword.text.6': '-Особые навыки:',
+  'effect.wither_sword.text.7': '  При взмахе и ударе выпускает чёрные черепа Иссушителя (10%) и накладывает Иссушение.',
+  'effect.wither_sword.text.8': '  Полный иммунитет к эффекту Иссушения.',
+  'effect.wither_sword.text.9': '  Листва вокруг опадает, цветы превращаются в розы визера, а трава высыхает.',
+  'effect.wither_sword.text.10': '  Активация (-3 прочности): выпускает разрушительный синий череп Иссушителя!',
+  'effect.wither_sword.text.11': '-Описание:',
+  'effect.wither_sword.text.12': '  Меч излучает зловещий свет.',
+  'effect.wither_sword.text.13': '  На экране появляется декоративная полоса босса «Wither Sword» и сгущается туман.',
+  'effect.wither_sword.text.14': '  На вас висит визуальный эффект Иссушения, не наносящий урона.',
+  'effect.wither_sword.text.15': '-Как получить:',
+  'effect.wither_sword.text.16': '  Победить босса Иссушителя (шанс 5%, либо 25% при добивании Мечом Звезды Незера).',
 
+  // 36. Time Sword
   'howtoplay.time_sword': '§lМеч Времени',
   'time_sword.header.title': '§lМеч Времени',
-  'effect.time_sword.text.5': '  Ускоряет время мира, скорость всех существ и рост растений вокруг вас!',
-  'effect.time_sword.text.10': '  Бросьте Часовой меч в воду пустынного колодца желаний (шанс 2.5%).',
+  'effect.time_sword.text.0': '-Прочность: 13770',
+  'effect.time_sword.text.1': '-Урон: 13',
+  'effect.time_sword.text.2': '-Зачаровывается: нет',
+  'effect.time_sword.text.3': '-Починка: нет',
+  'effect.time_sword.text.4': '-Особые навыки:',
+  'effect.time_sword.text.5': '  Пока меч в руке, время суток стремительно летит вперёд, вы и существа двигаетесь быстрее, а посевы мгновенно растут!',
+  'effect.time_sword.text.6': '-Описание:',
+  'effect.time_sword.text.7': '  При ударе меч теряет 1 ед. прочности (90%), 16 ед. (6%), 32 ед. (3%) или 64 ед. (1%).',
+  'effect.time_sword.text.8': '  Меч освещает пространство вокруг.',
+  'effect.time_sword.text.9': '-Как получить:',
+  'effect.time_sword.text.10': '  Бросайте Часовые мечи в воду пустынного колодца желаний (шанс 2.5%).',
 
+  // 37. Ultra Instinct Sword
   'howtoplay.ultra_instinct_sword': '§lМеч Ультра Инстинкта',
   'ultra_instinct_sword.header.title': '§lМеч Ультра Инстинкта',
-  'effect.ultra_instinct_sword.text.7': '  Автоматическое уклонение от ударов и снарядов, иммунитет к огню и взрывам, парящая аура!',
-  'effect.ultra_instinct_sword.text.8': '  Активация выпускает разрушительный энергетический снаряд, пробивающий даже бедрок (перезарядка 61 сек, -48 прочности)!',
-  'effect.ultra_instinct_sword.text.10': '  Бросайте кварцевые алмазы (0.8%) или кварцево-алмазные блоки (2.5%) в пустынный колодец желаний.',
+  'effect.ultra_instinct_sword.text.0': '-Прочность: 9999',
+  'effect.ultra_instinct_sword.text.1': '-Урон: 16',
+  'effect.ultra_instinct_sword.text.2': '-Перезарядка способности: 61 сек.',
+  'effect.ultra_instinct_sword.text.3': '-Исчезает на земле: нет',
+  'effect.ultra_instinct_sword.text.4': '-Зачаровывается: нет',
+  'effect.ultra_instinct_sword.text.5': '-Починка: нет',
+  'effect.ultra_instinct_sword.text.6': '-Особые навыки:',
+  'effect.ultra_instinct_sword.text.7': '  Автоматическое уклонение телепортацией от ударов и снарядов, иммунитет к огню, лаве и взрывам, сияющая 3D-аура!',
+  'effect.ultra_instinct_sword.text.8': '  Активация (-48 прочности): выпускает гигантский энергетический снаряд, раскалывающий даже бедрок!',
+  'effect.ultra_instinct_sword.text.9': '-Как получить:',
+  'effect.ultra_instinct_sword.text.10': '  Бросайте кварцевые алмазы (0.8%) или кварцево-алмазные блоки (2.5%) в воду пустынного колодца желаний.',
+  'effect.ultra_instinct_sword.text.11': '  (Кварцево-алмазная руда редко генерируется глубже высоты Y=16 и в Энде.)',
 
+  // 38. Cursed Pumpkin Sword
   'howtoplay.cursed_pumpkin_sword.title': '§lМечи',
   'howtoplay.cursed_pumpkin_sword': '§lПроклятый тыквенный меч',
   'cursed_pumpkin_sword.header.title': '§l§6Проклятый тыквенный меч',
   'effect.cursed_pumpkin_sword.text.0': '-Прочность: 606',
   'effect.cursed_pumpkin_sword.text.1': '-Урон: 5',
   'effect.cursed_pumpkin_sword.text.2': '-Зачаровывается: да',
-  'effect.cursed_pumpkin_sword.text.3': '-Починка: тыквами, сотами или таким же мечом',
-  'effect.cursed_pumpkin_sword.text.4': '-Способности:',
-  'effect.cursed_pumpkin_sword.text.5': '  При ударе с шансом 80% выпускает светящиеся проклятые тыквенные снаряды.',
+  'effect.cursed_pumpkin_sword.text.3': '-Починка: да (тыквами, вырезанными тыквами, сотами или таким же мечом)',
+  'effect.cursed_pumpkin_sword.text.4': '-Особые навыки:',
+  'effect.cursed_pumpkin_sword.text.5': '  При взмахе и ударе с шансом 80% выпускает светящиеся проклятые тыквенные снаряды.',
   'effect.cursed_pumpkin_sword.text.6': '-Как получить:',
   'effect.cursed_pumpkin_sword.text.7': '  Ломайте тыквы в мире (шанс 0.5% с каждой сломанной тыквы).',
 };

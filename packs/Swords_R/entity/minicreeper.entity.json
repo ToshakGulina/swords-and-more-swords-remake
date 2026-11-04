@@ -38,17 +38,6 @@
         "creeper_legs_controller": "controller.animation.creeper.legs",
         "creeper_swelling_controller": "controller.animation.creeper.swelling"
       },
-      "animation_controllers": [
-        {
-          "creeper_head": "controller.animation.creeper.head"
-        },
-        {
-          "creeper_legs": "controller.animation.creeper.legs"
-        },
-        {
-          "creeper_swelling": "controller.animation.creeper.swelling"
-        }
-      ],
       "render_controllers": [
         "controller.render.creeper",
         {

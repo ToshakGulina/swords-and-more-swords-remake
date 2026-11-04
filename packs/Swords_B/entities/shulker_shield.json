@@ -80,7 +80,7 @@
       "shulker_shield_clear_effect": {
         "queue_command": {
           "command": [
-            "effect @s levitation 0 0"
+            "effect @s levitation 0"
           ]
         }
       },
@@ -99,7 +99,7 @@
         },
         "queue_command": {
           "command": [
-            "event entity @p[family=shulker_sword,r=6] stop_shulker_sword_event"
+            "playsound mob.shulker.open @a[r=12] ~ ~ ~ 0.9 1.0"
           ]
         }
       },

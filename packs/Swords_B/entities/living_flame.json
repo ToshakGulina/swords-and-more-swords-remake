@@ -398,7 +398,8 @@
             "event": "minecraft:set_fire"
           }
         ]
-      }
+      },
+      "minecraft:is_baby": {}
     },
     "events": {
       "minecraft:entity_spawned": {

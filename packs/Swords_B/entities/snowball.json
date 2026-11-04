@@ -87,7 +87,10 @@
           ],
           "on_hit": {
             "impact_damage": {
-              "damage": 2,
+              "damage": {
+                "min": 2,
+                "max": 2
+              },
               "knockback": true
             },
             "particle_on_hit": {

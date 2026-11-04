@@ -12,11 +12,6 @@
           "type": "item",
           "name": "minecraft:wooden_axe",
           "weight": 3
-        },
-        {
-          "type": "item",
-          "name": "effect:coal_sword",
-          "weight": 5
         }
       ]
     },
@@ -456,6 +451,22 @@
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "conditions": [
+        {
+          "condition": "random_chance",
+          "chance": 0.35
+        }
+      ],
+      "entries": [
+        {
+          "type": "item",
+          "name": "effect:coal_sword",
+          "weight": 1
         }
       ]
     }

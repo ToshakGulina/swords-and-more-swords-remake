@@ -1,7 +1,10 @@
 import {
   EntityComponentTypes,
   EntityDamageCause,
+  EntityEquippableComponent,
   EntityRideableComponent,
+  EntitySwingSource,
+  EquipmentSlot,
   GameMode,
   ItemComponentRegistry,
   ItemStack,
@@ -58,6 +61,11 @@ function absorbSpongeWater(player: Player): number {
 }
 
 const spongeWaterTicks = new Map<string, number>();
+const lastDirectActionTick = new Map<string, number>();
+
+function markDirectAction(player: Player): void {
+  lastDirectActionTick.set(player.id, system.currentTick);
+}
 
 export function tryConvertSpongeSword(player: Player): boolean {
   const removed = absorbSpongeWater(player);
@@ -74,11 +82,11 @@ export function tryConvertSpongeSword(player: Player): boolean {
   spongeWaterTicks.delete(player.id);
 
   try {
-    const eq = player.getComponent(EntityComponentTypes.Equippable);
+    const eq = player.getComponent(EntityComponentTypes.Equippable) as EntityEquippableComponent | undefined;
     const current = getMainhandItem(player);
     if (eq && current && current.typeId === 'effect:sponge_sword') {
       const wet = new ItemStack('effect:wet_sponge_sword', 1);
-      eq.setEquipment('Mainhand' as never, wet);
+      eq.setEquipment(EquipmentSlot.Mainhand, wet);
       player.dimension.playSound('random.splash', player.location, { volume: 0.9, pitch: 1.2 });
       return true;
     }
@@ -151,6 +159,7 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
     onMineBlock(event) {
       const { itemStack, source } = event;
       if (!itemStack || !(source instanceof Player)) return;
+      markDirectAction(source);
       if (itemStack.typeId === 'effect:bedrock_sword' || itemStack.typeId === 'effect:bedrock_stick') {
         return;
       }
@@ -162,8 +171,18 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
     onHitEntity(event) {
       const { attackingEntity, hitEntity, itemStack } = event;
       if (!itemStack || !hitEntity.isValid) return;
+      if (attackingEntity instanceof Player) {
+        markDirectAction(attackingEntity);
+      }
       const dim = hitEntity.dimension;
       const id = itemStack.typeId;
+
+      // If Alpha Wolf is struck by ANY weapon other than Silver Sword, strip `hit_by_silver` so its regeneration returns (exact 2.8.8!)
+      if (hitEntity.typeId === 'entity:alpha_wolf' && id !== 'effect:silver_sword') {
+        try {
+          hitEntity.removeTag('hit_by_silver');
+        } catch {}
+      }
 
       try {
         switch (id) {
@@ -202,13 +221,22 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
           }
 
           case 'effect:silver_sword': {
-            // Extra damage & strips regen/resistance from Alpha Wolf!
+            // Extra damage & strips regen/resistance from Alpha Wolf for 4s per Silver Sword hit!
             if (hitEntity.typeId === 'entity:alpha_wolf') {
               hitEntity.triggerEvent('clear_effects');
               hitEntity.addTag('hit_by_silver');
+              const hitStamp = system.currentTick;
+              hitEntity.setDynamicProperty('effect:silver_tick', hitStamp);
               hitEntity.applyDamage(12, { cause: EntityDamageCause.magic, damagingEntity: attackingEntity });
               dim.playSound('random.anvil_land', hitEntity.location, { volume: 0.8, pitch: 1.5 });
-              dim.spawnParticle('minecraft:crit_emitter', hitEntity.location);
+              dim.spawnParticle('minecraft:critical_hit_emitter', hitEntity.location);
+              system.runTimeout(() => {
+                try {
+                  if (hitEntity.isValid && hitEntity.getDynamicProperty('effect:silver_tick') === hitStamp) {
+                    hitEntity.removeTag('hit_by_silver');
+                  }
+                } catch {}
+              }, 80);
             }
             break;
           }
@@ -407,6 +435,7 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
     onUseOn(event) {
       const { block, blockFace, itemStack, source } = event;
       if (!itemStack || !(source instanceof Player)) return;
+      markDirectAction(source);
       const dim = block.dimension;
 
       try {
@@ -435,6 +464,7 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
     onUse(event) {
       const { itemStack, source: player } = event;
       if (!itemStack || !player.isValid) return;
+      markDirectAction(player);
       const dim = player.dimension;
       const id = itemStack.typeId;
 
@@ -636,24 +666,66 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
           }
 
           case 'effect:ghost_sword': {
-            // Exact 2.8.8: teleport in any direction the player is looking via ghost_projectile / raycast! (-6 durability)
+            // Exact 2.8.8: teleport in any direction the player is looking, including phasing through cave walls! (-6 durability)
             if (!checkAndStartCooldown(player, 'ghost_sword', 2)) return;
-            shootCustomProjectile(player, 'entity:ghost_projectile', 2.2);
             const head = player.getHeadLocation();
             const dir = player.getViewDirection();
-            let dest = { x: player.location.x, y: player.location.y, z: player.location.z };
-            for (let d = 1; d <= 20; d++) {
+            const minY = dim.heightRange.min + 1;
+            const maxY = dim.heightRange.max - 2;
+
+            const isBreathableSpace = (bx: number, by: number, bz: number): boolean => {
+              if (by < minY || by > maxY) return false;
+              const foot = dim.getBlock({ x: bx, y: by, z: bz });
+              const upper = dim.getBlock({ x: bx, y: by + 1, z: bz });
+              if (!foot || !upper) return false;
+              const passable = (id: string, isAir: boolean) =>
+                isAir ||
+                id === 'minecraft:short_grass' ||
+                id === 'minecraft:snow_layer' ||
+                id === 'minecraft:water' ||
+                id === 'minecraft:flowing_water' ||
+                id === 'effect99:lightblock' ||
+                id === 'effect99:lightblock2';
+              return passable(foot.typeId, foot.isAir) && passable(upper.typeId, upper.isAir);
+            };
+
+            let targetPos: { x: number; y: number; z: number } | undefined;
+            let enteredWall = false;
+
+            for (let d = 1; d <= 18; d++) {
               const cx = head.x + dir.x * d;
-              const cy = head.y + dir.y * d;
+              const cy = Math.max(minY, Math.min(maxY, head.y + dir.y * d - 0.6));
               const cz = head.z + dir.z * d;
-              const b = dim.getBlock({ x: Math.floor(cx), y: Math.floor(cy), z: Math.floor(cz) });
-              if (b && b.isAir) {
-                dest = { x: cx, y: cy, z: cz };
+              const bx = Math.floor(cx);
+              const by = Math.floor(cy);
+              const bz = Math.floor(cz);
+
+              if (isBreathableSpace(bx, by, bz)) {
+                if (enteredWall) {
+                  // Found the first cave / room pocket on the far side of the wall!
+                  targetPos = { x: bx + 0.5, y: by, z: bz + 0.5 };
+                  break;
+                }
+                if (d <= 12) {
+                  targetPos = { x: cx, y: cy, z: cz };
+                }
+              } else {
+                enteredWall = true;
               }
             }
-            player.teleport(dest);
-            dim.playSound('mob.endermen.portal', dest, { volume: 0.8, pitch: 1.4 });
-            consumeMainhandDurability(player, 6);
+
+            if (targetPos) {
+              dim.spawnParticle('minecraft:ghost_spiral', player.location);
+              player.teleport(targetPos);
+              dim.spawnParticle('minecraft:ghost_spiral', targetPos);
+              dim.spawnParticle('minecraft:egg_destroy_emitter', {
+                x: targetPos.x,
+                y: targetPos.y + 0.8,
+                z: targetPos.z,
+              });
+              dim.playSound('mob.endermen.portal', targetPos, { volume: 0.9, pitch: 1.4 });
+              consumeMainhandDurability(player, 6);
+            }
             break;
           }
 
@@ -710,9 +782,17 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
           }
 
           case 'effect:spectral_sword': {
-            // Exact 2.8.8: fire explosive ender_crystal_projectile! (-15 durability)
+            // Exact 2.8.8: fire explosive ender_crystal_projectile + shrink overhead crystal for recharge! (-15 durability)
             if (!checkAndStartCooldown(player, 'spectral_sword', 18)) return;
             shootCustomProjectile(player, 'entity:ender_crystal_projectile', 1.45);
+            try {
+              const rideable = player.getComponent(EntityComponentTypes.Rideable) as EntityRideableComponent | undefined;
+              for (const rider of rideable?.getRiders() ?? []) {
+                if (rider.typeId === 'minecraft:ender_crystal') {
+                  rider.triggerEvent('effect:ender_crystal_scale');
+                }
+              }
+            } catch {}
             dim.playSound('portal.travel', player.location, { volume: 1.0, pitch: 5.0 });
             consumeMainhandDurability(player, 15);
             break;
@@ -767,3 +847,154 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
     },
   });
 }
+
+const lastAirSwingTick = new Map<string, number>();
+
+// Exact 2.8.8 `on_not_hurt_entity` parity: swinging ranged swords into the air fires their projectiles at distant targets!
+export function registerAirSwingEvents(): void {
+  world.afterEvents.playerSwingStart.subscribe((event) => {
+    if (event.swingSource !== EntitySwingSource.Attack) return;
+    const player = event.player;
+    const swingTick = system.currentTick;
+    if (swingTick - (lastAirSwingTick.get(player.id) ?? -99) < 5) return;
+    const itemId = event.heldItemStack?.typeId;
+    if (!itemId || !itemId.startsWith('effect:')) return;
+
+    system.runTimeout(() => {
+      if (!player.isValid) return;
+      // Skip if this swing hit an entity in melee, mined a block, or triggered right-click use!
+      if ((lastDirectActionTick.get(player.id) ?? -99) >= swingTick - 1) return;
+      if (getMainhandItem(player)?.typeId !== itemId) return;
+
+      const dim = player.dimension;
+      let fired = false;
+
+      try {
+        switch (itemId) {
+          case 'effect:bee_sword': {
+            fired = true;
+            if (Math.random() < 0.3) {
+              shootCustomProjectile(player, 'entity:bee_sword', 1.0);
+            }
+            break;
+          }
+          case 'effect:blaze_sword': {
+            fired = true;
+            const r = Math.random() * 100;
+            if (r < 14) {
+              player.addEffect('fire_resistance', 30, { amplifier: 0, showParticles: false });
+              shootCustomProjectile(player, 'minecraft:small_fireball', 1.35);
+            } else if (r < 15) {
+              player.addEffect('fire_resistance', 30, { amplifier: 0, showParticles: false });
+              shootCustomProjectile(player, 'minecraft:fireball', 1.35, 'effect:player_shot');
+            }
+            break;
+          }
+          case 'effect:bone_sword': {
+            fired = true;
+            if (Math.random() < 0.2) {
+              shootCustomProjectile(player, 'minecraft:arrow', 1.6);
+              dim.playSound('random.bow', player.location, { volume: 0.9, pitch: 1.0 });
+            }
+            break;
+          }
+          case 'effect:creeper_sword': {
+            fired = true;
+            if (Math.random() < 0.2) {
+              shootCustomProjectile(player, 'entity:minicreeper', 1.15);
+              dim.playSound('random.fuse', player.location, { volume: 0.9, pitch: 1.4 });
+            }
+            break;
+          }
+          case 'effect:fire_sword': {
+            fired = true;
+            if (Math.random() < 0.15) {
+              const lf = shootCustomProjectile(player, 'entity:living_flame', 1.0, 'hostile_entity');
+              lf?.addTag('player_summoned');
+            } else {
+              shootCustomProjectile(player, 'entity:fire', 1.3);
+            }
+            break;
+          }
+          case 'effect:lightning_sword': {
+            fired = true;
+            if (Math.random() < 0.85) {
+              shootCustomProjectile(player, 'entity:lightning_projectile', 1.8);
+            }
+            break;
+          }
+          case 'effect:nether_star_sword': {
+            fired = true;
+            shootCustomProjectile(player, 'entity:nether_star_projectile', 2.2, 'effect:nether_star_tracer');
+            const dir = player.getViewDirection();
+            const count = Math.random() < 0.2 ? 2 : 1;
+            const skyY = Math.min(dim.heightRange.max - 2, player.location.y + 18);
+            for (let i = 0; i < count; i++) {
+              dim.spawnEntity('entity:nether_star', {
+                x: player.location.x + dir.x * 6 + (Math.random() - 0.5) * 1.5,
+                y: skyY + i * 2,
+                z: player.location.z + dir.z * 6 + (Math.random() - 0.5) * 1.5,
+              });
+            }
+            if (Math.random() < 0.0001) {
+              dim.spawnEntity('entity:ultra_instinct_explode', player.location);
+            }
+            break;
+          }
+          case 'effect:cursed_pumpkin_sword': {
+            fired = true;
+            if (Math.random() < 0.8) {
+              shootCustomProjectile(player, 'entity:pumpkin_projectile', 0.95);
+            }
+            break;
+          }
+          case 'effect:shulker_sword': {
+            fired = true;
+            if (Math.random() < 0.1) {
+              shootCustomProjectile(player, 'minecraft:shulker_bullet', 1.1, 'effect:shulker_sword');
+              dim.playSound('random.bow', player.location, { volume: 1.0, pitch: 0.4 });
+            }
+            break;
+          }
+          case 'effect:spider_sword': {
+            fired = true;
+            if (Math.random() < 0.05) {
+              shootCustomProjectile(player, 'entity:web', 1.25);
+            }
+            break;
+          }
+          case 'effect:tnt_sword': {
+            fired = true;
+            if (Math.random() < 0.9) {
+              shootCustomProjectile(player, 'entity:tnt', 1.2);
+            }
+            break;
+          }
+          case 'effect:wither_sword': {
+            fired = true;
+            if (Math.random() < 0.1) {
+              shootCustomProjectile(player, 'minecraft:wither_skull', 1.4, 'effect:player_shot');
+              dim.playSound('mob.wither.shoot', player.location, { volume: 1.0, pitch: 1.0 });
+            }
+            break;
+          }
+          case 'effect:quartz_diamond_stick': {
+            fired = true;
+            if (player.getGameMode() !== GameMode.Creative) {
+              const r = Math.random() * 100;
+              const dmg = r < 10 ? 1 : r < 95 ? 3 : 6;
+              player.applyDamage(dmg, { cause: EntityDamageCause.magic });
+            }
+            break;
+          }
+        }
+
+        if (fired) {
+          lastAirSwingTick.set(player.id, swingTick);
+          consumeMainhandDurability(player, 1);
+        }
+      } catch {}
+    }, 1);
+  });
+}
+

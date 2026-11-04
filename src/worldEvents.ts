@@ -12,11 +12,13 @@ import {
   world,
 } from '@minecraft/server';
 import { getActiveShulkerShieldOwner } from './passiveEngine.js';
+import { registerAirSwingEvents } from './swordSkills.js';
 import { getMainhandItem, isDesertWellWater, safeRandomTeleport } from './utils.js';
 
 let isRainingOverworld = false;
 let lastCentellaDeathTick = -1000;
 let lastCentellaDeathLoc: Vector3 | undefined;
+const manuallyDroppedBedrock = new Set<string>();
 
 function convertSurroundingSand(dim: Dimension, center: Vector3, targetBlockId: string): void {
   const cx = Math.floor(center.x);
@@ -37,6 +39,9 @@ function convertSurroundingSand(dim: Dimension, center: Vector3, targetBlockId: 
 }
 
 export function registerWorldEvents(): void {
+  // Enable exact 2.8.8 `on_not_hurt_entity` ranged air-swing attacks for all 12 projectile swords!
+  registerAirSwingEvents();
+
   // Track Overworld rain/thunder for dropped Fire Sword & Sponge Sword outdoor reactions
   world.afterEvents.weatherChange.subscribe((ev) => {
     isRainingOverworld = ev.newWeather !== WeatherType.Clear;
@@ -74,6 +79,8 @@ export function registerWorldEvents(): void {
   world.afterEvents.blockExplode.subscribe((ev) => {
     try {
       if (ev.explodedBlockPermutation.type.id === 'minecraft:bedrock') {
+        const key = `${ev.dimension.id}:${ev.block.location.x},${ev.block.location.y},${ev.block.location.z}`;
+        if (manuallyDroppedBedrock.delete(key)) return;
         const center = {
           x: ev.block.location.x + 0.5,
           y: ev.block.location.y + 0.5,
@@ -123,9 +130,54 @@ export function registerWorldEvents(): void {
     } catch {}
   });
 
-  // 6. Natural Lightning Strike -> 20% Centella spawn!
+  // 6. Natural Lightning Strike -> 20% Centella spawn + `ultra_instinct_explode` 1.26.60 Bedrock shattering!
   world.afterEvents.entitySpawn.subscribe((ev) => {
     try {
+      if (ev.entity.typeId === 'entity:ultra_instinct_explode') {
+        // In 1.26.60+, C++ `minecraft:explode` no longer breaks `minecraft:bedrock` (blast resistance 3,600,000),
+        // so carve non-void-floor bedrock in radius 2.6 and spawn collectible `minecraft:bedrock` items post-blast!
+        if (world.gameRules.mobGriefing === false) return;
+        const dim = ev.entity.dimension;
+        const loc = ev.entity.location;
+        const cx = Math.floor(loc.x);
+        const cy = Math.floor(loc.y);
+        const cz = Math.floor(loc.z);
+        const minSafeY = dim.id === 'minecraft:the_end' ? dim.heightRange.min : dim.heightRange.min + 1;
+        const brokenDrops: Vector3[] = [];
+
+        for (let dx = -2; dx <= 2; dx++) {
+          for (let dy = -2; dy <= 2; dy++) {
+            for (let dz = -2; dz <= 2; dz++) {
+              if (dx * dx + dy * dy + dz * dz > 7) continue;
+              const bx = cx + dx;
+              const by = cy + dy;
+              const bz = cz + dz;
+              if (by < minSafeY) continue;
+              const b = dim.getBlock({ x: bx, y: by, z: bz });
+              if (b && b.typeId === 'minecraft:bedrock') {
+                const key = `${dim.id}:${bx},${by},${bz}`;
+                manuallyDroppedBedrock.add(key);
+                b.setType('minecraft:air');
+                brokenDrops.push({ x: bx + 0.5, y: by + 0.5, z: bz + 0.5 });
+              }
+            }
+          }
+        }
+
+        if (brokenDrops.length > 0) {
+          dim.playSound('random.anvil_break', loc, { volume: 1.2, pitch: 0.6 });
+          system.runTimeout(() => {
+            for (const dropPos of brokenDrops) {
+              try {
+                dim.spawnItem(new ItemStack('minecraft:bedrock', 1), dropPos);
+              } catch {}
+            }
+            manuallyDroppedBedrock.clear();
+          }, 5);
+        }
+        return;
+      }
+
       if (ev.entity.typeId === 'minecraft:lightning_bolt') {
         const dim = ev.entity.dimension;
         const loc = ev.entity.location;
@@ -178,11 +230,11 @@ export function registerWorldEvents(): void {
         }
 
         case 'minecraft:wither': {
-          // Kill the Wither with Nether Star Sword -> 13% chance to drop Wither Sword!
+          // Kill the Wither with Nether Star Sword -> 25% chance to drop Wither Sword (5% otherwise)!
           const usedNetherStar =
             deadEntity.hasTag('slain_by_nether_star_sword') ||
             (killer instanceof Player && getMainhandItem(killer)?.typeId === 'effect:nether_star_sword');
-          if (usedNetherStar && Math.random() < 0.13) {
+          if (Math.random() < (usedNetherStar ? 0.25 : 0.05)) {
             dim.spawnItem(new ItemStack('effect:wither_sword', 1), loc);
           }
           break;
@@ -215,8 +267,12 @@ export function registerWorldEvents(): void {
         }
 
         case 'minecraft:blaze': {
-          // Exact 2.8.8: killed by a Snow Golem -> 0.5% Blaze Sword!
-          if (killer?.typeId === 'minecraft:snow_golem' && Math.random() < 0.005) {
+          // Exact 2.8.8 combined Snow Golem drop chance (loot table 2.5% + entity event 0.5% = 3.0%)!
+          if (
+            (killer?.typeId === 'minecraft:snow_golem' || proj?.typeId === 'minecraft:snowball') &&
+            killer?.typeId !== 'minecraft:player' &&
+            Math.random() < 0.03
+          ) {
             dim.spawnItem(new ItemStack('effect:blaze_sword', 1), loc);
           }
           break;

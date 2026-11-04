@@ -1,4 +1,4 @@
-import { BlockPermutation, EntityComponentTypes, EntityDamageCause, GameMode, MoonPhase, system, world, } from '@minecraft/server';
+import { BlockPermutation, EntityComponentTypes, EntityDamageCause, EquipmentSlot, GameMode, MoonPhase, system, world, } from '@minecraft/server';
 import { LIGHT_EMITTING_SWORDS } from './blockComponents.js';
 import { tryConvertSpongeSword } from './swordSkills.js';
 import { getMainhandItem, getOffhandItem, isFullMoonNight, isProtectedEntity, } from './utils.js';
@@ -30,6 +30,8 @@ const playerWitherBossbar = new Map();
 const playerSpectralCrystal = new Map();
 const playerSpiderMount = new Map();
 const playerSlimeMount = new Map();
+const shulkerToggleCooldown = new Map();
+const airborneSlimeIds = new Set();
 const nextLapisTick = new Map();
 const nextBeeFlowerTick = new Map();
 const werewolfCursedPlayers = new Set();
@@ -238,11 +240,12 @@ export function startPassiveEngine() {
                     }
                     catch { }
                 }
-                // Clear Ghost Sword weakness/levitation when unequipping
+                // Clear Ghost Sword effects when unequipping
                 if (prevMainId === 'effect:ghost_sword' && mainId !== 'effect:ghost_sword') {
                     try {
                         player.removeEffect('weakness');
                         player.removeEffect('levitation');
+                        player.removeEffect('slow_falling');
                         player.removeEffect('invisibility');
                         dim.spawnParticle('minecraft:ghost_spiral', player.location);
                     }
@@ -355,12 +358,20 @@ export function startPassiveEngine() {
                         break;
                     }
                     case 'effect:ghost_sword': {
-                        // Cannot harm any entity + invisible legs + sneak levitation + cave wall X-ray!
+                        // Cannot harm any entity + invisible legs + slow_falling + sneak flight + lava/water float + cave wall X-ray!
                         if (tick % 10 === 0) {
                             player.addEffect('weakness', 40, { amplifier: 255, showParticles: false });
+                            player.addEffect('slow_falling', 40, { amplifier: 0, showParticles: false });
+                            player.addEffect('saturation', 40, { amplifier: 1, showParticles: false });
                         }
-                        if (player.isSneaking) {
-                            player.addEffect('levitation', 10, { amplifier: 3, showParticles: false });
+                        const footBlock = dim.getBlock(player.location);
+                        const inLava = footBlock && (footBlock.typeId === 'minecraft:lava' || footBlock.typeId === 'minecraft:flowing_lava');
+                        if (inLava) {
+                            player.addEffect('fire_resistance', 30, { amplifier: 0, showParticles: false });
+                            player.addEffect('levitation', 10, { amplifier: 1, showParticles: false });
+                        }
+                        else if (player.isSneaking || player.isInWater) {
+                            player.addEffect('levitation', 10, { amplifier: player.isSneaking ? 3 : 0, showParticles: false });
                         }
                         else {
                             player.removeEffect('levitation');
@@ -385,6 +396,8 @@ export function startPassiveEngine() {
                                             originKey = 'deepslate';
                                         else if (b.typeId === 'minecraft:netherrack')
                                             originKey = 'netherrack';
+                                        else if (b.typeId === 'minecraft:end_stone')
+                                            originKey = 'end_stone';
                                         if (originKey) {
                                             b.setPermutation(BlockPermutation.resolve('effect99:spectral_block', { 'effect99:origin': originKey }));
                                         }
@@ -402,7 +415,7 @@ export function startPassiveEngine() {
                             const inLava = foot && (foot.typeId === 'minecraft:lava' || foot.typeId === 'minecraft:flowing_lava');
                             if ((onFireComp || inLava) && player.getGameMode() !== GameMode.Creative) {
                                 const eq = player.getComponent(EntityComponentTypes.Equippable);
-                                eq?.setEquipment('Mainhand', undefined);
+                                eq?.setEquipment(EquipmentSlot.Mainhand, undefined);
                                 if (dim.id !== 'minecraft:nether' && foot && (foot.isAir || foot.typeId.includes('fire') || inLava)) {
                                     foot.setType('minecraft:water');
                                 }
@@ -410,7 +423,7 @@ export function startPassiveEngine() {
                                 dim.spawnParticle('minecraft:cauldron_explosion_emitter', player.location);
                                 break;
                             }
-                            // All water under your feet turns to ice (Frost Walker)
+                            // All water under your feet turns to cracking Fake Ice (exact 2.8.8!)
                             const px = Math.floor(player.location.x);
                             const py = Math.floor(player.location.y) - 1;
                             const pz = Math.floor(player.location.z);
@@ -420,7 +433,7 @@ export function startPassiveEngine() {
                                         continue;
                                     const b = dim.getBlock({ x: px + dx, y: py, z: pz + dz });
                                     if (b && (b.typeId === 'minecraft:water' || b.typeId === 'minecraft:flowing_water')) {
-                                        b.setType('minecraft:frosted_ice');
+                                        b.setType('effect99:fake_ice');
                                     }
                                 }
                             }
@@ -467,8 +480,11 @@ export function startPassiveEngine() {
                             for (const fb of fireballs) {
                                 if (fb.hasTag('effect_player_shot'))
                                     continue;
-                                fb.clearVelocity();
-                                fb.triggerEvent('minecraft:inertia_disable');
+                                try {
+                                    fb.clearVelocity();
+                                    fb.triggerEvent('minecraft:inertia_disable');
+                                }
+                                catch { }
                             }
                         }
                         break;
@@ -477,7 +493,7 @@ export function startPassiveEngine() {
                         // Exact description: disappears if you enter water, burns very close entities, melts ice and snow!
                         if (player.isInWater && player.getGameMode() !== GameMode.Creative) {
                             const eq = player.getComponent(EntityComponentTypes.Equippable);
-                            eq?.setEquipment('Mainhand', undefined);
+                            eq?.setEquipment(EquipmentSlot.Mainhand, undefined);
                             dim.playSound('random.fizz', player.location, { volume: 1.0, pitch: 0.8 });
                             dim.spawnParticle('minecraft:cauldron_explosion_emitter', player.location);
                             break;
@@ -501,7 +517,10 @@ export function startPassiveEngine() {
                                             b.setType('minecraft:air');
                                         }
                                         else if (b.typeId === 'minecraft:ice' ||
+                                            b.typeId === 'minecraft:packed_ice' ||
+                                            b.typeId === 'minecraft:blue_ice' ||
                                             b.typeId === 'minecraft:frosted_ice' ||
+                                            b.typeId === 'effect99:fake_ice' ||
                                             b.typeId === 'minecraft:snow') {
                                             b.setType(dim.id === 'minecraft:nether' ? 'minecraft:air' : 'minecraft:water');
                                         }
@@ -522,8 +541,14 @@ export function startPassiveEngine() {
                             for (const arr of arrows) {
                                 if (arr.hasTag('effect_player_shot'))
                                     continue;
-                                arr.clearVelocity();
-                                arr.triggerEvent('minecraft:inertia_disable');
+                                try {
+                                    const vel = arr.getVelocity();
+                                    if (Math.hypot(vel.x, vel.y, vel.z) < 0.05)
+                                        continue;
+                                    arr.clearVelocity();
+                                    arr.triggerEvent('minecraft:inertia_disable');
+                                }
+                                catch { }
                             }
                         }
                         if (tick % 20 === 0) {
@@ -623,7 +648,7 @@ export function startPassiveEngine() {
                         break;
                     }
                     case 'effect:slime_sword': {
-                        // Keep companion mountable_slime teleported near owner if it wanders > 10 blocks while in defense mode!
+                        // Keep companion mountable_slime alive (`slime_despawn = 0`) & teleported near owner if > 12 blocks away!
                         if (tick % 20 === 0) {
                             let slime = playerSlimeMount.get(player.id);
                             if (!slime || !slime.isValid) {
@@ -631,6 +656,10 @@ export function startPassiveEngine() {
                                 playerSlimeMount.set(player.id, slime);
                             }
                             else {
+                                try {
+                                    world.scoreboard.getObjective('slime_despawn')?.setScore(slime, 0);
+                                }
+                                catch { }
                                 const dist = Math.hypot(slime.location.x - player.location.x, slime.location.z - player.location.z);
                                 if (dist > 12) {
                                     slime.teleport(player.location);
@@ -642,30 +671,51 @@ export function startPassiveEngine() {
                     case 'effect:shulker_sword': {
                         // Immune to levitation effect!
                         player.removeEffect('levitation');
-                        // Ducking spawns Shulker Shell around player (riding inside it!)
-                        if (player.isSneaking) {
-                            player.addEffect('resistance', 15, { amplifier: 4, showParticles: false });
-                            let shield = playerShulkerShield.get(player.id);
-                            if (!shield || !shield.isValid) {
-                                shield = dim.spawnEntity('entity:shulker_shield', player.location);
-                                const rideable = shield.getComponent(EntityComponentTypes.Rideable);
-                                rideable?.addRider(player);
-                                playerShulkerShield.set(player.id, shield);
-                                dim.playSound('mob.shulker.close', player.location, { volume: 0.9, pitch: 1.0 });
+                        // Exact 2.8.8: pressing Sneak enters the Shulker Shell (`shulker_shield`, scale 0.7, damage-immune);
+                        // the player stays inside until pressing Sneak again to dismount (or until the 20-HP shell is destroyed)!
+                        const existingShield = playerShulkerShield.get(player.id);
+                        const ridingComp = player.getComponent(EntityComponentTypes.Riding);
+                        const currentlyMountedOn = ridingComp?.entityRidingOn;
+                        if (existingShield) {
+                            if (!existingShield.isValid || currentlyMountedOn?.id !== existingShield.id) {
+                                // Player dismounted via Sneak or shell was destroyed -> restore normal player state!
+                                cleanupHelperEntity(playerShulkerShield, player.id);
+                                shulkerToggleCooldown.set(player.id, tick + 16);
+                                try {
+                                    player.triggerEvent('effect:equip_shulker_sword');
+                                    dim.playSound('mob.shulker.open', player.location, { volume: 0.9, pitch: 1.0 });
+                                }
+                                catch { }
+                            }
+                            else {
+                                player.addEffect('resistance', 15, { amplifier: 4, showParticles: false });
                             }
                         }
-                        else if (playerShulkerShield.has(player.id)) {
-                            cleanupHelperEntity(playerShulkerShield, player.id);
-                            dim.playSound('mob.shulker.open', player.location, { volume: 0.9, pitch: 1.0 });
+                        else if (player.isSneaking &&
+                            !currentlyMountedOn &&
+                            tick >= (shulkerToggleCooldown.get(player.id) ?? 0)) {
+                            const shield = dim.spawnEntity('entity:shulker_shield', player.location);
+                            try {
+                                player.triggerEvent('effect:equip_shulker_hiding');
+                            }
+                            catch { }
+                            const rideable = shield.getComponent(EntityComponentTypes.Rideable);
+                            rideable?.addRider(player);
+                            playerShulkerShield.set(player.id, shield);
+                            shulkerToggleCooldown.set(player.id, tick + 12);
+                            dim.playSound('mob.shulker.close', player.location, { volume: 0.9, pitch: 1.0 });
                         }
                         break;
                     }
                     case 'effect:spider_sword': {
                         // Climbing assist on spider mount + re-mount on sneak
-                        if (spiderMount && spiderMount.isValid && spiderMount.isClimbing) {
-                            spiderMount.addEffect('levitation', 8, { amplifier: 2, showParticles: false });
+                        const spiderMount = playerSpiderMount.get(player.id);
+                        if (spiderMount && spiderMount.isValid) {
+                            if (spiderMount.isClimbing) {
+                                spiderMount.addEffect('levitation', 8, { amplifier: 2, showParticles: false });
+                            }
                         }
-                        else if (player.isSneaking && !playerSpiderMount.has(player.id)) {
+                        else if (player.isSneaking) {
                             const riding = player.getComponent(EntityComponentTypes.Riding);
                             if (!riding?.entityRidingOn) {
                                 const spider = dim.spawnEntity('minecraft:spider', player.location, {
@@ -679,14 +729,19 @@ export function startPassiveEngine() {
                         break;
                     }
                     case 'effect:spectral_sword': {
-                        // Overhead Ender Crystal follows you everywhere!
+                        // Overhead Ender Crystal follows you everywhere (outside The End so it never beams the Ender Dragon, exact 2.8.8!)
                         if (tick % 20 === 0) {
-                            let crystal = playerSpectralCrystal.get(player.id);
-                            if (!crystal || !crystal.isValid) {
-                                crystal = dim.spawnEntity('minecraft:ender_crystal', { x: player.location.x, y: player.location.y + 2.2, z: player.location.z }, { spawnEvent: 'effect:spectral_rider' });
-                                const rideable = player.getComponent(EntityComponentTypes.Rideable);
-                                rideable?.addRider(crystal);
-                                playerSpectralCrystal.set(player.id, crystal);
+                            if (dim.id === 'minecraft:the_end') {
+                                cleanupHelperEntity(playerSpectralCrystal, player.id, 'effect:despawn');
+                            }
+                            else {
+                                let crystal = playerSpectralCrystal.get(player.id);
+                                if (!crystal || !crystal.isValid) {
+                                    crystal = dim.spawnEntity('minecraft:ender_crystal', { x: player.location.x, y: player.location.y + 2.0, z: player.location.z }, { spawnEvent: 'effect:spectral_rider' });
+                                    const rideable = player.getComponent(EntityComponentTypes.Rideable);
+                                    rideable?.addRider(crystal);
+                                    playerSpectralCrystal.set(player.id, crystal);
+                                }
                             }
                         }
                         // Makes ONLY the main block of the current dimension transparent!
@@ -825,8 +880,8 @@ export function startPassiveEngine() {
             }
             catch { }
         }
-        // Handle Winged Mountable Slime landing stomp AoE when ridden!
-        if (tick % 8 === 0) {
+        // Handle Winged Mountable Slime landing stomp AoE ONLY when landing from a jump while ridden!
+        if (tick % 3 === 0) {
             for (const dimName of ['overworld', 'nether', 'the_end']) {
                 try {
                     const dim = world.getDimension(dimName);
@@ -834,11 +889,17 @@ export function startPassiveEngine() {
                     for (const slime of mounts) {
                         const rideable = slime.getComponent(EntityComponentTypes.Rideable);
                         const riders = rideable?.getRiders() ?? [];
-                        if (riders.length === 0)
+                        if (riders.length === 0) {
+                            airborneSlimeIds.delete(slime.id);
                             continue; // Keep alive in defense_mode_slime!
+                        }
                         const rider = riders[0];
-                        if (slime.isOnGround) {
-                            for (const victim of dim.getEntities({ location: slime.location, maxDistance: 2.5 })) {
+                        if (!slime.isOnGround) {
+                            airborneSlimeIds.add(slime.id);
+                        }
+                        else if (airborneSlimeIds.delete(slime.id)) {
+                            dim.playSound('mob.slime.big', slime.location, { volume: 0.9, pitch: 0.9 });
+                            for (const victim of dim.getEntities({ location: slime.location, maxDistance: 2.6 })) {
                                 if (victim.id !== slime.id && !isProtectedEntity(victim, rider)) {
                                     victim.applyDamage(6, { cause: EntityDamageCause.entityAttack, damagingEntity: rider });
                                 }
