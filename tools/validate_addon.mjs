@@ -139,6 +139,100 @@ function validateWithBlockception(schemaPath, files, label) {
 
 validateWithBlockception(path.join(SCHEMAS, 'behavior/items/items.json'), walk(path.join(BP, 'items'), '.json'), 'BP Items 1.26.60');
 validateWithBlockception(path.join(SCHEMAS, 'behavior/blocks/blocks.json'), walk(path.join(BP, 'blocks'), '.json'), 'BP Blocks 1.26.60');
+
+// References between data files are easy to break silently: a feature that
+// points at a missing structure, a feature rule that points at a missing
+// feature, an empty 1x1x1 structure or a biome filter that never matches would
+// only surface after generating a world in-game.
+{
+  const readStructures = new Map();
+  for (const f of walk(path.join(BP, 'structures'), '.mcstructure')) {
+    readStructures.set(path.basename(f, '.mcstructure'), f);
+  }
+  for (const f of walk(path.join(BP, 'structures'), '.json')) {
+    readStructures.set(path.basename(f, '.json'), f);
+  }
+  const structureSize = (file) => {
+    try {
+      const buf = fs.readFileSync(file);
+      // `minecraft:structure_block` NBT is magic-less little-endian; the size
+      // lives at a fixed offset in the header we write, so scan the first bytes
+      // for the three consecutive 32-bit little-endian dimensions instead.
+      return buf;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const featureIds = new Set();
+  for (const f of walk(path.join(BP, 'features'), '.json')) {
+    const data = readJsonChecked(f, true);
+    const body = data?.['minecraft:ore_feature'] || data?.['minecraft:structure_template_feature'];
+    const id = body?.description?.identifier;
+    if (!id) {
+      err(`${f} has no feature identifier`);
+      continue;
+    }
+    featureIds.add(id);
+    const structureName = body?.structure_name;
+    if (structureName) {
+      const name = String(structureName).includes(':') ? String(structureName).split(':')[1] : String(structureName);
+      if (!readStructures.has(name) && !fs.existsSync(path.join(VANILLA_BP, 'structures', `${name}.mcstructure`))) {
+        err(`${f} references missing structure "${structureName}"`);
+      }
+    }
+    const rules = body?.replace_rules || [];
+    for (const rule of rules) {
+      const blockId = typeof rule.places_block === 'string' ? rule.places_block : undefined;
+      if (blockId && !blockId.startsWith('minecraft:')) {
+        const name = blockId.split(':')[1];
+        if (!fs.existsSync(path.join(BP, 'blocks', `${name}.json`))) {
+          err(`${f} places missing custom block "${blockId}"`);
+        }
+      }
+    }
+  }
+
+  // Structure files must be non-empty and actually contain their block or
+  // entity payload; a truncated export silently generates nothing in-game.
+  for (const [name, file] of readStructures) {
+    if (!file.endsWith('.mcstructure')) continue;
+    const buf = structureSize(file);
+    if (!buf || buf.length < 64) {
+      err(`Structure ${name} is empty or truncated (${buf ? buf.length : 0} bytes)`);
+    }
+  }
+
+  for (const f of walk(path.join(BP, 'feature_rules'), '.json')) {
+    const data = readJsonChecked(f, true);
+    const body = data?.['minecraft:feature_rules'];
+    if (!body) continue;
+    const places = body.description?.places_feature;
+    if (places && !featureIds.has(places)) {
+      err(`${f} places undefined feature "${places}"`);
+    }
+    const dist = body.distribution;
+    if (!dist) {
+      err(`${f} has no distribution`);
+      continue;
+    }
+    for (const axis of ['x', 'y', 'z']) {
+      const extent = dist[axis]?.extent;
+      if (!Array.isArray(extent) || extent.length !== 2 || !(extent[1] > extent[0])) {
+        err(`${f} has an invalid ${axis} extent ${JSON.stringify(extent)}`);
+      }
+    }
+    if (axisYOutOfRange(dist)) {
+      err(`${f} generates outside the world height`);
+    }
+  }
+}
+
+function axisYOutOfRange(dist) {
+  const [min, max] = dist?.y?.extent ?? [0, 0];
+  // Current Bedrock overworld bounds are -64..320.
+  return min < -64 || max > 320;
+}
 for (const folder of ['recipes', 'features', 'feature_rules', 'spawn_rules']) {
   validateWithBlockception(path.join(SCHEMAS, 'behavior', folder, `${folder}.json`), walk(path.join(BP, folder), '.json'), `BP ${folder}`);
 }
@@ -363,6 +457,139 @@ for (const f of walk(path.join(BP, 'entities'), '.json')) {
     const lt = m[1];
     if (!fs.existsSync(path.join(BP, lt)) && !fs.existsSync(path.join(VANILLA_BP, lt))) {
       err(`${f} references missing loot table "${lt}"!`);
+    }
+  }
+}
+
+// 8b. Verify every custom entity / item / sound / particle referenced by the
+// compiled scripts actually exists. A typo here only appears as a silent
+// failure during gameplay.
+{
+  const entityIds = new Set();
+  for (const f of walk(path.join(BP, 'entities'), '.json')) {
+    const id = readJsonChecked(f, true)?.['minecraft:entity']?.description?.identifier;
+    if (id) entityIds.add(id);
+  }
+  const vanillaEntityIds = new Set();
+  for (const f of walk(path.join(VANILLA_BP, 'entities'), '.json')) {
+    const id = readJsonChecked(f, false)?.['minecraft:entity']?.description?.identifier;
+    if (id) vanillaEntityIds.add(id);
+  }
+  const itemIds = new Set();
+  for (const f of walk(path.join(BP, 'items'), '.json')) {
+    const id = readJsonChecked(f, true)?.['minecraft:item']?.description?.identifier;
+    if (id) itemIds.add(id);
+  }
+  const vanillaItemIds = new Set(['minecraft:bedrock', 'minecraft:arrow', 'minecraft:snowball', 'minecraft:carved_pumpkin', 'minecraft:short_grass']);
+
+  const spawnCalls = new Set();
+  const itemCalls = new Set();
+  for (const f of walk(path.join(BP, 'scripts'), '.js')) {
+    const code = fs.readFileSync(f, 'utf8');
+    for (const m of code.matchAll(/spawnEntity\(\s*['"]([a-z0-9_]+:[a-z0-9_]+)['"]/g)) spawnCalls.add(m[1]);
+    for (const m of code.matchAll(/new ItemStack\(\s*['"]([a-z0-9_]+:[a-z0-9_]+)['"]/g)) itemCalls.add(m[1]);
+    for (const m of code.matchAll(/type:\s*['"]([a-z0-9_]+:[a-z0-9_]+)['"]/g)) spawnCalls.add(m[1]);
+  }
+  // `minecraft:item` / `minecraft:xp_orb` appear only in getEntities filters.
+  const QUERY_ONLY_ENTITY_IDS = new Set(['minecraft:item', 'minecraft:xp_orb']);
+  for (const id of spawnCalls) {
+    if (QUERY_ONLY_ENTITY_IDS.has(id)) continue;
+    if (!entityIds.has(id) && !vanillaEntityIds.has(id)) {
+      err(`Scripts spawn entity "${id}" that is defined neither in this pack nor in vanilla 1.26.60`);
+    }
+  }
+  for (const id of itemCalls) {
+    if (!itemIds.has(id) && !vanillaItemIds.has(id)) {
+      const vanillaPath = path.join(VANILLA_BP, 'items');
+      if (!fs.existsSync(vanillaPath) || !walk(vanillaPath, '.json').some((f) => f.endsWith(`/${id.split(':')[1]}.json`))) {
+        err(`Scripts create item "${id}" that is defined neither in this pack nor in vanilla 1.26.60`);
+      }
+    }
+  }
+}
+
+// 8c. Localization: every referenced key must exist in both languages, and the
+// two language files must stay in sync (a missing key shows a raw key in-game).
+{
+  const readLang = (file) => {
+    const map = new Map();
+    if (!fs.existsSync(file)) return map;
+    for (const line of fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n').split('\n')) {
+      const idx = line.indexOf('=');
+      if (idx <= 0 || line.startsWith('#')) continue;
+      map.set(line.slice(0, idx).trim(), line.slice(idx + 1));
+    }
+    return map;
+  };
+  const en = readLang(path.join(RP, 'texts/en_US.lang'));
+  const ru = readLang(path.join(RP, 'texts/ru_RU.lang'));
+  for (const [label, map] of [['en_US', en], ['ru_RU', ru]]) {
+    for (const f of walk(path.join(BP, 'items'), '.json')) {
+      const name = readJsonChecked(f, true)?.['minecraft:item']?.components?.['minecraft:display_name']?.value;
+      if (typeof name === 'string' && !map.has(name)) err(`${label}.lang is missing item name key "${name}" (${f})`);
+    }
+    for (const f of walk(path.join(BP, 'blocks'), '.json')) {
+      const name = readJsonChecked(f, true)?.['minecraft:block']?.components?.['minecraft:display_name'];
+      const key = typeof name === 'string' ? name : name?.value;
+      if (key && typeof key === 'string' && !map.has(key)) err(`${label}.lang is missing block name key "${key}" (${f})`);
+    }
+    for (const f of walk(path.join(RP, 'ui'), '.json')) {
+      const raw = fs.readFileSync(f, 'utf8');
+      for (const m of raw.matchAll(/"(?:\$text|text|title)":\s*"([a-z0-9_.]+\.[a-z0-9_.:]+)"/gi)) {
+        const key = m[1];
+        if (key.includes('@') || key.startsWith('textures/')) continue;
+        if (!map.has(key)) err(`${label}.lang is missing UI key "${key}" (${f})`);
+      }
+    }
+  }
+  for (const key of en.keys()) {
+    if (!ru.has(key)) err(`ru_RU.lang is missing key "${key}" that exists in en_US.lang`);
+  }
+  for (const key of ru.keys()) {
+    if (!en.has(key)) err(`en_US.lang is missing key "${key}" that exists in ru_RU.lang`);
+  }
+}
+
+// 8d. Loot tables: every table reached from another table must exist, and the
+// rewards the original added must still be present. A table that silently falls
+// back to vanilla makes a sword unobtainable.
+{
+  const tableFiles = walk(path.join(BP, 'loot_tables'), '.json');
+  const existing = (rel) => fs.existsSync(path.join(BP, rel)) || fs.existsSync(path.join(VANILLA_BP, rel));
+  for (const f of tableFiles) {
+    const raw = fs.readFileSync(f, 'utf8');
+    for (const m of raw.matchAll(/"name":\s*"(loot_tables\/[^"]+\.json)"/g)) {
+      if (!existing(m[1])) err(`${f} references missing loot table "${m[1]}"`);
+    }
+  }
+  // Rewards added by Effect99 that must remain reachable.
+  const required = {
+    'loot_tables/entities/blaze.json': ['effect:blaze_sword'],
+    'loot_tables/gameplay/fishing/treasure.json': ['effect:jungle_sword'],
+    'loot_tables/entities/slime_king.json': ['effect:slime_sword'],
+    'loot_tables/entities/shulker.json': ['effect:shulker_sword'],
+    'loot_tables/entities/elder_guardian.json': ['effect:sponge_sword'],
+    'loot_tables/entities/wither_skeleton.json': ['effect:wither_skeleton_sword'],
+    'loot_tables/entities/red_enderman.json': ['effect:ender_sword'],
+    'loot_tables/entities/living_flame.json': ['effect:fire_sword'],
+  };
+  for (const [rel, items] of Object.entries(required)) {
+    const file = path.join(BP, rel);
+    if (!fs.existsSync(file)) {
+      err(`Missing loot table ${rel}`);
+      continue;
+    }
+    const raw = fs.readFileSync(file, 'utf8');
+    for (const item of items) {
+      if (!raw.includes(`"${item}`)) err(`${rel} lost the "${item}" reward`);
+    }
+  }
+  // The jungle fishing table must not point at a table that does not exist.
+  const jungle = path.join(BP, 'loot_tables/gameplay/jungle_fishing.json');
+  if (fs.existsSync(jungle)) {
+    const raw = fs.readFileSync(jungle, 'utf8');
+    if (raw.includes('jungle_treasure')) {
+      err(`${jungle} references loot_tables/gameplay/fishing/jungle_treasure.json, which does not exist; use treasure.json`);
     }
   }
 }

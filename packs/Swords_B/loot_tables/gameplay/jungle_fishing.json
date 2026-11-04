@@ -11,7 +11,7 @@
         },
         {
           "type": "loot_table",
-          "name": "loot_tables/gameplay/fishing/jungle_treasure.json",
+          "name": "loot_tables/gameplay/fishing/treasure.json",
           "weight": 5,
           "quality": 2
         },

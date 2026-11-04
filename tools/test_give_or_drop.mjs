@@ -5,4 +5,8 @@ const drops=[];const player={location:{x:0,y:0,z:0},dimension:{spawnItem(x){drop
 const item={typeId:'effect:thing'};ctx.give(player,item);assert.equal(drops[0],item);
 player.getComponent=()=>({container:{addItem(){return undefined;}}});ctx.give(player,item);assert.equal(drops.length,1);
 const leftover={typeId:'effect:leftover'};player.getComponent=()=>({container:{addItem(){return leftover;}}});ctx.give(player,item);assert.equal(drops[1],leftover);
-console.log('Inventory reward: missing or full inventory drops item, success does not duplicate');
+// If a partial insertion succeeds but the first spawn fails, retry only the remainder.
+let attempts=0;const spawned=[];
+player.dimension.spawnItem=x=>{attempts++;if(attempts===1)throw Error('temporary failure');spawned.push(x);};
+ctx.give(player,item);assert.equal(attempts,2);assert.deepEqual(spawned,[leftover]);
+console.log('Inventory reward: missing, full and partial inventory; spawn retry does not duplicate inserted items');

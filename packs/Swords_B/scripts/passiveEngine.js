@@ -791,6 +791,13 @@ export function startPassiveEngine() {
                                 });
                                 if (tBelow && tBelow.typeId === 'minecraft:grass_block') {
                                     dim.spawnEntity('entity:grass', target.location);
+                                    // Original grass_sword_skills tags buried entities with `grass`
+                                    // and removes the tag beyond r=9; without it the same mob spawns
+                                    // another grass block every 0.5 s.
+                                    try {
+                                        target.addTag('grass');
+                                    }
+                                    catch { }
                                 }
                             }
                         }

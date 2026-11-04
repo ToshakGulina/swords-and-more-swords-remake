@@ -158,19 +158,15 @@ export function registerWorldEvents(): void {
 
     try {
       // Cactus Sword natural Thorns recoil when wielder is struck
-      if (hurtEntity instanceof Player && attacker && attacker.isValid && attacker.id !== hurtEntity.id) {
+      // Reflected thorns damage must not trigger another reflection: two cactus
+      // wielders (or another thorns source) could otherwise bounce damage forever.
+      if (damageSource.cause !== EntityDamageCause.thorns &&
+          hurtEntity instanceof Player && attacker && attacker.isValid && attacker.id !== hurtEntity.id) {
         if (getMainhandItem(hurtEntity)?.typeId === 'effect:cactus_sword') {
           attacker.applyDamage(2, { cause: EntityDamageCause.thorns, damagingEntity: hurtEntity });
         }
       }
 
-      // Angry Bee stinging a player -> 2% chance to drop Bee Stinger (effect:bee_sword)
-      if (hurtEntity instanceof Player && attacker?.typeId === 'minecraft:bee') {
-        if (Math.random() < 0.02) {
-          hurtEntity.dimension.spawnItem(new ItemStack('effect:bee_sword', 1), attacker.location);
-          hurtEntity.dimension.playSound('random.orb', hurtEntity.location, { volume: 1.0, pitch: 1.2 });
-        }
-      }
     } catch {}
   });
 
@@ -279,6 +275,26 @@ export function registerWorldEvents(): void {
             (killer instanceof Player && getMainhandItem(killer)?.typeId === 'effect:nether_star_sword');
           if (Math.random() < (usedNetherStar ? 0.25 : 0.05)) {
             dim.spawnItem(new ItemStack('effect:wither_sword', 1), loc);
+          }
+          break;
+        }
+
+        case 'minecraft:bee': {
+          // The original hooks vanilla's `countdown_to_perish_event` with a
+          // 2% (weight 2 vs 98) roll. That event runs when a bee perishes - after
+          // it stings or ages out - and is NOT a kill reward, so a bee killed by
+          // a player, a pet or a projectile must never yield the sword.
+          // `entity:bee_sword` is excluded in the original definition, which
+          // prevents a sword-summoned bee from producing endless new swords.
+          // `typeId` is narrowed to the switch literal here, so widen it first.
+          const beeTypeId: string = deadEntity.typeId;
+          if (
+            beeTypeId !== 'entity:bee_sword' &&
+            killer === undefined &&
+            proj === undefined &&
+            Math.random() < 0.02
+          ) {
+            dim.spawnItem(new ItemStack('effect:bee_sword', 1), loc);
           }
           break;
         }
@@ -401,8 +417,9 @@ export function registerWorldEvents(): void {
               activeRainSwordIds.add(itemEnt.id);
               const rainChecks = (fadingFireSwordTicks.get(itemEnt.id) ?? 0) + 1;
               fadingFireSwordTicks.set(itemEnt.id, rainChecks);
-              dim.playSound('random.fizz', loc, { volume: 0.7, pitch: 1.1 });
-              dim.spawnParticle('minecraft:cauldron_explosion_emitter', loc);
+              // A missing sound or particle must not prevent the transformation.
+              try { dim.playSound('random.fizz', loc, { volume: 0.7, pitch: 1.1 }); } catch {}
+              try { dim.spawnParticle('minecraft:cauldron_explosion_emitter', loc); } catch {}
               if (rainChecks >= 10) {
                 fadingFireSwordTicks.delete(itemEnt.id);
                 itemEnt.remove();

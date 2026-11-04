@@ -6,7 +6,7 @@
     "compile": "tsc -p tsconfig.json",
     "validate": "node tools/validate_addon.mjs",
     "test": "node tools/run_tests.mjs",
-    "build:data": "node tools/build_data.mjs && node tools/build_entities.mjs && node tools/build_ui_and_lang.mjs",
+    "build:data": "node tools/build_data.mjs && node tools/build_entities.mjs && node tools/build_ui_and_lang.mjs && node tools/restore_loot_tables.mjs",
     "package": "node tools/package_addon.mjs"
   },
   "devDependencies": {

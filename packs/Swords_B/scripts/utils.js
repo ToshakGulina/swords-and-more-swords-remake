@@ -59,20 +59,24 @@ export function consumeMainhandDurability(player, amount) {
     }
 }
 export function giveOrDropItem(player, itemStack) {
+    let pending = itemStack;
     try {
         const inv = player.getComponent(EntityComponentTypes.Inventory);
-        if (!inv?.container) {
-            player.dimension.spawnItem(itemStack, player.location);
-            return;
-        }
-        const leftover = inv.container.addItem(itemStack);
-        if (leftover) {
-            player.dimension.spawnItem(leftover, player.location);
-        }
+        if (inv?.container)
+            pending = inv.container.addItem(itemStack);
     }
     catch {
+        // Inventory unavailable: fall back to dropping the original stack.
+    }
+    if (!pending)
+        return;
+    try {
+        player.dimension.spawnItem(pending, player.location);
+    }
+    catch {
+        // Never retry with the original stack: part may already be in the inventory.
         try {
-            player.dimension.spawnItem(itemStack, player.location);
+            player.dimension.spawnItem(pending, player.location);
         }
         catch { }
     }
