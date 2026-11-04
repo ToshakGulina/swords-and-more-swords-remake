@@ -28,6 +28,7 @@ const PLAYER_COMPONENT_KEYS = new Set([
   'wolf_transformation',
   'ultra_instinct_sword',
   'ender_sword',
+  'nether_star_sword',
   'obsidian_sword',
   'blaze_sword',
   'fire_sword',
@@ -123,18 +124,22 @@ function clearTrackedLight(playerId: string): void {
 }
 
 function updateDynamicLight(player: Player, mainId: string, offId: string): void {
-  const isBrightFire = mainId === 'effect:fire_sword' || offId === 'effect:fire_sword';
+  const isModerateBlaze =
+    mainId === 'effect:blaze_sword' &&
+    offId !== 'effect:glowstone_sword' &&
+    offId !== 'effect:fire_sword';
   const isLight =
-    isBrightFire ||
     LIGHT_EMITTING_SWORDS.has(mainId) ||
-    offId === 'effect:glowstone_sword';
+    offId === 'effect:glowstone_sword' ||
+    offId === 'effect:fire_sword';
 
   if (!isLight) {
     clearTrackedLight(player.id);
     return;
   }
 
-  const targetType = isBrightFire ? 'effect99:lightblock2' : 'effect99:lightblock';
+  // Exact 2.8.8: Blaze Sword uses `lightblock2` (level 11); Glowstone/Fire/Lightning/Time/Wither/Spectral use `lightblock` (level 15)
+  const targetType = isModerateBlaze ? 'effect99:lightblock2' : 'effect99:lightblock';
   const headLoc: Vector3 = {
     x: Math.floor(player.location.x),
     y: Math.floor(player.location.y + 1),
@@ -506,6 +511,7 @@ export function startPassiveEngine(): void {
                 type: 'minecraft:small_fireball',
               });
               for (const fb of fireballs) {
+                if (fb.hasTag('effect_player_shot')) continue;
                 fb.clearVelocity();
                 fb.triggerEvent('minecraft:inertia_disable');
               }
@@ -561,6 +567,7 @@ export function startPassiveEngine(): void {
                 type: 'minecraft:arrow',
               });
               for (const arr of arrows) {
+                if (arr.hasTag('effect_player_shot')) continue;
                 arr.clearVelocity();
                 arr.triggerEvent('minecraft:inertia_disable');
               }
@@ -599,33 +606,28 @@ export function startPassiveEngine(): void {
           }
 
           case 'effect:jungle_sword': {
-            // 4 max hearts (player.json) + absorption effect + vines placed on nearby blocks!
+            // 4 max hearts (player.json) + absorption effect + vines placed on nearby blocks (exact 2.8.8 vine_direction_bits)!
             if (tick % 30 === 0) {
               player.addEffect('absorption', 120, { amplifier: 1, showParticles: false });
-              const offsets = [
-                { x: 1, z: 0 },
-                { x: -1, z: 0 },
-                { x: 0, z: 1 },
-                { x: 0, z: -1 },
+              const dirs: ReadonlyArray<{ x: number; z: number; bit: number }> = [
+                { x: 1, z: 0, bit: 8 },
+                { x: -1, z: 0, bit: 2 },
+                { x: 0, z: 1, bit: 1 },
+                { x: 0, z: -1, bit: 4 },
               ];
-              const off = offsets[Math.floor(Math.random() * offsets.length)];
-              const wall = dim.getBlock({
-                x: Math.floor(player.location.x) + off.x * 2,
-                y: Math.floor(player.location.y) + 1,
-                z: Math.floor(player.location.z) + off.z * 2,
-              });
-              const airInFront = dim.getBlock({
-                x: Math.floor(player.location.x) + off.x,
-                y: Math.floor(player.location.y) + 1,
-                z: Math.floor(player.location.z) + off.z,
-              });
+              const off = dirs[Math.floor(Math.random() * dirs.length)];
+              const px = Math.floor(player.location.x);
+              const py = Math.floor(player.location.y) + 1;
+              const pz = Math.floor(player.location.z);
+              const wall = dim.getBlock({ x: px + off.x, y: py, z: pz + off.z });
+              const centerAir = dim.getBlock({ x: px, y: py, z: pz });
               if (
                 wall &&
                 (JUNGLE_VINE_SURFACES.has(wall.typeId) || wall.typeId.includes('planks') || wall.typeId.includes('leaves')) &&
-                airInFront &&
-                airInFront.isAir
+                centerAir &&
+                centerAir.isAir
               ) {
-                airInFront.setType('minecraft:vine');
+                centerAir.setPermutation(BlockPermutation.resolve('minecraft:vine', { vine_direction_bits: off.bit }));
               }
             }
             break;
@@ -838,10 +840,11 @@ export function startPassiveEngine(): void {
               world.getMoonPhase() === MoonPhase.FullMoon &&
               timeOfDay >= 12000 &&
               timeOfDay < 13000 &&
-              tick % 40 === 0
+              tick % 60 === 0
             ) {
-              // Sunset dizziness before Full Moon night!
+              // Sunset dizziness before Full Moon night (exact 2.8.8 tellraw1.mcfunction)!
               player.addEffect('nausea', 100, { amplifier: 0, showParticles: false });
+              player.onScreenDisplay.setActionBar('§fFor some reason you feel nauseous...');
             } else if (fullMoon && tick % 20 === 0) {
               werewolfCursedPlayers.delete(player.id);
               player.addEffect('speed', 60, { amplifier: 2, showParticles: false });

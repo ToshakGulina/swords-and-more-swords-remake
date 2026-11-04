@@ -146,30 +146,11 @@
         }
       },
       "centella_death_by_player": {
-        "sequence": [
-          {
-            "queue_command": {
-              "command": [
-                "summon lightning_bolt ~~~"
-              ]
-            }
-          },
-          {
-            "randomize": [
-              {
-                "weight": 98
-              },
-              {
-                "weight": 2,
-                "queue_command": {
-                  "command": [
-                    "loot spawn ~ ~10 ~ loot \"swords/lightning_sword\""
-                  ]
-                }
-              }
-            ]
-          }
-        ]
+        "queue_command": {
+          "command": [
+            "summon lightning_bolt ~ ~ ~"
+          ]
+        }
       },
       "centella_death": {
         "queue_command": {

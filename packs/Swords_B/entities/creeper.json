@@ -355,7 +355,7 @@
             "weight": 5,
             "queue_command": {
               "command": [
-                "loot spawn ~ ~ ~ loot \"swords/creeper_sword\""
+                "scriptevent effect:creeper_sword_drop ~"
               ]
             }
           }

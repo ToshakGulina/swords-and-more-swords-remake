@@ -9,6 +9,7 @@ const ORIGIN_MAP = {
 export const LIGHT_EMITTING_SWORDS = new Set([
     'effect:glowstone_sword',
     'effect:fire_sword',
+    'effect:blaze_sword',
     'effect:time_sword',
     'effect:lightning_sword',
     'effect:wither_sword',

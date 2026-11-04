@@ -37,7 +37,7 @@ writeJson(path.join(BP, 'manifest.json'), {
     name: '§6§lSwords and More Swords §r§a(1.26+ Remake)',
     description: '§eПолное восстановление всех 38 мечей, боссов, руд и способностей мода Effect99 для Minecraft Bedrock 1.26.60+ (Android & Windows) без экспериментальных режимов.',
     uuid: UUIDS.bp_header,
-    version: [3, 0, 0],
+    version: [3, 0, 1],
     min_engine_version: [1, 26, 20],
   },
   modules: [
@@ -45,21 +45,21 @@ writeJson(path.join(BP, 'manifest.json'), {
       description: 'Swords and More Swords Behavior Data',
       type: 'data',
       uuid: UUIDS.bp_data,
-      version: [3, 0, 0],
+      version: [3, 0, 1],
     },
     {
       description: 'Swords and More Swords Script Engine',
       type: 'script',
       language: 'javascript',
       uuid: UUIDS.bp_script,
-      version: [3, 0, 0],
+      version: [3, 0, 1],
       entry: 'scripts/main.js',
     },
   ],
   dependencies: [
     {
       uuid: UUIDS.rp_header,
-      version: [3, 0, 0],
+      version: [3, 0, 1],
     },
     {
       module_name: '@minecraft/server',
@@ -77,7 +77,7 @@ writeJson(path.join(RP, 'manifest.json'), {
     name: '§6§lSwords and More Swords §r§bResources (1.26+)',
     description: '§eРесурс-пак мода Swords and More Swords (текстуры, 3D-модели, анимации, звуки и встроенный справочник на русском и английском языках) для Minecraft Bedrock 1.26.60+.',
     uuid: UUIDS.rp_header,
-    version: [3, 0, 0],
+    version: [3, 0, 1],
     min_engine_version: [1, 26, 20],
   },
   modules: [
@@ -85,13 +85,13 @@ writeJson(path.join(RP, 'manifest.json'), {
       description: 'Swords and More Swords Resource Assets',
       type: 'resources',
       uuid: UUIDS.rp_res,
-      version: [3, 0, 0],
+      version: [3, 0, 1],
     },
   ],
   dependencies: [
     {
       uuid: UUIDS.bp_header,
-      version: [3, 0, 0],
+      version: [3, 0, 1],
     },
   ],
   metadata: {
@@ -886,7 +886,41 @@ for (const [rel, data] of Object.entries(customLootTables)) {
   writeJson(path.join(BP, 'loot_tables', rel), data);
 }
 
-// 7.2 Rebase ONLY the 17 modified vanilla chest/fishing/entity loot tables onto Mojang v1.26.60.5!
+// 7.1b Grass Witch loot table = vanilla Witch drops + 20% Grass Sword drop (exact 2.8.8!)
+{
+  const grassWitchLoot = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/entities/witch.json'), 'utf8'));
+  grassWitchLoot.pools.push({
+    conditions: [
+      { condition: 'killed_by_player' },
+      { condition: 'random_chance_with_looting', chance: 0.2, looting_multiplier: 0.05 },
+    ],
+    rolls: 1,
+    entries: [{ type: 'item', name: 'effect:grass_sword', weight: 1 }],
+  });
+  writeJson(path.join(BP, 'loot_tables/entities/grass_witch.json'), grassWitchLoot);
+}
+
+// Remove stale `gameplay/fishing/treasure.json` override so regular Ocean/River fishing stays 100% vanilla,
+// while Jungle biome fishing (`gameplay/jungle_fishing.json` -> `jungle_treasure.json`) drops `effect:jungle_sword`!
+const staleTreasurePath = path.join(BP, 'loot_tables/gameplay/fishing/treasure.json');
+if (fs.existsSync(staleTreasurePath)) {
+  fs.unlinkSync(staleTreasurePath);
+}
+{
+  const jungleTreasure = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/gameplay/fishing/treasure.json'), 'utf8'));
+  jungleTreasure.pools[0].entries.push({ type: 'item', name: 'effect:jungle_sword', weight: 2 });
+  writeJson(path.join(BP, 'loot_tables/gameplay/fishing/jungle_treasure.json'), jungleTreasure);
+
+  const jungleFishing = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/gameplay/jungle_fishing.json'), 'utf8'));
+  for (const entry of jungleFishing.pools[0].entries) {
+    if (entry.name === 'loot_tables/gameplay/fishing/treasure.json') {
+      entry.name = 'loot_tables/gameplay/fishing/jungle_treasure.json';
+    }
+  }
+  writeJson(path.join(BP, 'loot_tables/gameplay/jungle_fishing.json'), jungleFishing);
+}
+
+// 7.2 Rebase ONLY the modified vanilla chest loot tables onto Mojang v1.26.60!
 // This preserves 100% of 1.20–1.26 Armor Trims, Pottery Sherds, Bundles & Music Discs!
 const chestInjections = [
   ['chests/abandoned_mineshaft.json', 1, [{ type: 'item', name: 'effect:spider_sword', weight: 3 }]],
@@ -909,7 +943,6 @@ const chestInjections = [
   ['chests/underwater_ruin_big.json', 0, [{ type: 'item', name: 'effect:magma_sword', weight: 2 }]],
   ['chests/village/village_snowy_house.json', 0, [{ type: 'item', name: 'effect:ice_sword', weight: 2 }]],
   ['chests/woodland_mansion.json', 0, [{ type: 'item', name: 'effect:emerald_sword', weight: 3 }]],
-  ['gameplay/fishing/treasure.json', 0, [{ type: 'item', name: 'effect:jungle_sword', weight: 1 }]],
 ];
 
 for (const [rel, poolIdx, entries] of chestInjections) {
@@ -919,16 +952,13 @@ for (const [rel, poolIdx, entries] of chestInjections) {
   writeJson(path.join(BP, 'loot_tables', rel), base);
 }
 
-// Rebase entity loot tables (`blaze`, `elder_guardian`, `shulker`, `wither_skeleton`) onto v1.26.60.5
+// Rebase entity loot tables (`elder_guardian`, `shulker`, `wither_skeleton`) onto v1.26.60
+// Note: Blaze killed by Snow Golem (0.5%) is handled cleanly in `worldEvents.ts` so snowball kills are 100% reliable without double-rolling!
+const staleBlazeLoot = path.join(BP, 'loot_tables/entities/blaze.json');
+if (fs.existsSync(staleBlazeLoot)) {
+  fs.unlinkSync(staleBlazeLoot);
+}
 const entityPoolAdditions = [
-  ['entities/blaze.json', {
-    conditions: [
-      { condition: 'killed_by_entity', entity_type: 'minecraft:snow_golem' },
-      { condition: 'random_chance_with_looting', chance: 0.025, looting_multiplier: 0.02 },
-    ],
-    rolls: 1,
-    entries: [{ type: 'item', name: 'effect:blaze_sword', weight: 1 }],
-  }],
   ['entities/elder_guardian.json', {
     conditions: [
       { condition: 'killed_by_player' },
@@ -1000,6 +1030,7 @@ writeJson(path.join(BP, 'spawn_rules/alpha_wolf.json'), {
         'minecraft:spawns_on_surface': {},
         'minecraft:spawns_on_block_filter': ['minecraft:grass_block', 'minecraft:podzol', 'minecraft:snow_layer'],
         'minecraft:brightness_filter': { min: 0, max: 7, adjust_for_weather: true },
+        'minecraft:spawn_event': { event: 'effect:natural_spawn' },
         'minecraft:difficulty_filter': { min: 'easy', max: 'hard' },
         'minecraft:weight': { default: 10 },
         'minecraft:herd': { min_size: 1, max_size: 1 },

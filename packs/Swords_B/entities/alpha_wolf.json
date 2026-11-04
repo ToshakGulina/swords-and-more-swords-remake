@@ -2,19 +2,11 @@
   "format_version": "1.13.0",
   "minecraft:entity": {
     "description": {
-      "animations": {
-        "despawn_wolf": "controller.animation.despawn_wolf"
-      },
       "identifier": "entity:alpha_wolf",
       "is_experimental": false,
       "is_spawnable": true,
       "is_summonable": true,
-      "runtime_identifier": "minecraft:wolf",
-      "scripts": {
-        "animate": [
-          "despawn_wolf"
-        ]
-      }
+      "runtime_identifier": "minecraft:wolf"
     },
     "component_groups": {
       "despawn": {
@@ -29,6 +21,29 @@
       },
       "effect:instant_despawn": {
         "minecraft:instant_despawn": {}
+      },
+      "effect:natural_wolf": {
+        "minecraft:is_sheared": {},
+        "minecraft:environment_sensor": {
+          "triggers": [
+            {
+              "filters": {
+                "any_of": [
+                  {
+                    "test": "moon_phase",
+                    "operator": "!=",
+                    "value": 0
+                  },
+                  {
+                    "test": "is_daytime",
+                    "value": true
+                  }
+                ]
+              },
+              "event": "despawn"
+            }
+          ]
+        }
       }
     },
     "components": {
@@ -344,35 +359,48 @@
       "minecraft:entity_spawned": {
         "queue_command": {
           "command": [
-            "playsound wolf_sword.distant_howl @a[rm=25,r=100]"
+            "playsound wolf_sword.distant_howl @a[r=64]"
           ]
         }
       },
-      "minecraft:wolf_sword": {
-        "sequence": [
-          {
-            "randomize": [
-              {
-                "weight": 90
-              },
-              {
-                "weight": 10,
-                "queue_command": {
-                  "command": [
-                    "loot spawn ~ ~ ~ loot \"swords/wolf_sword\""
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
+      "minecraft:wolf_sword": {},
       "effect:instant_despawn": {
         "add": {
           "component_groups": [
             "effect:instant_despawn"
           ]
         }
+      },
+      "effect:natural_spawn": {
+        "sequence": [
+          {
+            "add": {
+              "component_groups": [
+                "effect:natural_wolf"
+              ]
+            }
+          },
+          {
+            "filters": {
+              "all_of": [
+                {
+                  "test": "moon_phase",
+                  "operator": "==",
+                  "value": 0
+                },
+                {
+                  "test": "is_daytime",
+                  "value": false
+                }
+              ]
+            },
+            "queue_command": {
+              "command": [
+                "playsound wolf_sword.distant_howl @a[rm=16,r=100]"
+              ]
+            }
+          }
+        ]
       }
     }
   }

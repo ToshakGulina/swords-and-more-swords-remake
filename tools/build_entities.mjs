@@ -256,6 +256,7 @@ const SWORD_PLAYER_GROUPS = {
 
   'effect:wolf_transformation': {
     'minecraft:scale': { value: 1.05 },
+    'minecraft:health': { value: 40, max: 40 },
     'minecraft:type_family': { family: ['monster', 'wolf_sword'] },
     'minecraft:attack': { damage: 16 },
     'minecraft:movement': { value: 0.16 },
@@ -323,6 +324,27 @@ const SWORD_PLAYER_GROUPS = {
           cause: 'entity_attack',
           deals_damage: true,
           on_damage: { event: 'effect:ender_melee_dodge' },
+        },
+        {
+          on_damage: {
+            filters: { test: 'in_water_or_rain', subject: 'self', value: true },
+            event: 'effect:ender_dodge',
+          },
+          deals_damage: true,
+        },
+      ],
+    },
+  },
+
+  'effect:nether_star_sword': {
+    'minecraft:type_family': { family: ['player', 'nether_star_sword'] },
+    'minecraft:damage_sensor': {
+      triggers: [
+        {
+          on_damage: {
+            filters: { test: 'is_family', subject: 'other', value: 'nether_star_projectile' },
+          },
+          deals_damage: false,
         },
       ],
     },
@@ -550,17 +572,16 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
   };
   ent.component_groups['effect:grass_witch'] = {
     'minecraft:variant': { value: 1 },
+    'minecraft:scale': { value: 1.1 },
     'minecraft:type_family': { family: ['witch', 'grass_witch', 'monster', 'mob'] },
     'minecraft:health': { value: 32, max: 32 },
-    'minecraft:behavior.ranged_attack': {
-      priority: 2,
-      speed_multiplier: 1.0,
-      attack_interval_min: 3.0,
-      attack_interval_max: 3.5,
-      attack_radius: 12.0,
-    },
-    'minecraft:shooter': {
-      def: 'entity:nether_star_projectile',
+    'minecraft:follow_range': { value: 80, max: 80 },
+    'minecraft:loot': { table: 'loot_tables/entities/grass_witch.json' },
+    'minecraft:timer': {
+      time: [1.5, 2.5],
+      looping: true,
+      randomInterval: true,
+      time_down_event: { event: 'effect:grass_witch_skill', target: 'self' },
     },
   };
   ent.events['minecraft:entity_spawned'] = {
@@ -571,6 +592,17 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
   };
   ent.events['grass_witch'] = {
     add: { component_groups: ['effect:grass_witch'] },
+  };
+  ent.events['minecraft:grass_witch'] = {
+    add: { component_groups: ['effect:grass_witch'] },
+  };
+  ent.events['effect:grass_witch_skill'] = {
+    queue_command: {
+      command: [
+        'execute at @e[family=!grass_witch,type=!item,type=!entity:grass,type=!xp_orb,type=!arrow,r=8,tag=!grass,family=!shulker_sword] if block ~ ~-0.1 ~ grass_block if block ~ ~ ~ air run summon entity:grass ~ ~ ~',
+        'execute at @e[family=!grass_witch,type=!item,type=!entity:grass,type=!xp_orb,type=!arrow,r=8,tag=!grass,family=!shulker_sword] if block ~ ~-0.1 ~ grass_block if block ~ ~ ~ short_grass run summon entity:grass ~ ~ ~',
+      ],
+    },
   };
   writeJson(path.join(BP, 'entities/witch.json'), data);
 }
@@ -639,6 +671,7 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
 }
 
 // C.5 `creeper.json` — Charged Creeper ignited with Flint & Steel (`forced_charged_exploding`) drops `effect:creeper_sword` (5%)
+// Spawns AFTER the t=1.5s Power-6 explosion via `scriptevent effect:creeper_sword_drop` so the blast never destroys the dropped sword!
 {
   const data = readVanillaBP('creeper.json');
   const ent = data['minecraft:entity'];
@@ -655,7 +688,7 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
       {
         weight: 5,
         queue_command: {
-          command: ['loot spawn ~ ~ ~ loot "swords/creeper_sword"'],
+          command: ['scriptevent effect:creeper_sword_drop ~'],
         },
       },
     ],
@@ -877,14 +910,91 @@ for (const f of customEntityFiles.sort()) {
     };
   }
   if (f === 'alpha_wolf.json') {
-    // Ensure Alpha Wolf is spawnable via spawn egg in Creative too!
+    // Ensure Alpha Wolf is spawnable via Spawn Egg anytime (day or night), while natural Taiga spawns only persist & howl on Full Moon nights!
+    ent.description.is_spawnable = true;
+    delete ent.description.scripts;
+    delete ent.description.animations;
+    ent.component_groups['effect:natural_wolf'] = {
+      'minecraft:is_sheared': {},
+      'minecraft:environment_sensor': {
+        triggers: [
+          {
+            filters: {
+              any_of: [
+                { test: 'moon_phase', operator: '!=', value: 0 },
+                { test: 'is_daytime', value: true },
+              ],
+            },
+            event: 'despawn',
+          },
+        ],
+      },
+    };
+    ent.events['effect:natural_spawn'] = {
+      sequence: [
+        { add: { component_groups: ['effect:natural_wolf'] } },
+        {
+          filters: {
+            all_of: [
+              { test: 'moon_phase', operator: '==', value: 0 },
+              { test: 'is_daytime', value: false },
+            ],
+          },
+          queue_command: {
+            command: ['playsound wolf_sword.distant_howl @a[rm=16,r=100]'],
+          },
+        },
+      ],
+    };
+    ent.events['minecraft:entity_spawned'] = {
+      queue_command: {
+        command: ['playsound wolf_sword.distant_howl @a[r=64]'],
+      },
+    };
+    // Handle the 10% Wolf Sword drop in `worldEvents.ts` so both Silver Sword melee AND +12 silver magic bonus hits roll once cleanly!
+    ent.events['minecraft:wolf_sword'] = {};
+  }
+  if (f === 'ghost.json') {
     ent.description.is_spawnable = true;
   }
-  if (f === 'ghost.json' || f === 'slime_king.json') {
+  if (f === 'slime_king.json') {
     ent.description.is_spawnable = true;
+    // Restore missing loot table link from 2.8.8 so King Slime genuinely drops `effect:slime_sword` (4% + Looting)!
+    ent.components['minecraft:loot'] = { table: 'loot_tables/entities/slime_king.json' };
+    ent.events['slime_effects'] = {
+      queue_command: {
+        command: [
+          'effect @s jump_boost 1 0 true',
+          'damage @p[r=1.8] 4 magic',
+          'damage @e[r=1.5,type=!item,type=!xp_orb,family=!slime_king] 2 magic',
+        ],
+      },
+    };
   }
-  if (f === 'centella.json' && ent.components?.['minecraft:loot']) {
-    ent.components['minecraft:loot'].table = 'loot_tables/empty.json';
+  if (f === 'grows_crop.json') {
+    // Fix entity-leak bug: `ageable` requires `is_baby`, plus add guaranteed 0.9s despawn timer!
+    ent.components['minecraft:is_baby'] = {};
+    ent.components['minecraft:timer'] = {
+      time: [0.8, 1.0],
+      looping: false,
+      time_down_event: { event: 'despawn', target: 'self' },
+    };
+  }
+  if (f === 'nether_star_projectile.json') {
+    ent.events['effect:nether_star_tracer'] = {
+      add: { component_groups: ['nether_star_sword'] },
+    };
+  }
+  if (f === 'centella.json') {
+    if (ent.components?.['minecraft:loot']) {
+      ent.components['minecraft:loot'].table = 'loot_tables/empty.json';
+    }
+    // Let `worldEvents.ts` handle the 2% `effect:lightning_sword` drop for both melee and Bow/Trident kills (post-lightning, blast-safe!)
+    ent.events['centella_death_by_player'] = {
+      queue_command: {
+        command: ['summon lightning_bolt ~ ~ ~'],
+      },
+    };
   }
 
   walkTransformCommands(ent);

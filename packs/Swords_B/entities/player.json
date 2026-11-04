@@ -504,6 +504,10 @@
         "minecraft:scale": {
           "value": 1.05
         },
+        "minecraft:health": {
+          "value": 40,
+          "max": 40
+        },
         "minecraft:type_family": {
           "family": [
             "monster",
@@ -649,6 +653,39 @@
               "on_damage": {
                 "event": "effect:ender_melee_dodge"
               }
+            },
+            {
+              "on_damage": {
+                "filters": {
+                  "test": "in_water_or_rain",
+                  "subject": "self",
+                  "value": true
+                },
+                "event": "effect:ender_dodge"
+              },
+              "deals_damage": true
+            }
+          ]
+        }
+      },
+      "effect:nether_star_sword": {
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "nether_star_sword"
+          ]
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "on_damage": {
+                "filters": {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "nether_star_projectile"
+                }
+              },
+              "deals_damage": false
             }
           ]
         }
@@ -962,6 +999,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
@@ -989,6 +1027,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
@@ -1017,6 +1056,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
@@ -1045,6 +1085,7 @@
             "effect:ghost_sword",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
@@ -1073,6 +1114,7 @@
             "effect:ghost_sword",
             "effect:wolf_transformation",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
@@ -1101,6 +1143,7 @@
             "effect:ghost_sword",
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
@@ -1122,6 +1165,35 @@
           ]
         }
       },
+      "effect:equip_nether_star_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:slime_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:nether_star_sword"
+          ]
+        }
+      },
       "effect:equip_obsidian_sword": {
         "remove": {
           "component_groups": [
@@ -1130,6 +1202,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
             "effect:magma_sword",
@@ -1158,6 +1231,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:fire_sword",
             "effect:magma_sword",
@@ -1186,6 +1260,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:magma_sword",
@@ -1214,6 +1289,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
@@ -1242,6 +1318,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
@@ -1270,6 +1347,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
@@ -1298,6 +1376,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
@@ -1326,6 +1405,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
@@ -1354,6 +1434,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
@@ -1382,6 +1463,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
@@ -1410,6 +1492,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
@@ -1438,6 +1521,7 @@
             "effect:wolf_transformation",
             "effect:ultra_instinct_sword",
             "effect:ender_sword",
+            "effect:nether_star_sword",
             "effect:obsidian_sword",
             "effect:blaze_sword",
             "effect:fire_sword",
