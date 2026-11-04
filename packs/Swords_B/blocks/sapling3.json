@@ -24,10 +24,10 @@
         ]
       },
       "minecraft:destructible_by_mining": {
-        "seconds_to_destroy": 0
+        "seconds_to_destroy": 0.1
       },
       "minecraft:destructible_by_explosion": {
-        "explosion_resistance": 0
+        "explosion_resistance": 1
       },
       "minecraft:light_dampening": 0,
       "minecraft:light_emission": 0,
@@ -43,7 +43,7 @@
       },
       "minecraft:tick": {
         "interval_range": [
-          2,
+          4,
           4
         ],
         "looping": false

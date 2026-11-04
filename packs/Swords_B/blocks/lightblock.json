@@ -30,8 +30,8 @@
       },
       "minecraft:tick": {
         "interval_range": [
-          8,
-          12
+          4,
+          4
         ],
         "looping": true
       },

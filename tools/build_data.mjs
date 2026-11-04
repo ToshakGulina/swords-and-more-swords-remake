@@ -370,8 +370,10 @@ writeJson(path.join(BP, 'blocks/fake_ice.json'), {
     },
     components: {
       'minecraft:display_name': 'tile.effect99:fake_ice.name',
-      'minecraft:destructible_by_mining': { seconds_to_destroy: 0.4 },
-      'minecraft:destructible_by_explosion': { explosion_resistance: 0.5 },
+      // Exact 2.8.8: `destroy_time: 9999` (unbreakable in survival — it is meant to
+      // crack and melt on its own) and `explosion_resistance: 10`.
+      'minecraft:destructible_by_mining': { seconds_to_destroy: 9999.0 },
+      'minecraft:destructible_by_explosion': { explosion_resistance: 10.0 },
       'minecraft:friction': 0.02,
       'minecraft:light_dampening': 2,
       'minecraft:light_emission': 0,
@@ -386,8 +388,11 @@ writeJson(path.join(BP, 'blocks/fake_ice.json'), {
           face_dimming: true,
         },
       },
+      // Exact 2.8.8: the old `minecraft:ticking` range is in SECONDS, and each of
+      // the four models holds for `range: [2, 2]` (2 s) before advancing, so the
+      // cage melts after 4 × 2 s ≈ 8 s — the value the original help text quotes.
       'minecraft:tick': {
-        interval_range: [35, 55],
+        interval_range: [40, 40],
         looping: true,
       },
       'effect99:fake_ice': {},
@@ -441,7 +446,9 @@ for (const [id, lightVal, tex] of [
           },
         },
         'minecraft:tick': {
-          interval_range: [8, 12],
+          // 2.8.8 `ticking range [0.2, 0.2]` = 4 game ticks: the light block is a
+          // 0.2 s placeholder that re-arms while a glowing sword is nearby.
+          interval_range: [4, 4],
           looping: true,
         },
         'effect99:lightblock': {},
@@ -581,8 +588,8 @@ writeJson(path.join(BP, 'blocks/sapling3.json'), {
         origin: [-6, 0, -6],
         size: [12, 12, 12],
       },
-      'minecraft:destructible_by_mining': { seconds_to_destroy: 0.0 },
-      'minecraft:destructible_by_explosion': { explosion_resistance: 0.0 },
+      'minecraft:destructible_by_mining': { seconds_to_destroy: 0.1 },
+      'minecraft:destructible_by_explosion': { explosion_resistance: 1.0 },
       'minecraft:light_dampening': 0,
       'minecraft:light_emission': 0,
       'minecraft:loot': 'loot_tables/empty.json',
@@ -595,8 +602,10 @@ writeJson(path.join(BP, 'blocks/sapling3.json'), {
           face_dimming: false,
         },
       },
+      // 2.8.8 has no tick here at all: the sapling plants itself in `on_placed`,
+      // so a single short fallback tick is enough to cover a blocked target.
       'minecraft:tick': {
-        interval_range: [2, 4],
+        interval_range: [4, 4],
         looping: false,
       },
       'effect99:sapling3': {},
@@ -616,7 +625,7 @@ writeJson(path.join(BP, 'blocks/spectral_block.json'), {
       },
     },
     components: {
-      'minecraft:destructible_by_mining': false,
+      'minecraft:destructible_by_mining': { seconds_to_destroy: 9999.0 },
       'minecraft:destructible_by_explosion': { explosion_resistance: 999.0 },
       'minecraft:light_dampening': 0,
       'minecraft:light_emission': 0,

@@ -23,10 +23,10 @@
     "components": {
       "minecraft:display_name": "tile.effect99:fake_ice.name",
       "minecraft:destructible_by_mining": {
-        "seconds_to_destroy": 0.4
+        "seconds_to_destroy": 9999
       },
       "minecraft:destructible_by_explosion": {
-        "explosion_resistance": 0.5
+        "explosion_resistance": 10
       },
       "minecraft:friction": 0.02,
       "minecraft:light_dampening": 2,
@@ -44,8 +44,8 @@
       },
       "minecraft:tick": {
         "interval_range": [
-          35,
-          55
+          40,
+          40
         ],
         "looping": true
       },
