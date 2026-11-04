@@ -481,7 +481,7 @@ export function startPassiveEngine(): void {
           try {
             cleanupHelperEntity(playerSpiderMount, player.id, 'effect:despawn_mount');
             const spider = dim.spawnEntity('minecraft:spider', player.location, {
-              spawnEvent: 'spider_player_jockey',
+              spawnEvent: 'effect:spider_sword',
             });
             const rideable = spider.getComponent(EntityComponentTypes.Rideable) as EntityRideableComponent | undefined;
             rideable?.addRider(player);
@@ -1023,7 +1023,7 @@ export function startPassiveEngine(): void {
               const riding = player.getComponent(EntityComponentTypes.Riding) as EntityRidingComponent | undefined;
               if (!riding?.entityRidingOn) {
                 const spider = dim.spawnEntity('minecraft:spider', player.location, {
-                  spawnEvent: 'spider_player_jockey',
+                  spawnEvent: 'effect:spider_sword',
                 });
                 const rideable = spider.getComponent(EntityComponentTypes.Rideable) as
                   | EntityRideableComponent

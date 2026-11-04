@@ -718,33 +718,38 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
 {
   const data = readVanillaBP('spider.json');
   const ent = data['minecraft:entity'];
+  // Exact 2.8.8 `minecraft:spider_player_jockey`: no loot, 20 HP, jump 0.4–0.7,
+  // ridden through `behavior.controlled_by_player`, seat at y=0.54 and an
+  // `environment_sensor` that fires `not_climb` so the mount does not climb walls.
   ent.component_groups['effect:spider_player_jockey'] = {
-    'minecraft:type_family': { family: ['spider', 'spider_mount', 'effect99_entities', 'arthropod'] },
-    'minecraft:is_tamed': {},
+    'minecraft:type_family': { family: ['spider', 'monster', 'mob', 'arthropod', 'spider_sword'] },
     'minecraft:input_ground_controlled': {},
+    'minecraft:behavior.controlled_by_player': { priority: 0 },
     'minecraft:can_power_jump': {},
-    'minecraft:horse.jump_strength': { value: { range_min: 0.7, range_max: 1.1 } },
-    'minecraft:movement': { value: 0.34 },
+    'minecraft:horse.jump_strength': { value: { range_min: 0.4, range_max: 0.7 } },
+    'minecraft:loot': { table: 'loot_tables/entities/empty.json' },
+    'minecraft:health': { value: 20, max: 20 },
     'minecraft:rideable': {
       seat_count: 1,
-      crouching_skip_interact: true,
       family_types: ['player'],
-      seats: [{ position: [0.0, 0.55, -0.1] }],
+      seats: [{ position: [0.0, 0.54, 0.0] }],
     },
-    'minecraft:damage_sensor': {
-      triggers: [
-        { cause: 'fall', deals_damage: 'no' },
-        {
-          on_damage: { filters: { test: 'is_family', subject: 'other', value: 'player' } },
-          deals_damage: 'no',
-        },
-      ],
+    'minecraft:environment_sensor': {
+      triggers: [{ filters: {}, event: 'not_climb' }],
     },
   };
+  // The 2.8.8 entity attacks for 3, not for the vanilla 2.
+  ent.components['minecraft:attack'] = { damage: 3 };
   ent.component_groups['effect:instant_despawn'] = {
     'minecraft:instant_despawn': {},
   };
-  ent.events['spider_player_jockey'] = {
+  // Same shape as 2.8.8: strip the hostile/neutral/default groups, then become a mount.
+  // The 1.26.60 spider has no `minecraft:default_spider` group, so only the two
+  // groups that actually exist there are removed.
+  ent.events['effect:spider_sword'] = {
+    remove: {
+      component_groups: ['minecraft:spider_hostile', 'minecraft:spider_neutral'],
+    },
     add: { component_groups: ['effect:spider_player_jockey'] },
   };
   ent.events['effect:despawn_mount'] = {

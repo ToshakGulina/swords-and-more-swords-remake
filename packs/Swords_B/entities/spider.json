@@ -9,7 +9,7 @@
     },
     "components": {
       "minecraft:attack": {
-        "damage": 2
+        "damage": 3
       },
       "minecraft:behavior.avoid_mob_type": {
         "entity_types": [
@@ -339,26 +339,32 @@
         "minecraft:type_family": {
           "family": [
             "spider",
-            "spider_mount",
-            "effect99_entities",
-            "arthropod"
+            "monster",
+            "mob",
+            "arthropod",
+            "spider_sword"
           ]
         },
-        "minecraft:is_tamed": {},
         "minecraft:input_ground_controlled": {},
+        "minecraft:behavior.controlled_by_player": {
+          "priority": 0
+        },
         "minecraft:can_power_jump": {},
         "minecraft:horse.jump_strength": {
           "value": {
-            "range_min": 0.7,
-            "range_max": 1.1
+            "range_min": 0.4,
+            "range_max": 0.7
           }
         },
-        "minecraft:movement": {
-          "value": 0.34
+        "minecraft:loot": {
+          "table": "loot_tables/entities/empty.json"
+        },
+        "minecraft:health": {
+          "value": 20,
+          "max": 20
         },
         "minecraft:rideable": {
           "seat_count": 1,
-          "crouching_skip_interact": true,
           "family_types": [
             "player"
           ],
@@ -366,27 +372,17 @@
             {
               "position": [
                 0,
-                0.55,
-                -0.1
+                0.54,
+                0
               ]
             }
           ]
         },
-        "minecraft:damage_sensor": {
+        "minecraft:environment_sensor": {
           "triggers": [
             {
-              "cause": "fall",
-              "deals_damage": "no"
-            },
-            {
-              "on_damage": {
-                "filters": {
-                  "test": "is_family",
-                  "subject": "other",
-                  "value": "player"
-                }
-              },
-              "deals_damage": "no"
+              "filters": {},
+              "event": "not_climb"
             }
           ]
         }
@@ -578,7 +574,13 @@
           }
         ]
       },
-      "spider_player_jockey": {
+      "effect:spider_sword": {
+        "remove": {
+          "component_groups": [
+            "minecraft:spider_hostile",
+            "minecraft:spider_neutral"
+          ]
+        },
         "add": {
           "component_groups": [
             "effect:spider_player_jockey"

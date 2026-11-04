@@ -38,6 +38,17 @@ const files = [
   'loot_tables/gameplay/fishing/junk.json',
   'loot_tables/gameplay/fishing/treasure.json',
   'loot_tables/gameplay/fishing/jungle_junk.json',
+  // Entity tables that the remake's own entity JSON references. Without the file
+  // the engine silently rolls nothing: the Spider Sword mount, witches, endermen
+  // and parrots would stop dropping their vanilla loot entirely.
+  'loot_tables/entities/spider.json',
+  'loot_tables/entities/witch.json',
+  'loot_tables/entities/enderman.json',
+  'loot_tables/entities/parrot.json',
+  // Vanilla village houses reference the bundle table, and the spider mount uses
+  // `entities/empty.json` (that file does not exist in the samples, so it is
+  // written below).
+  'loot_tables/chests/village/village_bundle.json',
 ];
 
 // 1.xx loot tables still use the legacy `set_data` function; 1.26 silently
@@ -104,6 +115,16 @@ for (const name of ['fishing.json', 'jungle_fishing.json']) {
     }
   }
   if (changed) fs.writeFileSync(file, JSON.stringify(table, null, 2) + '\n', 'utf8');
+}
+
+// `loot_tables/entities/empty.json` is not shipped in the 1.26.60 samples but is
+// referenced by the Spider Sword mount (no loot, exactly like 2.8.8).
+{
+  const emptyEntities = path.join(BP, 'loot_tables/entities/empty.json');
+  if (!fs.existsSync(emptyEntities)) {
+    fs.writeFileSync(emptyEntities, JSON.stringify({ pools: [] }, null, 2) + '\n', 'utf8');
+    report.push('written: loot_tables/entities/empty.json');
+  }
 }
 
 console.log(report.join('\n'));

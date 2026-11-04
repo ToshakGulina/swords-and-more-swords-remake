@@ -48,4 +48,25 @@ for (const ore of ['quartz_diamond_ore', 'silver_ore']) {
   assert.equal(comp(ore, 'minecraft:loot'), 'loot_tables/empty.json');
 }
 
+// Every table referenced from a shipped JSON must exist, otherwise the engine
+// silently rolls nothing (this is how the Spider Sword mount lost its no-loot
+// table and the village bundle pool disappeared).
+{
+  const refs = new Set();
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = `${dir}/${e.name}`;
+      if (e.isDirectory()) walk(p);
+      else if (e.name.endsWith('.json')) {
+        for (const m of fs.readFileSync(p, 'utf8').matchAll(/"loot_tables\/([^"]+)"/g)) refs.add(m[1]);
+      }
+    }
+  };
+  walk('packs/Swords_B');
+  const missing = [...refs].filter((rel) =>
+    !fs.existsSync(`packs/Swords_B/loot_tables/${rel}`) &&
+    !fs.existsSync(`packs/Swords_B/loot_tables/${rel}.json`));
+  assert.deepEqual(missing, [], 'every referenced loot table must exist');
+}
+
 console.log('Blocks: fake ice lifetime, light placeholders, spectral walls and sapling parity OK');
