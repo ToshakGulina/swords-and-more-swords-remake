@@ -513,12 +513,13 @@ export function startPassiveEngine() {
                         break;
                     }
                     case 'effect:cactus_sword': {
-                        // Every 0.5s (10 ticks): pricks wielder for 1 contact dmg & damages very close entities (r = 1.5)!
+                        // Exact 2.8.8 `cactus_sword_skills` (timer 0.5 s): `damage @e[r=1.4] 1
+                        // contact` and `damage @s 1 contact` — the radius is 1.4, not 1.5.
                         if (tick % 10 === 0) {
                             if (player.getGameMode() !== GameMode.Creative) {
                                 player.applyDamage(1, { cause: EntityDamageCause.contact });
                             }
-                            for (const e of dim.getEntities({ location: player.location, maxDistance: 1.5 })) {
+                            for (const e of dim.getEntities({ location: player.location, maxDistance: 1.4 })) {
                                 if (!isProtectedEntity(e, player)) {
                                     e.applyDamage(1, { cause: EntityDamageCause.contact, damagingEntity: player });
                                 }
@@ -771,6 +772,7 @@ export function startPassiveEngine() {
                                 catch { }
                             }
                         }
+                        // `bone_sword_skills` timer is 1 s, i.e. one `entity:grows_crop` per 20 ticks.
                         if (tick % 20 === 0) {
                             const grower = dim.spawnEntity('entity:grows_crop', { x: player.location.x, y: player.location.y + 0.1, z: player.location.z }, { spawnEvent: 'grows_crop_event' });
                             system.runTimeout(() => {
