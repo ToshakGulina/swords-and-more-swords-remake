@@ -22,6 +22,7 @@ import {
   getMainhandItem,
   getOffhandItem,
   isFullMoonNight,
+  isInVillage,
   isProtectedEntity,
 } from './utils.js';
 
@@ -242,6 +243,8 @@ export function startPassiveEngine(): void {
     }
   });
 
+  // The 2.8.8 component timers are measured in game ticks, so the engine must
+  // tick at 20 Hz; the default (every game tick) is exactly that.
   system.runInterval(() => {
     tick++;
     const players = world.getAllPlayers();
@@ -766,7 +769,8 @@ export function startPassiveEngine(): void {
           }
 
           case 'effect:lapis_sword': {
-            // Exact description: 5 XP in a random period of between 2.5 and 6 seconds (50..120 ticks)
+            // Exact 2.8.8 timer: `time [2.5, 6.0]`, looping, randomInterval — one
+            // `xp 5 @s` + `playsound random.orb` per 50..120 ticks.
             let due = nextLapisTick.get(player.id);
             if (due === undefined) {
               due = tick + 50 + Math.floor(Math.random() * 71);
@@ -874,19 +878,21 @@ export function startPassiveEngine(): void {
           }
 
           case 'effect:emerald_sword': {
-            // Village Hero inside a village & gives villagers Resistance within radius 64!
-            if (tick % 40 === 0) {
-              const villagers = dim.getEntities({
-                location: player.location,
-                maxDistance: 64,
-                type: 'minecraft:villager_v2',
-              });
-              if (villagers.length > 0) {
-                player.addEffect('village_hero', 120, { amplifier: 0, showParticles: false });
-                for (const v of villagers) {
-                  v.addEffect('resistance', 120, { amplifier: 1, showParticles: true });
-                }
-              }
+            // Exact 2.8.8: `is_in_village` gates the whole thing; inside a village
+            // the holder gets Village Hero and every villager within 64 blocks
+            // gets Resistance I for one second, re-applied every tick.
+            if (!isInVillage(player)) break;
+            try {
+              player.addEffect('village_hero', 20, { amplifier: 0, showParticles: false });
+            } catch {}
+            for (const v of dim.getEntities({
+              location: player.location,
+              maxDistance: 64,
+              families: ['villager'],
+            })) {
+              try {
+                v.addEffect('resistance', 20, { amplifier: 0, showParticles: false });
+              } catch {}
             }
             break;
           }

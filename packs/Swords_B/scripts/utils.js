@@ -369,3 +369,21 @@ export function isInRain(dimension, location) {
         return false;
     }
 }
+// `test: is_in_village` replacement. The script API has no village query, so a
+// village is recognised by its population: vanilla villages always contain a
+// bed-anchored villager cluster, and the Emerald Sword already looks 64 blocks
+// out for villagers. Keep the radius conservative so a lone wandering villager
+// does not grant Village Hero.
+export function isInVillage(player) {
+    try {
+        const villagers = player.dimension.getEntities({
+            location: player.location,
+            maxDistance: 32,
+            families: ['villager'],
+        });
+        return villagers.length >= 2;
+    }
+    catch {
+        return false;
+    }
+}
