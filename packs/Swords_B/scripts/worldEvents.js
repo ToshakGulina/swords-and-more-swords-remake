@@ -508,18 +508,16 @@ export function registerWorldEvents() {
                                 id === 'effect99:quartz_diamond_block' ||
                                 id === 'effect:clock_sword')) {
                             if (isDesertWellWater(dim, loc)) {
-                                const count = stack.amount;
                                 itemEnt.addTag('effect_processed');
                                 itemEnt.remove();
-                                const chancePerItem = id === 'effect:quartz_diamond' ? 0.008 : 0.025;
+                                // The original rolls once per dropped item entity (`randomize`
+                                // inside the `wish_*` event), not once per stack amount.
+                                const chance = id === 'effect:quartz_diamond' ? 0.008 : 0.025;
                                 const isClockWish = id === 'effect:clock_sword';
                                 const rewardId = isClockWish ? 'effect:time_sword' : 'effect:ultra_instinct_sword';
-                                let won = false;
-                                for (let i = 0; i < count; i++) {
-                                    if (Math.random() < chancePerItem) {
-                                        won = true;
-                                        dim.spawnItem(new ItemStack(rewardId, 1), { x: loc.x, y: loc.y + 1.2, z: loc.z });
-                                    }
+                                const won = Math.random() < chance;
+                                if (won) {
+                                    dim.spawnItem(new ItemStack(rewardId, 1), { x: loc.x, y: loc.y + 1.2, z: loc.z });
                                 }
                                 if (won) {
                                     if (isClockWish) {

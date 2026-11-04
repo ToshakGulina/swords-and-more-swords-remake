@@ -226,27 +226,37 @@ export function isFullMoonNight(): boolean {
   return time >= 13000 && time <= 23000 && world.getMoonPhase() === MoonPhase.FullMoon;
 }
 
+/**
+ * The original `fountain_of_wishes_*` events chain `execute ... detect` checks,
+ * so every one of these blocks must match exactly (no count-based shortcut):
+ * water at the item and at its 4 neighbours, sandstone directly underneath all
+ * five, sandstone four blocks above the item and sandstone on the four upper
+ * diagonals two blocks above. Any other shape is not the desert well.
+ */
 export function isDesertWellWater(dim: Dimension, loc: Vector3): boolean {
+  const isWater = (id: string | undefined) => id === 'minecraft:water' || id === 'minecraft:flowing_water';
+  const isSandstone = (id: string | undefined) => !!id && id.includes('sandstone');
   try {
-    const center = dim.getBlock(loc);
-    if (!center || (center.typeId !== 'minecraft:water' && center.typeId !== 'minecraft:flowing_water')) {
-      return false;
+    const bx = Math.floor(loc.x);
+    const by = Math.floor(loc.y);
+    const bz = Math.floor(loc.z);
+    const idAt = (dx: number, dy: number, dz: number) =>
+      dim.getBlock({ x: bx + dx, y: by + dy, z: bz + dz })?.typeId;
+
+    if (!isWater(idAt(0, 0, 0))) return false;
+    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      if (!isWater(idAt(dx, 0, dz))) return false;
+      if (!isSandstone(idAt(dx, -1, dz))) return false;
     }
-    // Vanilla Desert Well water basin is surrounded by sandstone / cut_sandstone / sandstone_slab / chiseled_sandstone
-    let sandstoneCount = 0;
-    for (let dx = -2; dx <= 2; dx++) {
-      for (let dy = -1; dy <= 2; dy++) {
-        for (let dz = -2; dz <= 2; dz++) {
-          const b = dim.getBlock({ x: Math.floor(loc.x) + dx, y: Math.floor(loc.y) + dy, z: Math.floor(loc.z) + dz });
-          if (b && b.typeId.includes('sandstone')) {
-            sandstoneCount++;
-            if (sandstoneCount >= 10) return true;
-          }
-        }
-      }
+    if (!isSandstone(idAt(0, -1, 0))) return false;
+    if (!isSandstone(idAt(0, 4, 0))) return false;
+    for (const [dx, dz] of [[1, 1], [-1, -1], [-1, 1], [1, -1]]) {
+      if (!isSandstone(idAt(dx, 2, dz))) return false;
     }
-  } catch {}
-  return false;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function growInstantJungleTree(dim: Dimension, baseLoc: Vector3): void {

@@ -23,8 +23,8 @@ const ctx = vm.createContext({ Math: math, world, ItemStack,
   ItemComponentTypes: { Durability: 'd', Enchantable: 'en' },
   MoonPhase: { FullMoon: 0 }, EntityDamageCause: {} });
 vm.runInContext(`${code}
-this.api = { isFullMoonNight, isProtectedEntity, consumeMainhandDurability, safeRandomTeleport, giveOrDropItem };`, ctx);
-const { isFullMoonNight, isProtectedEntity, consumeMainhandDurability, safeRandomTeleport } = ctx.api;
+this.api = { isFullMoonNight, isProtectedEntity, consumeMainhandDurability, safeRandomTeleport, giveOrDropItem, isDesertWellWater };`, ctx);
+const { isFullMoonNight, isProtectedEntity, consumeMainhandDurability, safeRandomTeleport, isDesertWellWater } = ctx.api;
 
 const moon = (phase, time) => { moonPhase = phase; timeOfDay = time; return isFullMoonNight(); };
 assert.equal(moon(0, 18000), true, 'full moon at night');
@@ -86,3 +86,39 @@ function equipped(mode) {
   assert.equal(consumeMainhandDurability(player, 1), false, 'no sword in hand cannot pay durability');
 }
 console.log('Utils: moon window, teleport failure, protection rules, empty hand and durability cost OK');
+
+// Desert well: the original chains `execute detect` checks, so every listed
+// block must match. A plain pool of water with "enough" sandstone is not a well.
+const wellAt = (overrides = {}) => ({
+  getBlock({ x, y, z }) {
+    const dx = x;
+    const dy = y - 64;
+    const dz = z - 8;
+    const key = `${dx},${dy},${dz}`;
+    const custom = overrides[key];
+    if (custom !== undefined) return custom === null ? undefined : { typeId: custom };
+    if (dx === 0 && dy === 0 && dz === 0) return { typeId: 'minecraft:water' };
+    if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => dx === a && dy === 0 && dz === b)) {
+      return { typeId: 'minecraft:water' };
+    }
+    return { typeId: 'minecraft:sandstone' };
+  },
+  id: 'minecraft:overworld',
+});
+assert.equal(isDesertWellWater(wellAt(), { x: 0, y: 64, z: 8 }), true, 'a real desert well must be recognised');
+assert.equal(
+  isDesertWellWater(
+    wellAt({ '1,0,0': 'minecraft:sandstone' }),
+    { x: 0, y: 64, z: 8 },
+  ),
+  false,
+  'a missing water block breaks the original detect chain',
+);
+assert.equal(
+  isDesertWellWater(wellAt({ '0,4,0': null }), { x: 0, y: 64, z: 8 }),
+  false,
+  'the sandstone above the well is required',
+);
+assert.equal(isDesertWellWater({ getBlock: () => undefined }, { x: 0, y: 64, z: 8 }), false,
+  'an unloaded location must not throw or count as a well');
+console.log('Utils: desert well detects the exact 2.8.8 shape, not any sandstone pool');

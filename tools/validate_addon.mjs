@@ -679,6 +679,21 @@ for (const f of walk(path.join(BP, 'entities'), '.json')) {
   for (const f of walk(path.join(BP, 'entities'), '.json')) checkEntity(f);
 }
 
+// 8h. Every sword in the pack must carry the `effect:sword` custom component;
+// without it the whole skill set (onUse, hit effects, durability rules) is dead
+// even though the item exists, which is invisible to schema validation.
+{
+  const EXCLUDED = new Set(['effect:quartz_diamond', 'effect:silver_ingot']);
+  for (const f of walk(path.join(BP, 'items'), '.json')) {
+    const item = readJsonChecked(f, true)?.['minecraft:item'];
+    const id = item?.description?.identifier;
+    if (!id || EXCLUDED.has(id)) continue;
+    if (!item.components?.['effect:sword']) {
+      err(`${f}: ${id} is missing the effect:sword custom component`);
+    }
+  }
+}
+
 // 9. Verify compiled JS imports & custom event names
 for (const f of walk(path.join(BP, 'scripts'), '.js')) {
   const code = fs.readFileSync(f, 'utf8');
