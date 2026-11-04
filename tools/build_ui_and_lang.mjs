@@ -144,13 +144,13 @@ enMap.set('cursed_pumpkin_sword.header.title', '§l§6Cursed Pumpkin Sword');
 enMap.set('effect.cursed_pumpkin_sword.text.0', '-Durability: 606');
 enMap.set('effect.cursed_pumpkin_sword.text.1', '-Damage: 5');
 enMap.set('effect.cursed_pumpkin_sword.text.2', '-Enchantable: true');
-enMap.set('effect.cursed_pumpkin_sword.text.3', '-Repairable: true (With pumpkins, carved pumpkins, honeycomb, or the same sword.)');
+enMap.set('effect.cursed_pumpkin_sword.text.3', '-Repairable: true (With honey blocks, honeycomb, or the same sword.)');
 enMap.set('effect.cursed_pumpkin_sword.text.4', '-Special skills:');
 enMap.set('effect.cursed_pumpkin_sword.text.5', '  When attacking, launches glowing cursed pumpkin projectiles with an 80% chance.');
 enMap.set('effect.cursed_pumpkin_sword.text.6', '-How to create or get it:');
 enMap.set('effect.cursed_pumpkin_sword.text.7', '  Break pumpkin blocks in the world (0.5% chance per block, once per player).');
 
-enMap.set('effect.blaze_sword.text.13', '  A snow golem must kill a blaze (2.5% chance).');
+enMap.set('effect.blaze_sword.text.13', '  A snow golem must kill a blaze (2.5% chance; the original text said 0.5%).');
 enMap.set('effect.bone_sword.text.9', '  Kill skeletons in a dark desert (0.7% chance).');
 
 // Ensure every `item.effect:*` also has `.name` alias for 100% compatibility
@@ -549,7 +549,7 @@ const ruOverrides = {
   'effect.blaze_sword.text.10': '  Вокруг вашего тела вращаются огненные стержни Ифрита.',
   'effect.blaze_sword.text.11': '  Вода наносит вам урон, пока меч в руке.',
   'effect.blaze_sword.text.12': '-Как получить:',
-  'effect.blaze_sword.text.13': '  Снежный голем должен убить ифрита (шанс 2.5%).',
+  'effect.blaze_sword.text.13': '  Снежный голем должен убить ифрита (шанс 2.5%; в оригинале было указано 0.5%).',
 
   // 20. Nether Star Sword
   'howtoplay.nether_star_sword': '§lМеч Звезды Незера',
@@ -563,7 +563,7 @@ const ruOverrides = {
   'effect.nether_star_sword.text.5': '-Особые навыки:',
   'effect.nether_star_sword.text.6': '  При взмахе или ударе с неба обрушиваются Звёзды Незера, нанося по 6 ед. урона.',
   'effect.nether_star_sword.text.7': '-Описание:',
-  'effect.nether_star_sword.text.8': '  При убийстве Иссушителя этим мечом повышен шанс получить Меч Иссушителя (25%).',
+  'effect.nether_star_sword.text.8': '  При убийстве Иссушителя этим мечом с шансом 13% выпадает Меч Иссушителя.',
   'effect.nether_star_sword.text.9': '  Если бросить меч в огонь — мощнейший взрыв расколет даже блоки бедрока!',
   'effect.nether_star_sword.text.10': '  Слегка нестабилен: с шансом 0.01% при атаке может устроить гигантский взрыв.',
   'effect.nether_star_sword.text.11': '-Как получить:',
@@ -864,7 +864,7 @@ const ruOverrides = {
   'effect.cursed_pumpkin_sword.text.0': '-Прочность: 606',
   'effect.cursed_pumpkin_sword.text.1': '-Урон: 5',
   'effect.cursed_pumpkin_sword.text.2': '-Зачаровывается: да',
-  'effect.cursed_pumpkin_sword.text.3': '-Починка: да (тыквами, вырезанными тыквами, сотами или таким же мечом)',
+  'effect.cursed_pumpkin_sword.text.3': '-Починка: да (блоком мёда, сотами или таким же мечом)',
   'effect.cursed_pumpkin_sword.text.4': '-Особые навыки:',
   'effect.cursed_pumpkin_sword.text.5': '  При взмахе и ударе с шансом 80% выпускает светящиеся проклятые тыквенные снаряды.',
   'effect.cursed_pumpkin_sword.text.6': '-Как получить:',

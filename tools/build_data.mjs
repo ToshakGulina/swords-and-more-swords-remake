@@ -247,17 +247,14 @@ for (const fileName of fs.readdirSync(path.join(SRC_288_BP, 'items')).sort()) {
 
   // Repairable
   if (oldC['minecraft:repairable']?.repair_items?.length) {
-    const repairItems = oldC['minecraft:repairable'].repair_items.map((entry) => ({
-      items: entry.items,
-      repair_amount: entry.repair_amount,
-    }));
-    if (id === 'effect:cursed_pumpkin_sword') {
-      repairItems.push({
-        items: ['minecraft:pumpkin', 'minecraft:carved_pumpkin'],
-        repair_amount: 150,
-      });
-    }
-    components['minecraft:repairable'] = { repair_items: repairItems };
+    // Exact 2.8.8 repair lists: no invented materials (the Cursed Pumpkin Sword
+    // repairs with honey block / honeycomb / itself only, never with pumpkins).
+    components['minecraft:repairable'] = {
+      repair_items: oldC['minecraft:repairable'].repair_items.map((entry) => ({
+        items: entry.items,
+        repair_amount: entry.repair_amount,
+      })),
+    };
   }
 
   // Cooldown

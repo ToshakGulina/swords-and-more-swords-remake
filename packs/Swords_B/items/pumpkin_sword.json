@@ -57,13 +57,6 @@
               "minecraft:honeycomb"
             ],
             "repair_amount": 150
-          },
-          {
-            "items": [
-              "minecraft:pumpkin",
-              "minecraft:carved_pumpkin"
-            ],
-            "repair_amount": 150
           }
         ]
       },
