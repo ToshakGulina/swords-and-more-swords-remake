@@ -293,7 +293,6 @@ const SWORD_PLAYER_GROUPS = {
     'minecraft:type_family': { family: ['ghost_sword'] },
     'minecraft:knockback_resistance': { value: 1.0 },
     'minecraft:movement': { value: 0.14 },
-    'minecraft:hurt_on_condition': { damage_conditions: [] },
     'minecraft:damage_sensor': {
       triggers: [{ cause: 'all', deals_damage: 'no' }],
     },
@@ -543,6 +542,13 @@ const SWORD_PLAYER_GROUPS = {
         },
       ],
     },
+  },
+
+  'effect:time_sword': {
+    // Exact 2.8.8 `minecraft:time_sword` (+ `time_sword_movement`): the holder
+    // walks at movement 1 while the sword is in hand.
+    'minecraft:movement': { value: 1.0 },
+    'minecraft:type_family': { family: ['player', 'time_sword'] },
   },
 
   'effect:spider_sword': {

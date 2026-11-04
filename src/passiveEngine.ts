@@ -42,6 +42,7 @@ const PLAYER_COMPONENT_KEYS = new Set([
   'spectral_sword',
   'jungle_sword',
   'tnt_sword',
+  'time_sword',
   'shulker_sword',
   'slime_sword',
   'spider_sword',

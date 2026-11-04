@@ -499,9 +499,6 @@
         "minecraft:movement": {
           "value": 0.14
         },
-        "minecraft:hurt_on_condition": {
-          "damage_conditions": []
-        },
         "minecraft:damage_sensor": {
           "triggers": [
             {
@@ -1024,6 +1021,17 @@
           ]
         }
       },
+      "effect:time_sword": {
+        "minecraft:movement": {
+          "value": 1
+        },
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "time_sword"
+          ]
+        }
+      },
       "effect:spider_sword": {
         "minecraft:type_family": {
           "family": [
@@ -1096,6 +1104,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1125,6 +1134,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1155,6 +1165,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1185,6 +1196,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1215,6 +1227,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1245,6 +1258,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1275,6 +1289,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1305,6 +1320,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1335,6 +1351,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1365,6 +1382,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1395,6 +1413,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1425,6 +1444,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1455,6 +1475,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1485,6 +1506,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1515,6 +1537,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1545,6 +1568,7 @@
             "effect:shulker_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1575,6 +1599,7 @@
             "effect:tnt_sword",
             "effect:shulker_hiding",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1605,6 +1630,7 @@
             "effect:tnt_sword",
             "effect:shulker_sword",
             "effect:slime_sword",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1635,6 +1661,7 @@
             "effect:tnt_sword",
             "effect:shulker_sword",
             "effect:shulker_hiding",
+            "effect:time_sword",
             "effect:spider_sword"
           ]
         },
@@ -1642,6 +1669,37 @@
           "component_groups": [
             "effect:default_stats",
             "effect:slime_sword"
+          ]
+        }
+      },
+      "effect:equip_time_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:time_sword"
           ]
         }
       },
@@ -1665,7 +1723,8 @@
             "effect:tnt_sword",
             "effect:shulker_sword",
             "effect:shulker_hiding",
-            "effect:slime_sword"
+            "effect:slime_sword",
+            "effect:time_sword"
           ]
         },
         "add": {
