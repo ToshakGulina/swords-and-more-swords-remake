@@ -117,7 +117,7 @@ enMap.set('effect.basic_information.text_3', '§6• Complete collection of 38+ 
 // Fill all 9 missing keys referenced in how_to_play_screen.json / encyclopedia_screen.json
 enMap.set('effect.obsidian_sword.text.2', '-Blast & Knockback Immunity: true');
 enMap.set('effect.nether_star_sword.text.1', '-Enchanted Glint: true');
-enMap.set('effect.ice_sword.text.8', '  (Snowballs deal bonus damage and coat the ground in snow.)');
+enMap.set('effect.ice_sword.text.8', '  (Snowballs deal bonus damage and coat the ground in snow.)'); // continuations of text.7
 enMap.set('effect.ghost_sword.text.2', '-Cooldown: 2 sec');
 enMap.set('effect.creeper_sword.text.2', '-Cooldown: 3 sec');
 enMap.set('effect.spectral_sword.text.2', '-Cooldown: 18 sec');
@@ -575,15 +575,15 @@ const ruOverrides = {
   'effect.ice_sword.text.0': '-Прочность: 500',
   'effect.ice_sword.text.1': '-Урон: 8.5',
   'effect.ice_sword.text.2': '-Зачаровывается: да',
-  'effect.ice_sword.text.3': '-Починка: да (льдом, плотным/синим льдом или таким же мечом)',
+  'effect.ice_sword.text.3': '-Починка: да (льдом и таким же мечом)',
   'effect.ice_sword.text.4': '-Особые навыки:',
-  'effect.ice_sword.text.5': '  Замедляет поражённых врагов ледяным холодом.',
-  'effect.ice_sword.text.6': '  Вода под вашими ногами замерзает в хрупкий лёд.',
-  'effect.ice_sword.text.7': '  При атаке запускает во врагов ледяные снежки.',
-  'effect.ice_sword.text.8': '  (Снежки наносят урон и покрывают место попадания снегом.)',
-  'effect.ice_sword.text.9': '  Активация (перезарядка 5 сек., -6 прочности): заковывает существ в радиусе 12 блоков в ледяные клетки!',
+  'effect.ice_sword.text.5': '  Лёд, созданный при использовании меча, исчезает примерно через 8 секунд.',
+  'effect.ice_sword.text.6': '  Вся вода под вашими ногами превращается в лёд.',
+  'effect.ice_sword.text.7': '  Иногда вы бросаете снежки в существ, которых атакуете.',
+  'effect.ice_sword.text.8': '  (Снежки наносят дополнительный урон и покрывают землю снегом.)',
+  'effect.ice_sword.text.9': '  ПКМ (перезарядка 5 сек., прочность -6): существа в радиусе 8 блоков оказываются закованы в ледяные блоки.',
   'effect.ice_sword.text.10': '-Описание:',
-  'effect.ice_sword.text.11': '  Если игрок загорится или войдёт в лаву, меч растает и превратится в воду!',
+  'effect.ice_sword.text.11': '  Если игрок горит, меч превращается в воду.',
   'effect.ice_sword.text.12': '-Как получить:',
   'effect.ice_sword.text.13': '  В сундуках иглу и домов снежных деревень.',
 

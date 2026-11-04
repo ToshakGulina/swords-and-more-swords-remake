@@ -592,9 +592,18 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
           case 'effect:ice_sword': {
             // Exact 2.8.8: encase entities within radius 8-12 in size-adapted Fake Ice cages! (-6 durability)
             if (!checkAndStartCooldown(player, 'ice_sword', 5)) return;
+            // `@e[...,rm=2,r=12]` — everything from 2 to 12 blocks away; the holder
+            // and their mount are never caged, and no extra effect is applied.
+            const eye = player.location;
             const targets = dim
-              .getEntities({ location: player.location, maxDistance: 10 })
-              .filter((e) => !isProtectedEntity(e, player));
+              .getEntities({ location: eye, maxDistance: 12 })
+              .filter((e) => {
+                if (isProtectedEntity(e, player)) return false;
+                const dx = e.location.x - eye.x;
+                const dy = e.location.y - eye.y;
+                const dz = e.location.z - eye.z;
+                return Math.sqrt(dx * dx + dy * dy + dz * dz) >= 2;
+              });
 
             const buildIceCage = (cx: number, cy: number, cz: number, rx = 1, hy = 2) => {
               const bx = Math.floor(cx);
@@ -620,13 +629,10 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
               }
             };
 
-            for (const t of targets.slice(0, 8)) {
+            for (const t of targets) {
               const isTall = t.typeId === 'minecraft:enderman';
               const isHuge = t.typeId === 'minecraft:ghast' || t.typeId === 'entity:slime_king';
               buildIceCage(t.location.x, t.location.y, t.location.z, isHuge ? 3 : 1, isHuge ? 4 : isTall ? 3 : 2);
-              try {
-                t.addEffect('slowness', 120, { amplifier: 4, showParticles: true });
-              } catch {}
             }
 
             player.onScreenDisplay.setActionBar('§l§bIce Skill');
