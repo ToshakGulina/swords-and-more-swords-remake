@@ -269,11 +269,15 @@ export function registerWorldEvents(): void {
         }
 
         case 'minecraft:wither': {
-          // Kill the Wither with Nether Star Sword -> 25% chance to drop Wither Sword (5% otherwise)!
+          // Original `entities/wither.json`: the `wither_sword` event fires only
+          // from a damage_sensor trigger that needs a *player* with the Nether
+          // Star Sword in hand AND a fatal hit, and it then rolls 13 against 87.
+          // A wither killed with anything else drops nothing, and an undead
+          // attacker deals no damage at all to it.
           const usedNetherStar =
             deadEntity.hasTag('slain_by_nether_star_sword') ||
             (killer instanceof Player && getMainhandItem(killer)?.typeId === 'effect:nether_star_sword');
-          if (Math.random() < (usedNetherStar ? 0.25 : 0.05)) {
+          if (usedNetherStar && Math.random() < 0.13) {
             dim.spawnItem(new ItemStack('effect:wither_sword', 1), loc);
           }
           break;

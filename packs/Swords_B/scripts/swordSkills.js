@@ -291,7 +291,12 @@ export function registerItemComponents(registry) {
                         break;
                     }
                     case 'effect:nether_star_sword': {
-                        if (hitEntity.typeId === 'minecraft:wither') {
+                        // The original wither's damage_sensor fires `wither_sword` only for a
+                        // *player* whose main hand is the Nether Star Sword and only when the
+                        // hit is fatal, so the tag must not be set by any other attacker.
+                        if (hitEntity.typeId === 'minecraft:wither' &&
+                            attackingEntity instanceof Player &&
+                            getMainhandItem(attackingEntity)?.typeId === 'effect:nether_star_sword') {
                             hitEntity.addTag('slain_by_nether_star_sword');
                         }
                         // Exact 2.8.8: mark target with `entity:objective` + summon 1 (80%) or 2 (20%) sky `entity:nether_star` turrets

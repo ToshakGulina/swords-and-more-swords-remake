@@ -594,6 +594,87 @@ for (const f of walk(path.join(BP, 'entities'), '.json')) {
   }
 }
 
+// 8e. Every behavior entity needs a client entity (own or vanilla), otherwise
+// it spawns invisibly and looks like a broken feature in-game.
+{
+  const clientIds = new Set();
+  for (const f of walk(path.join(RP, 'entity'), '.json')) {
+    const id = readJsonChecked(f, false)?.['minecraft:client_entity']?.description?.identifier;
+    if (id) clientIds.add(id);
+  }
+  for (const f of walk(path.join(VANILLA_RP, 'entity'), '.json')) {
+    const id = readJsonChecked(f, false)?.['minecraft:client_entity']?.description?.identifier;
+    if (id) clientIds.add(id);
+  }
+  // Vanilla client entities whose definition lives inside the engine rather
+  // than in the sample resource pack (e.g. primed TNT, falling blocks).
+  const ENGINE_CLIENT_IDS = new Set(['minecraft:tnt']);
+  for (const f of walk(path.join(BP, 'entities'), '.json')) {
+    const desc = readJsonChecked(f, true)?.['minecraft:entity']?.description;
+    if (!desc?.identifier) continue;
+    if (ENGINE_CLIENT_IDS.has(desc.identifier)) continue;
+    const runtime = desc.runtime_identifier;
+    if (!clientIds.has(desc.identifier) && !(runtime && clientIds.has(runtime))) {
+      err(`${desc.identifier} has no client entity in this pack or in vanilla 1.26.60 (it would spawn invisible)`);
+    }
+  }
+}
+
+// 8f. Ore mining must stay tool-gated. The block scripts only award a drop for
+// iron/diamond/netherite pickaxes and the Bedrock Sword, so the block itself
+// must not also be breakable by hand or by any other tool, otherwise the ore
+// becomes a free source of rewards.
+{
+  const ALLOWED_TOOLS = ['minecraft:iron_pickaxe', 'minecraft:diamond_pickaxe', 'minecraft:netherite_pickaxe', 'effect:bedrock_sword'];
+  for (const f of walk(path.join(BP, 'blocks'), '.json')) {
+    if (!/ore|block/i.test(path.basename(f))) continue;
+    const body = readJsonChecked(f, true)?.['minecraft:block'];
+    const id = body?.description?.identifier;
+    if (!id?.startsWith('effect99:')) continue;
+    if (!['effect99:silver_ore', 'effect99:quartz_diamond_ore', 'effect99:quartz_diamond_block'].includes(id)) continue;
+    const mining = body.components?.['minecraft:destructible_by_mining'];
+    if (!mining || typeof mining !== 'object') {
+      err(`${f}: ${id} has no mineable component`);
+      continue;
+    }
+    if (!Number.isFinite(mining.seconds_to_destroy) || mining.seconds_to_destroy <= 0) {
+      err(`${f}: ${id} has an invalid seconds_to_destroy`);
+    }
+    const speeds = mining.item_specific_speeds ?? [];
+    for (const tool of ALLOWED_TOOLS) {
+      if (!speeds.some((entry) => entry.item === tool)) {
+        err(`${f}: ${id} has no mining speed for ${tool}, so an allowed tool may not be able to break it`);
+      }
+    }
+  }
+}
+
+// 8g. Every projectile the scripts shoot must declare the attack/reach payload
+// it needs; a projectile that loses its `on_hit` (or an entity that loses its
+// minecraft:attack) silently deals no damage in game.
+{
+  const checkEntity = (file) => {
+    const body = readJsonChecked(file, true)?.['minecraft:entity'];
+    if (!body) return;
+    const containers = [body.components || {}, ...Object.values(body.component_groups || {})];
+    for (const components of containers) {
+      const projectile = components['minecraft:projectile'];
+      if (projectile && !projectile.on_hit) {
+        err(`${file}: minecraft:projectile has no on_hit, so it can never hurt anything`);
+      }
+      const attack = components['minecraft:attack'];
+      if (attack && (typeof attack.damage !== 'number' || attack.damage < 0)) {
+        err(`${file}: minecraft:attack has an invalid damage ${JSON.stringify(attack.damage)}`);
+      }
+      const health = components['minecraft:health'];
+      if (health && !(health.value > 0)) {
+        err(`${file}: minecraft:health has a non-positive value ${JSON.stringify(health)}`);
+      }
+    }
+  };
+  for (const f of walk(path.join(BP, 'entities'), '.json')) checkEntity(f);
+}
+
 // 9. Verify compiled JS imports & custom event names
 for (const f of walk(path.join(BP, 'scripts'), '.js')) {
   const code = fs.readFileSync(f, 'utf8');

@@ -824,7 +824,7 @@ const ruOverrides = {
   'effect.wither_sword.text.13': '  На экране появляется декоративная полоса босса «Wither Sword» и сгущается туман.',
   'effect.wither_sword.text.14': '  На вас висит визуальный эффект Иссушения, не наносящий урона.',
   'effect.wither_sword.text.15': '-Как получить:',
-  'effect.wither_sword.text.16': '  Победить босса Иссушителя (шанс 5%, либо 25% при добивании Мечом Звезды Незера).',
+  'effect.wither_sword.text.16': '  Победить босса Иссушителя, добив его Мечом Звезды Незера (шанс 13%).',
 
   // 36. Time Sword
   'howtoplay.time_sword': '§lМеч Времени',
