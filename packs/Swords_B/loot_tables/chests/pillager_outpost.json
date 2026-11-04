@@ -59,16 +59,6 @@
             }
           ],
           "name": "minecraft:carrot"
-        },
-        {
-          "type": "item",
-          "name": "effect:emerald_sword",
-          "weight": 2
-        },
-        {
-          "type": "item",
-          "name": "effect:lapis_sword",
-          "weight": 3
         }
       ]
     },
@@ -169,6 +159,16 @@
             }
           ],
           "name": "minecraft:book"
+        },
+        {
+          "type": "item",
+          "name": "effect:emerald_sword",
+          "weight": 3
+        },
+        {
+          "type": "item",
+          "name": "effect:lapis_sword",
+          "weight": 3
         }
       ]
     },

@@ -946,23 +946,30 @@ for (const [rel, data] of Object.entries(customLootTables)) {
 
 // 7.2 Rebase ONLY the modified vanilla chest loot tables onto Mojang v1.26.60!
 // This preserves 100% of 1.20–1.26 Armor Trims, Pottery Sherds, Bundles, Heart of the Sea & Starter Tools!
+// Pool index & weight are copied verbatim from the 2.8.8 loot tables, so each
+// sword keeps the exact per-roll odds it had there (the vanilla entries around
+// it are the modern 1.26.60 ones).
 const chestInjections = [
-  ['chests/abandoned_mineshaft.json', 1, [{ type: 'item', name: 'effect:spider_sword', weight: 5 }]],
-  ['chests/desert_pyramid.json', 0, [{ type: 'item', name: 'effect:tnt_sword', weight: 15 }]],
-  ['chests/igloo_chest.json', 0, [{ type: 'item', name: 'effect:ice_sword', weight: 4 }]],
-  ['chests/jungle_temple.json', 0, [{ type: 'item', name: 'effect:jungle_sword', weight: 25 }]],
-  ['chests/pillager_outpost.json', 1, [
-    { type: 'item', name: 'effect:emerald_sword', weight: 2 },
+  ['chests/abandoned_mineshaft.json', 1, [{ type: 'item', name: 'effect:spider_sword', weight: 3 }]],
+  ['chests/desert_pyramid.json', 0, [{ type: 'item', name: 'effect:tnt_sword', weight: 10 }]],
+  ['chests/igloo_chest.json', 0, [{ type: 'item', name: 'effect:ice_sword', weight: 1 }]],
+  ['chests/jungle_temple.json', 0, [{ type: 'item', name: 'effect:jungle_sword', weight: 16 }]],
+  ['chests/pillager_outpost.json', 3, [
+    { type: 'item', name: 'effect:emerald_sword', weight: 3 },
     { type: 'item', name: 'effect:lapis_sword', weight: 3 },
   ]],
   ['chests/stronghold_corridor.json', 0, [
-    { type: 'item', name: 'effect:emerald_sword', weight: 10 },
-    { type: 'item', name: 'effect:lapis_sword', weight: 12 },
+    { type: 'item', name: 'effect:emerald_sword', weight: 5 },
+    { type: 'item', name: 'effect:lapis_sword', weight: 5 },
   ]],
-  ['chests/stronghold_library.json', 0, [{ type: 'item', name: 'effect:lapis_sword', weight: 15 }]],
-  ['chests/underwater_ruin_big.json', 0, [{ type: 'item', name: 'effect:magma_sword', weight: 3 }]],
+  ['chests/stronghold_library.json', 0, [{ type: 'item', name: 'effect:lapis_sword', weight: 5 }]],
+  ['chests/underwater_ruin_big.json', 1, [{ type: 'item', name: 'effect:magma_sword', weight: 1 }]],
   ['chests/village/village_snowy_house.json', 0, [{ type: 'item', name: 'effect:ice_sword', weight: 4 }]],
-  ['chests/woodland_mansion.json', 0, [{ type: 'item', name: 'effect:emerald_sword', weight: 35 }]],
+  ['chests/woodland_mansion.json', 0, [{ type: 'item', name: 'effect:emerald_sword', weight: 25 }]],
+  // 2.8.8 put the Sea Sword in the 5–12-roll prismarine pool, not a separate 35 % pool.
+  ['chests/buriedtreasure.json', 1, [{ type: 'item', name: 'effect:sea_sword', weight: 15 }]],
+  // …and the Coal Sword in pool 0 next to the starter axe (1 of 5 rolls).
+  ['chests/spawn_bonus_chest.json', 0, [{ type: 'item', name: 'effect:coal_sword', weight: 1 }]],
 ];
 
 for (const [rel, poolIdx, entries] of chestInjections) {
@@ -970,25 +977,6 @@ for (const [rel, poolIdx, entries] of chestInjections) {
   const targetPool = base.pools[Math.min(poolIdx, base.pools.length - 1)];
   targetPool.entries.push(...entries);
   writeJson(path.join(BP, 'loot_tables', rel), base);
-}
-
-// Dedicated bonus pools for `buriedtreasure.json` & `spawn_bonus_chest.json` so guaranteed `heart_of_the_sea` & starter axe are NEVER overwritten!
-{
-  const bt = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/chests/buriedtreasure.json'), 'utf8'));
-  bt.pools.push({
-    rolls: 1,
-    conditions: [{ condition: 'random_chance', chance: 0.35 }],
-    entries: [{ type: 'item', name: 'effect:sea_sword', weight: 1 }],
-  });
-  writeJson(path.join(BP, 'loot_tables/chests/buriedtreasure.json'), bt);
-
-  const sbc = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/chests/spawn_bonus_chest.json'), 'utf8'));
-  sbc.pools.push({
-    rolls: 1,
-    conditions: [{ condition: 'random_chance', chance: 0.35 }],
-    entries: [{ type: 'item', name: 'effect:coal_sword', weight: 1 }],
-  });
-  writeJson(path.join(BP, 'loot_tables/chests/spawn_bonus_chest.json'), sbc);
 }
 
 // Rebase entity loot tables (`elder_guardian`, `shulker`, `wither_skeleton`) onto v1.26.60

@@ -56,6 +56,11 @@
             }
           ],
           "weight": 5
+        },
+        {
+          "type": "item",
+          "name": "effect:sea_sword",
+          "weight": 15
         }
       ]
     },
@@ -210,22 +215,6 @@
           "type": "item",
           "name": "minecraft:diamond_nautilus_armor",
           "weight": 10
-        }
-      ]
-    },
-    {
-      "rolls": 1,
-      "conditions": [
-        {
-          "condition": "random_chance",
-          "chance": 0.35
-        }
-      ],
-      "entries": [
-        {
-          "type": "item",
-          "name": "effect:sea_sword",
-          "weight": 1
         }
       ]
     }

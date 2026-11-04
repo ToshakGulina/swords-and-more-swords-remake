@@ -57,11 +57,6 @@
               }
             }
           ]
-        },
-        {
-          "type": "item",
-          "name": "effect:magma_sword",
-          "weight": 3
         }
       ]
     },
@@ -113,6 +108,11 @@
               "destination": "buriedtreasure"
             }
           ]
+        },
+        {
+          "type": "item",
+          "name": "effect:magma_sword",
+          "weight": 1
         }
       ]
     },
