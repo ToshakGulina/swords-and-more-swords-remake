@@ -1,6 +1,6 @@
-import { EntityComponentTypes, EntityDamageCause, GameMode, ItemStack, Player, system, } from '@minecraft/server';
+import { EntityComponentTypes, EntityDamageCause, GameMode, ItemStack, Player, system, world, } from '@minecraft/server';
 import { openSwordsGuide } from './guideMenu.js';
-import { consumeMainhandDurability, getMainhandItem, growInstantJungleTree, isFullMoonNight, isProtectedEntity, shootCustomProjectile, } from './utils.js';
+import { consumeMainhandDurability, getMainhandItem, growInstantJungleTree, isFullMoonNight, isProtectedEntity, safeRandomTeleport, shootCustomProjectile, } from './utils.js';
 function checkAndStartCooldown(player, category, seconds) {
     try {
         if (player.getItemCooldown(category) > 0)
@@ -23,7 +23,10 @@ function absorbSpongeWater(player) {
             for (let dy = -2; dy <= 2; dy++) {
                 for (let dz = -2; dz <= 2; dz++) {
                     const b = dim.getBlock({ x: px + dx, y: py + dy, z: pz + dz });
-                    if (b && (b.typeId === 'minecraft:water' || b.typeId === 'minecraft:flowing_water')) {
+                    if (b &&
+                        (b.typeId === 'minecraft:water' ||
+                            b.typeId === 'minecraft:flowing_water' ||
+                            b.typeId === 'minecraft:seagrass')) {
                         b.setType('minecraft:air');
                         removed++;
                     }
@@ -34,20 +37,26 @@ function absorbSpongeWater(player) {
     catch { }
     return removed;
 }
+const spongeWaterTicks = new Map();
 export function tryConvertSpongeSword(player) {
     const removed = absorbSpongeWater(player);
     if (removed <= 0)
         return false;
+    const prev = (spongeWaterTicks.get(player.id) ?? 0) + 1;
+    spongeWaterTicks.set(player.id, prev);
+    try {
+        player.dimension.playSound('random.fizz', player.location, { volume: 0.5, pitch: 1.1 });
+    }
+    catch { }
+    // Original description: "after several seconds absorbing water the sword will transform into a wet sponge sword"
+    if (prev < 4)
+        return false;
+    spongeWaterTicks.delete(player.id);
     try {
         const eq = player.getComponent(EntityComponentTypes.Equippable);
         const current = getMainhandItem(player);
         if (eq && current && current.typeId === 'effect:sponge_sword') {
             const wet = new ItemStack('effect:wet_sponge_sword', 1);
-            const oldDur = current.getComponent('minecraft:durability');
-            const newDur = wet.getComponent('minecraft:durability');
-            if (oldDur && newDur) {
-                newDur.damage = Math.min(newDur.maxDurability - 1, oldDur.damage);
-            }
             eq.setEquipment('Mainhand', wet);
             player.dimension.playSound('random.splash', player.location, { volume: 0.9, pitch: 1.2 });
             return true;
@@ -56,6 +65,49 @@ export function tryConvertSpongeSword(player) {
     catch { }
     return false;
 }
+const LIGHTNING_RING_OFFSETS = [
+    [0, 2, 0],
+    [7, 0, 0],
+    [0, 0, 7],
+    [-7, 0, 0],
+    [0, 0, -7],
+    [6, 0, 6],
+    [-6, 0, -6],
+    [-6, 0, 6],
+    [6, 0, -6],
+    [14, 0, 0],
+    [0, 0, 14],
+    [-14, 0, 0],
+    [0, 0, -14],
+    [12, 0, 12],
+    [-12, 0, -12],
+    [-12, 0, 12],
+    [12, 0, -12],
+    [28, 0, 0],
+    [0, 0, 28],
+    [-28, 0, 0],
+    [0, 0, -28],
+    [24, 0, 24],
+    [-24, 0, -24],
+    [-24, 0, 24],
+    [24, 0, -24],
+    [34, 0, 0],
+    [0, 0, 34],
+    [-34, 0, 0],
+    [0, 0, -34],
+    [30, 0, 30],
+    [-30, 0, -30],
+    [-30, 0, 30],
+    [30, 0, -30],
+    [42, 0, 0],
+    [0, 0, 42],
+    [-42, 0, 0],
+    [0, 0, -42],
+    [38, 0, 38],
+    [-38, 0, -38],
+    [-38, 0, 38],
+    [38, 0, -38],
+];
 export function registerItemComponents(registry) {
     // Interactive Encyclopedia Book
     registry.registerCustomComponent('effect:guide', {
@@ -71,10 +123,14 @@ export function registerItemComponents(registry) {
                 event.durabilityDamage = 0;
             }
             else if (itemId === 'effect:obsidian_sword') {
-                event.durabilityDamage = 1 + Math.floor(Math.random() * 3);
+                // Exact 2.8.8 probabilities: 55% -> 1, 30% -> 2, 15% -> 3
+                const r = Math.random() * 100;
+                event.durabilityDamage = r < 55 ? 1 : r < 85 ? 2 : 3;
             }
             else if (itemId === 'effect:time_sword') {
-                event.durabilityDamage = 1 + Math.floor(Math.random() * 4);
+                // Exact 2.8.8 probabilities: 90% -> 1, 6% -> 16, 3% -> 32, 1% -> 64
+                const r = Math.random() * 100;
+                event.durabilityDamage = r < 90 ? 1 : r < 96 ? 16 : r < 99 ? 32 : 64;
             }
         },
         onMineBlock(event) {
@@ -82,7 +138,6 @@ export function registerItemComponents(registry) {
             if (!itemStack || !(source instanceof Player))
                 return;
             if (itemStack.typeId === 'effect:bedrock_sword' || itemStack.typeId === 'effect:bedrock_stick') {
-                // Ensure zero durability loss when mining with Bedrock tools
                 return;
             }
             if (source.getGameMode() !== GameMode.Creative) {
@@ -97,97 +152,120 @@ export function registerItemComponents(registry) {
             const id = itemStack.typeId;
             try {
                 switch (id) {
-                    case 'effect:coal_sword':
-                        hitEntity.addEffect('blindness', 100, { amplifier: 0, showParticles: true });
-                        dim.spawnParticle('minecraft:basic_smoke_particle', hitEntity.location);
+                    case 'effect:bee_sword': {
+                        // Exact 2.8.8: 30% chance to release aggressive defending bee (entity:bee_sword)
+                        if (Math.random() < 0.3 && attackingEntity instanceof Player) {
+                            shootCustomProjectile(attackingEntity, 'entity:bee_sword', 1.0);
+                        }
+                        hitEntity.addEffect('poison', 80, { amplifier: 0, showParticles: true });
                         break;
-                    case 'effect:silver_sword':
+                    }
+                    case 'effect:blaze_sword': {
+                        hitEntity.setOnFire(8, true);
+                        // Exact 2.8.8: 14% small_fireball, 1% large fireball on hit
+                        if (attackingEntity instanceof Player) {
+                            const r = Math.random() * 100;
+                            if (r < 14) {
+                                attackingEntity.addEffect('fire_resistance', 30, { amplifier: 0, showParticles: false });
+                                shootCustomProjectile(attackingEntity, 'minecraft:small_fireball', 1.35);
+                            }
+                            else if (r < 15) {
+                                attackingEntity.addEffect('fire_resistance', 30, { amplifier: 0, showParticles: false });
+                                shootCustomProjectile(attackingEntity, 'minecraft:fireball', 1.35, 'effect:player_shot');
+                            }
+                        }
+                        break;
+                    }
+                    case 'effect:bone_sword': {
+                        // Exact 2.8.8: 20% chance to shoot an arrow when attacking!
+                        if (Math.random() < 0.2 && attackingEntity instanceof Player) {
+                            shootCustomProjectile(attackingEntity, 'minecraft:arrow', 1.6);
+                            dim.playSound('random.bow', attackingEntity.location, { volume: 0.9, pitch: 1.0 });
+                        }
+                        break;
+                    }
+                    case 'effect:silver_sword': {
+                        // Extra damage & strips regen/resistance from Alpha Wolf!
                         if (hitEntity.typeId === 'entity:alpha_wolf') {
                             hitEntity.triggerEvent('clear_effects');
                             hitEntity.addTag('hit_by_silver');
-                            hitEntity.applyDamage(8, { cause: EntityDamageCause.magic, damagingEntity: attackingEntity });
+                            hitEntity.applyDamage(12, { cause: EntityDamageCause.magic, damagingEntity: attackingEntity });
                             dim.playSound('random.anvil_land', hitEntity.location, { volume: 0.8, pitch: 1.5 });
                             dim.spawnParticle('minecraft:crit_emitter', hitEntity.location);
                         }
                         break;
-                    case 'effect:glowstone_sword':
-                        hitEntity.addEffect('blindness', 60, { amplifier: 0, showParticles: true });
-                        dim.spawnParticle('minecraft:endrod', {
-                            x: hitEntity.location.x,
-                            y: hitEntity.location.y + 1,
-                            z: hitEntity.location.z,
-                        });
-                        break;
-                    case 'effect:glass_sword':
+                    }
+                    case 'effect:glass_sword': {
                         dim.playSound('random.glass', hitEntity.location, { volume: 1.2, pitch: 0.9 });
                         break;
-                    case 'effect:jungle_sword':
-                        hitEntity.addEffect('poison', 80, { amplifier: 0, showParticles: true });
-                        break;
-                    case 'effect:cactus_sword':
-                        dim.spawnParticle('minecraft:crit_emitter', hitEntity.location);
-                        break;
-                    case 'effect:cursed_pumpkin_sword':
+                    }
+                    case 'effect:cursed_pumpkin_sword': {
+                        // Exact 2.8.8: 80% chance to launch entity:pumpkin_projectile on hit!
+                        if (Math.random() < 0.8 && attackingEntity instanceof Player) {
+                            shootCustomProjectile(attackingEntity, 'entity:pumpkin_projectile', 0.95);
+                        }
                         if (Math.random() < 0.15) {
-                            hitEntity.addEffect('blindness', 120, { amplifier: 0, showParticles: true });
-                            hitEntity.addEffect('nausea', 120, { amplifier: 0, showParticles: true });
-                            dim.playSound('mob.witch.celebrate', hitEntity.location, { volume: 1.0, pitch: 0.8 });
                             const eq = hitEntity.getComponent(EntityComponentTypes.Equippable);
                             if (eq && !eq.getEquipment('Head')) {
                                 eq.setEquipment('Head', new ItemStack('minecraft:carved_pumpkin', 1));
                             }
                         }
                         break;
-                    case 'effect:bone_sword':
-                        dim.playSound('mob.skeleton.hurt', hitEntity.location, { volume: 0.8, pitch: 1.1 });
-                        break;
-                    case 'effect:wither_skeleton_sword':
+                    }
+                    case 'effect:wither_skeleton_sword': {
                         hitEntity.addEffect('wither', 120, { amplifier: 1, showParticles: true });
-                        break;
-                    case 'effect:slime_sword': {
-                        const dx = hitEntity.location.x - attackingEntity.location.x;
-                        const dz = hitEntity.location.z - attackingEntity.location.z;
-                        const len = Math.hypot(dx, dz) || 1;
-                        hitEntity.applyKnockback({ x: (dx / len) * 1.4, z: (dz / len) * 1.4 }, 0.55);
-                        dim.playSound('mob.slime.big', hitEntity.location, { volume: 1.0, pitch: 1.0 });
+                        if (attackingEntity instanceof Player) {
+                            shootCustomProjectile(attackingEntity, 'entity:wither_effect', 1.1);
+                        }
                         break;
                     }
-                    case 'effect:magma_sword':
+                    case 'effect:magma_sword': {
+                        // Preserve exact 7.2 damage (7 base + 0.2 bonus) + ignite
+                        hitEntity.applyDamage(0.2, { cause: EntityDamageCause.fire, damagingEntity: attackingEntity });
                         hitEntity.setOnFire(5, true);
-                        dim.spawnParticle('minecraft:lava_particle', hitEntity.location);
                         break;
-                    case 'effect:clock_sword':
-                        hitEntity.addEffect('slowness', 80, { amplifier: 2, showParticles: true });
-                        break;
-                    case 'effect:sea_sword':
-                        hitEntity.addEffect('slowness', 80, { amplifier: 1, showParticles: true });
-                        dim.spawnParticle('minecraft:water_splash_particle', hitEntity.location);
-                        break;
-                    case 'effect:blaze_sword':
-                        hitEntity.setOnFire(8, true);
-                        dim.playSound('mob.blaze.hit', hitEntity.location, { volume: 0.9, pitch: 1.0 });
-                        break;
-                    case 'effect:nether_star_sword':
-                        hitEntity.addEffect('wither', 100, { amplifier: 1, showParticles: true });
+                    }
+                    case 'effect:nether_star_sword': {
                         if (hitEntity.typeId === 'minecraft:wither') {
                             hitEntity.addTag('slain_by_nether_star_sword');
                         }
-                        break;
-                    case 'effect:ice_sword':
-                        // Preserve exact 8.5 damage (8 base + 0.5 frost bonus) + 30% snow freeze
-                        hitEntity.applyDamage(0.5, { cause: EntityDamageCause.freezing, damagingEntity: attackingEntity });
-                        hitEntity.addEffect('slowness', 80, { amplifier: 1, showParticles: true });
-                        if (Math.random() < 0.3) {
-                            const foot = dim.getBlock(hitEntity.location);
-                            if (foot && foot.isAir) {
-                                foot.setType('minecraft:snow_layer');
-                            }
-                            dim.playSound('random.glass', hitEntity.location, { volume: 0.8, pitch: 1.3 });
+                        // Exact 2.8.8: shoot nether_star_projectile + summon 1 (80%) or 2 (20%) falling nether_star from sky (6 dmg each)
+                        if (attackingEntity instanceof Player) {
+                            shootCustomProjectile(attackingEntity, 'entity:nether_star_projectile', 1.3);
+                        }
+                        const count = Math.random() < 0.2 ? 2 : 1;
+                        for (let i = 0; i < count; i++) {
+                            const skyY = Math.min(dim.heightRange.max - 2, hitEntity.location.y + 18 + i * 2);
+                            const star = dim.spawnEntity('entity:nether_star', {
+                                x: hitEntity.location.x + (Math.random() - 0.5) * 1.5,
+                                y: skyY,
+                                z: hitEntity.location.z + (Math.random() - 0.5) * 1.5,
+                            });
+                            star.applyImpulse({ x: 0, y: -1.4, z: 0 });
+                        }
+                        // Exact 2.8.8: 0.01% (1/10000) unstable bedrock-shattering explosion on attack!
+                        if (Math.random() < 0.0001) {
+                            dim.spawnEntity('entity:ultra_instinct_explode', hitEntity.location);
                         }
                         break;
-                    case 'effect:quartz_sword':
-                        // 600 lethal damage to target + instant sacrifice of wielder
+                    }
+                    case 'effect:ice_sword': {
+                        // Preserve exact 8.5 damage (8 base + 0.5 frost bonus) + 30% snowball throw!
+                        hitEntity.applyDamage(0.5, { cause: EntityDamageCause.freezing, damagingEntity: attackingEntity });
+                        if (Math.random() < 0.3 && attackingEntity instanceof Player) {
+                            shootCustomProjectile(attackingEntity, 'minecraft:snowball', 1.4, 'effect:ice_sword_snowball');
+                            dim.playSound('random.bow', attackingEntity.location, { volume: 1.0, pitch: 0.4 });
+                        }
+                        break;
+                    }
+                    case 'effect:quartz_sword': {
+                        // 600 lethal damage + instant sacrifice of wielder
                         hitEntity.applyDamage(600, { cause: EntityDamageCause.magic, damagingEntity: attackingEntity });
+                        dim.spawnParticle('minecraft:knockback_roar_particle', {
+                            x: hitEntity.location.x,
+                            y: hitEntity.location.y + 1,
+                            z: hitEntity.location.z,
+                        });
                         dim.playSound('ambient.weather.thunder', hitEntity.location, { volume: 1.5, pitch: 0.8 });
                         if (attackingEntity instanceof Player && attackingEntity.getGameMode() !== GameMode.Creative) {
                             const eq = attackingEntity.getComponent(EntityComponentTypes.Equippable);
@@ -200,90 +278,96 @@ export function registerItemComponents(registry) {
                             });
                         }
                         break;
-                    case 'effect:quartz_diamond_stick':
+                    }
+                    case 'effect:quartz_diamond_stick': {
+                        // Exact 2.8.8 weights: 10% -> 1 magic, 85% -> 3 magic, 5% -> 6 magic
                         if (attackingEntity instanceof Player && attackingEntity.getGameMode() !== GameMode.Creative) {
-                            const recoils = [2, 6, 12];
-                            const dmg = recoils[Math.floor(Math.random() * recoils.length)];
+                            const r = Math.random() * 100;
+                            const dmg = r < 10 ? 1 : r < 95 ? 3 : 6;
                             attackingEntity.applyDamage(dmg, { cause: EntityDamageCause.magic });
                         }
                         break;
-                    case 'effect:spider_sword':
-                        hitEntity.addEffect('poison', 100, { amplifier: 1, showParticles: true });
-                        if (Math.random() < 0.05) {
-                            const foot = dim.getBlock(hitEntity.location);
-                            if (foot && foot.isAir) {
-                                foot.setType('minecraft:web');
+                    }
+                    case 'effect:spider_sword': {
+                        // Exact 2.8.8: 5% chance to shoot entity:web on attack
+                        if (Math.random() < 0.05 && attackingEntity instanceof Player) {
+                            shootCustomProjectile(attackingEntity, 'entity:web', 1.25);
+                        }
+                        break;
+                    }
+                    case 'effect:tnt_sword': {
+                        // Exact 2.8.8: 90% chance to shoot entity:tnt small explosion on hit
+                        if (Math.random() < 0.9 && attackingEntity instanceof Player) {
+                            shootCustomProjectile(attackingEntity, 'entity:tnt', 1.2);
+                        }
+                        break;
+                    }
+                    case 'effect:wolf_sword': {
+                        // Exact 2.8.8: 20 total melee damage during Full Moon night!
+                        if (isFullMoonNight()) {
+                            hitEntity.applyDamage(20, { cause: EntityDamageCause.entityAttack, damagingEntity: attackingEntity });
+                            dim.playSound('mob.wolf.bark', hitEntity.location, { volume: 1.0, pitch: 0.55 });
+                        }
+                        break;
+                    }
+                    case 'effect:shulker_sword': {
+                        // Exact 2.8.8: 10% chance to shoot shulker_bullet
+                        if (Math.random() < 0.1 && attackingEntity instanceof Player) {
+                            shootCustomProjectile(attackingEntity, 'minecraft:shulker_bullet', 1.1, 'effect:shulker_sword');
+                            dim.playSound('random.bow', attackingEntity.location, { volume: 1.0, pitch: 0.4 });
+                        }
+                        break;
+                    }
+                    case 'effect:creeper_sword': {
+                        // Exact 2.8.8: 20% chance to launch small creeper on hit!
+                        if (Math.random() < 0.2 && attackingEntity instanceof Player) {
+                            shootCustomProjectile(attackingEntity, 'entity:minicreeper', 1.15);
+                            dim.playSound('random.fuse', attackingEntity.location, { volume: 0.9, pitch: 1.4 });
+                        }
+                        break;
+                    }
+                    case 'effect:fire_sword': {
+                        hitEntity.setOnFire(10, true);
+                        // Exact 2.8.8: 85% shoot entity:fire, 15% launch entity:living_flame!
+                        if (attackingEntity instanceof Player) {
+                            if (Math.random() < 0.15) {
+                                const lf = shootCustomProjectile(attackingEntity, 'entity:living_flame', 1.0, 'hostile_entity');
+                                lf?.addTag('player_summoned');
+                            }
+                            else {
+                                shootCustomProjectile(attackingEntity, 'entity:fire', 1.3);
                             }
                         }
                         break;
-                    case 'effect:tnt_sword':
-                        if (Math.random() < 0.9) {
-                            dim.createExplosion(hitEntity.location, 2.2, {
+                    }
+                    case 'effect:spectral_sword': {
+                        // Exact 2.8.8: 1% unstable explosion chance when attacking entities!
+                        if (Math.random() < 0.01) {
+                            dim.createExplosion(hitEntity.location, 3.0, {
                                 breaksBlocks: false,
                                 causesFire: false,
                                 source: attackingEntity,
                             });
                         }
                         break;
-                    case 'effect:wolf_sword':
-                        if (isFullMoonNight()) {
-                            hitEntity.applyDamage(15, { cause: EntityDamageCause.entityAttack, damagingEntity: attackingEntity });
-                            attackingEntity.addEffect('regeneration', 60, { amplifier: 1, showParticles: false });
-                            dim.playSound('mob.wolf.growl', hitEntity.location, { volume: 1.0, pitch: 0.85 });
-                        }
-                        break;
-                    case 'effect:shulker_sword':
-                        hitEntity.addEffect('levitation', 40, { amplifier: 1, showParticles: true });
-                        if (Math.random() < 0.1 && attackingEntity instanceof Player) {
-                            shootCustomProjectile(attackingEntity, 'minecraft:shulker_bullet', 1.1, 'effect:shulker_sword');
-                        }
-                        break;
-                    case 'effect:bee_sword':
-                        hitEntity.addEffect('poison', 100, { amplifier: 1, showParticles: true });
-                        dim.playSound('mob.bee.sting', hitEntity.location, { volume: 0.9, pitch: 1.1 });
-                        break;
-                    case 'effect:creeper_sword':
-                        dim.createExplosion(hitEntity.location, 2.0, {
-                            breaksBlocks: false,
-                            causesFire: false,
-                            source: attackingEntity,
-                        });
-                        break;
-                    case 'effect:fire_sword':
-                        hitEntity.setOnFire(12, true);
-                        dim.spawnParticle('minecraft:mobflame_single', hitEntity.location);
-                        break;
-                    case 'effect:spectral_sword':
-                        hitEntity.addEffect('levitation', 25, { amplifier: 1, showParticles: true });
-                        hitEntity.addEffect('weakness', 80, { amplifier: 0, showParticles: true });
-                        break;
-                    case 'effect:ender_sword':
-                        if (Math.random() < 0.25) {
-                            dim.spawnParticle('minecraft:portal_directional', hitEntity.location);
-                            dim.playSound('mob.endermen.portal', hitEntity.location, { volume: 0.8, pitch: 1.2 });
-                            hitEntity.applyKnockback({ x: 0, z: 0 }, 0.65);
-                        }
-                        break;
-                    case 'effect:lightning_sword':
+                    }
+                    case 'effect:lightning_sword': {
+                        // Exact 2.8.8: 85% chance to shoot lightning_projectile / thunder on attack!
                         if (Math.random() < 0.85) {
+                            if (attackingEntity instanceof Player) {
+                                shootCustomProjectile(attackingEntity, 'entity:lightning_projectile', 1.5);
+                            }
                             dim.spawnEntity('minecraft:lightning_bolt', hitEntity.location);
                         }
                         break;
-                    case 'effect:wither_sword':
-                        hitEntity.addEffect('wither', 160, { amplifier: 2, showParticles: true });
-                        break;
-                    case 'effect:time_sword':
-                        hitEntity.addEffect('slowness', 100, { amplifier: 5, showParticles: true });
-                        hitEntity.addEffect('mining_fatigue', 100, { amplifier: 3, showParticles: false });
-                        hitEntity.addEffect('weakness', 100, { amplifier: 1, showParticles: false });
-                        dim.playSound('random.orb', hitEntity.location, { volume: 0.8, pitch: 0.5 });
-                        break;
-                    case 'effect:ultra_instinct_sword': {
-                        const dx = hitEntity.location.x - attackingEntity.location.x;
-                        const dz = hitEntity.location.z - attackingEntity.location.z;
-                        const len = Math.hypot(dx, dz) || 1;
-                        hitEntity.applyKnockback({ x: (dx / len) * 2.2, z: (dz / len) * 2.2 }, 0.7);
-                        dim.playSound('random.explode', hitEntity.location, { volume: 0.8, pitch: 1.4 });
+                    }
+                    case 'effect:wither_sword': {
+                        hitEntity.addEffect('wither', 140, { amplifier: 1, showParticles: true });
+                        // Exact 2.8.8: 10% chance to shoot wither_skull on hit!
+                        if (Math.random() < 0.1 && attackingEntity instanceof Player) {
+                            shootCustomProjectile(attackingEntity, 'minecraft:wither_skull', 1.4, 'effect:player_shot');
+                            dim.playSound('mob.wither.shoot', attackingEntity.location, { volume: 1.0, pitch: 1.0 });
+                        }
                         break;
                     }
                 }
@@ -311,31 +395,7 @@ export function registerItemComponents(registry) {
                         const above = dim.getBlock({ x: block.location.x, y: block.location.y + 1, z: block.location.z });
                         if (above && above.isAir) {
                             growInstantJungleTree(dim, above.location);
-                            consumeMainhandDurability(source, 15);
-                        }
-                    }
-                }
-                else if (itemStack.typeId === 'effect:grass_sword') {
-                    if (block.typeId === 'minecraft:dirt') {
-                        block.setType('minecraft:grass_block');
-                        dim.spawnParticle('minecraft:villager_happy', {
-                            x: block.location.x + 0.5,
-                            y: block.location.y + 1.1,
-                            z: block.location.z + 0.5,
-                        });
-                        consumeMainhandDurability(source, 1);
-                    }
-                    else if (block.typeId === 'minecraft:grass_block' && blockFace === 'Up') {
-                        const above = dim.getBlock({ x: block.location.x, y: block.location.y + 1, z: block.location.z });
-                        if (above && above.isAir) {
-                            const flora = ['minecraft:short_grass', 'minecraft:dandelion', 'minecraft:poppy', 'minecraft:azure_bluet'];
-                            above.setType(flora[Math.floor(Math.random() * flora.length)]);
-                            dim.spawnParticle('minecraft:villager_happy', {
-                                x: above.location.x + 0.5,
-                                y: above.location.y + 0.5,
-                                z: above.location.z + 0.5,
-                            });
-                            consumeMainhandDurability(source, 1);
+                            consumeMainhandDurability(source, 8);
                         }
                     }
                 }
@@ -354,69 +414,64 @@ export function registerItemComponents(registry) {
                         tryConvertSpongeSword(player);
                         break;
                     }
-                    case 'effect:emerald_sword': {
-                        if (!checkAndStartCooldown(player, 'emerald_sword', 10))
-                            return;
-                        player.addEffect('village_hero', 1200, { amplifier: 0, showParticles: true });
-                        const villagers = dim.getEntities({
-                            location: player.location,
-                            maxDistance: 12,
-                            type: 'minecraft:villager_v2',
-                        });
-                        for (const v of villagers) {
-                            v.addEffect('regeneration', 200, { amplifier: 1, showParticles: true });
-                            dim.spawnParticle('minecraft:villager_happy', { x: v.location.x, y: v.location.y + 1.5, z: v.location.z });
-                        }
-                        dim.playSound('random.levelup', player.location, { volume: 0.9, pitch: 1.2 });
-                        consumeMainhandDurability(player, 5);
-                        break;
-                    }
                     case 'effect:slime_sword': {
-                        if (!checkAndStartCooldown(player, 'slime_sword', 4))
-                            return;
-                        const slime = dim.spawnEntity('entity:mountable_slime', player.location);
+                        // Re-mount existing nearby mountable_slime or spawn one if missing
+                        const existing = dim.getEntities({
+                            location: player.location,
+                            maxDistance: 16,
+                            type: 'entity:mountable_slime',
+                        });
+                        const slime = existing[0] ?? dim.spawnEntity('entity:mountable_slime', player.location);
+                        slime.triggerEvent('minecraft:entity_spawned');
                         const rideable = slime.getComponent(EntityComponentTypes.Rideable);
                         rideable?.addRider(player);
                         dim.playSound('mob.slime.big', player.location, { volume: 1.0, pitch: 1.0 });
-                        consumeMainhandDurability(player, 8);
                         break;
                     }
                     case 'effect:clock_sword': {
+                        // Exact 2.8.8: advance 1 hour (1000 ticks) & speed up world 10x for 5 seconds! (-10 durability)
                         if (!checkAndStartCooldown(player, 'clock_sword', 30))
                             return;
-                        player.addEffect('speed', 140, { amplifier: 1, showParticles: true });
-                        for (const e of dim.getEntities({ location: player.location, maxDistance: 8 })) {
-                            if (!isProtectedEntity(e, player)) {
-                                e.addEffect('slowness', 140, { amplifier: 3, showParticles: true });
+                        world.setTimeOfDay((world.getTimeOfDay() + 1000) % 24000);
+                        player.addEffect('speed', 100, { amplifier: 3, showParticles: false });
+                        for (const e of dim.getEntities({ location: player.location, maxDistance: 24 })) {
+                            if (e.typeId !== 'minecraft:item' && e.typeId !== 'minecraft:xp_orb') {
+                                try {
+                                    e.addEffect('speed', 100, { amplifier: 2, showParticles: false });
+                                }
+                                catch { }
                             }
                         }
+                        try {
+                            dim.runCommand('gamerule randomtickspeed 30');
+                            system.runTimeout(() => {
+                                try {
+                                    world.getDimension('overworld').runCommand('gamerule randomtickspeed 1');
+                                }
+                                catch { }
+                            }, 100);
+                        }
+                        catch { }
                         dim.playSound('random.orb', player.location, { volume: 1.0, pitch: 0.6 });
                         consumeMainhandDurability(player, 10);
                         break;
                     }
-                    case 'effect:sea_sword': {
-                        if (!player.isInWater)
-                            return;
-                        if (!checkAndStartCooldown(player, 'sea_sword', 5))
-                            return;
-                        const dir = player.getViewDirection();
-                        player.applyKnockback({ x: dir.x * 2.4, z: dir.z * 2.4 }, Math.max(0.2, dir.y * 1.4));
-                        dim.playSound('item.trident.riptide_3', player.location, { volume: 1.0, pitch: 1.0 });
-                        consumeMainhandDurability(player, 4);
-                        break;
-                    }
                     case 'effect:blaze_sword': {
+                        // Exact 2.8.8: levitate for 7s + slow_falling 10s, then launch volley of small fireballs! (-10 durability)
                         if (!checkAndStartCooldown(player, 'blaze_sword', 20))
                             return;
-                        for (let shot = 0; shot < 3; shot++) {
+                        player.addEffect('levitation', 140, { amplifier: 0, showParticles: false });
+                        player.addEffect('slow_falling', 200, { amplifier: 3, showParticles: false });
+                        dim.playSound('mob.blaze.breathe', player.location, { volume: 1.0, pitch: 1.0 });
+                        for (let shot = 0; shot < 8; shot++) {
                             system.runTimeout(() => {
                                 if (!player.isValid)
                                     return;
-                                shootCustomProjectile(player, 'minecraft:fireball', 1.45, 'effect:player_shot', 1.8, 0.04);
+                                shootCustomProjectile(player, 'minecraft:small_fireball', 1.5, undefined, 1.7, 0.06);
                                 player.dimension.playSound('mob.blaze.shoot', player.location, { volume: 1.0, pitch: 1.0 });
-                            }, shot * 6);
+                            }, 30 + shot * 8);
                         }
-                        consumeMainhandDurability(player, 12);
+                        consumeMainhandDurability(player, 10);
                         break;
                     }
                     case 'effect:nether_star_sword': {
@@ -431,35 +486,32 @@ export function registerItemComponents(registry) {
                                     return;
                                 const tx = origin.x + dir.x * (i * 2.8) + (Math.random() - 0.5) * 2.0;
                                 const tz = origin.z + dir.z * (i * 2.8) + (Math.random() - 0.5) * 2.0;
-                                const ty = Math.min(dim.heightRange.max - 2, origin.y + 13);
+                                const ty = Math.min(dim.heightRange.max - 2, origin.y + 15);
                                 try {
-                                    const star = dim.spawnEntity('entity:nether_star_projectile', { x: tx, y: ty, z: tz });
-                                    star.applyImpulse({ x: 0, y: -1.6, z: 0 });
+                                    const star = dim.spawnEntity('entity:nether_star', { x: tx, y: ty, z: tz });
+                                    star.applyImpulse({ x: 0, y: -1.4, z: 0 });
                                 }
                                 catch { }
                             }, i * 3);
                         }
-                        // Faithful 0.01% unstable overload Easter egg from original 2.8.8
-                        if (Math.random() < 0.0001) {
-                            dim.spawnEntity('entity:ultra_instinct_explode', player.location);
-                        }
-                        consumeMainhandDurability(player, 15);
+                        consumeMainhandDurability(player, 10);
                         break;
                     }
                     case 'effect:ice_sword': {
+                        // Exact 2.8.8: encase entities within radius 8-12 in size-adapted Fake Ice cages! (-6 durability)
                         if (!checkAndStartCooldown(player, 'ice_sword', 5))
                             return;
                         const targets = dim
-                            .getEntities({ location: player.location, maxDistance: 7.5 })
+                            .getEntities({ location: player.location, maxDistance: 10 })
                             .filter((e) => !isProtectedEntity(e, player));
-                        const buildIceCage = (cx, cy, cz) => {
+                        const buildIceCage = (cx, cy, cz, rx = 1, hy = 2) => {
                             const bx = Math.floor(cx);
                             const by = Math.floor(cy);
                             const bz = Math.floor(cz);
-                            for (let dx = -1; dx <= 1; dx++) {
-                                for (let dy = 0; dy <= 3; dy++) {
-                                    for (let dz = -1; dz <= 1; dz++) {
-                                        const isShell = Math.abs(dx) === 1 || Math.abs(dz) === 1 || dy === 0 || dy === 3;
+                            for (let dx = -rx; dx <= rx; dx++) {
+                                for (let dy = -1; dy <= hy; dy++) {
+                                    for (let dz = -rx; dz <= rx; dz++) {
+                                        const isShell = Math.abs(dx) === rx || Math.abs(dz) === rx || dy === -1 || dy === hy;
                                         if (!isShell)
                                             continue;
                                         const b = dim.getBlock({ x: bx + dx, y: by + dy, z: bz + dz });
@@ -470,21 +522,23 @@ export function registerItemComponents(registry) {
                                 }
                             }
                         };
-                        if (targets.length > 0) {
-                            for (const t of targets.slice(0, 5)) {
-                                t.addEffect('slowness', 100, { amplifier: 3, showParticles: true });
-                                buildIceCage(t.location.x, t.location.y, t.location.z);
-                            }
+                        for (const t of targets.slice(0, 8)) {
+                            const isTall = t.typeId === 'minecraft:enderman';
+                            const isHuge = t.typeId === 'minecraft:ghast' || t.typeId === 'entity:slime_king';
+                            buildIceCage(t.location.x, t.location.y, t.location.z, isHuge ? 3 : 1, isHuge ? 4 : isTall ? 3 : 2);
                         }
-                        else {
-                            const dir = player.getViewDirection();
-                            buildIceCage(player.location.x + dir.x * 4, player.location.y + dir.y * 2, player.location.z + dir.z * 4);
-                        }
-                        dim.playSound('random.glass', player.location, { volume: 1.0, pitch: 0.8 });
-                        consumeMainhandDurability(player, 10);
+                        player.onScreenDisplay.setActionBar('§l§bIce Skill');
+                        dim.playSound('random.fizz', player.location, { volume: 1.0, pitch: 2.3 });
+                        dim.spawnParticle('minecraft:knockback_roar_particle', {
+                            x: player.location.x,
+                            y: player.location.y + 1,
+                            z: player.location.z,
+                        });
+                        consumeMainhandDurability(player, 6);
                         break;
                     }
                     case 'effect:spider_sword': {
+                        // Exact 2.8.8: fire cobweb projectiles continuously for 2-3 seconds! (-8 durability)
                         if (!checkAndStartCooldown(player, 'spider_sword', 28))
                             return;
                         for (let i = 0; i < 12; i++) {
@@ -493,208 +547,188 @@ export function registerItemComponents(registry) {
                                     return;
                                 shootCustomProjectile(player, 'entity:web', 1.35, undefined, 1.5, 0.08);
                                 player.dimension.playSound('mob.spider.step', player.location, { volume: 0.8, pitch: 1.4 });
-                            }, i * 5);
+                            }, i * 4);
                         }
-                        consumeMainhandDurability(player, 14);
+                        consumeMainhandDurability(player, 8);
                         break;
                     }
                     case 'effect:tnt_sword': {
+                        // Exact 2.8.8: summon SuperTNT (giant_tnt, 8s fuse) + actionbar! (-18 durability)
                         if (!checkAndStartCooldown(player, 'tnt_sword', 10))
                             return;
-                        const head = player.getHeadLocation();
-                        const dir = player.getViewDirection();
-                        const spawnPos = {
-                            x: head.x + dir.x * 1.8,
-                            y: head.y + dir.y * 1.8,
-                            z: head.z + dir.z * 1.8,
-                        };
-                        const giantTnt = dim.spawnEntity('minecraft:tnt', spawnPos, { spawnEvent: 'giant_tnt' });
-                        giantTnt.applyImpulse({ x: dir.x * 1.35, y: dir.y * 1.1 + 0.25, z: dir.z * 1.35 });
-                        dim.playSound('game.tnt.primed', player.location, { volume: 1.2, pitch: 0.8 });
-                        consumeMainhandDurability(player, 20);
-                        break;
-                    }
-                    case 'effect:wolf_sword': {
-                        if (!checkAndStartCooldown(player, 'wolf_sword', 10))
-                            return;
-                        player.addEffect('strength', 160, { amplifier: 1, showParticles: true });
-                        player.addEffect('speed', 160, { amplifier: 1, showParticles: true });
-                        dim.playSound('mob.wolf.howl', player.location, { volume: 1.2, pitch: 0.95 });
-                        consumeMainhandDurability(player, 8);
-                        break;
-                    }
-                    case 'effect:shulker_sword': {
-                        if (!checkAndStartCooldown(player, 'shulker_sword', 8))
-                            return;
-                        for (const e of dim.getEntities({ location: player.location, maxDistance: 6.5 })) {
-                            if (!isProtectedEntity(e, player)) {
-                                e.addEffect('levitation', 100, { amplifier: 4, showParticles: true });
-                                dim.spawnParticle('minecraft:endrod', e.location);
-                            }
+                        dim.spawnEntity('minecraft:tnt', player.location, { spawnEvent: 'giant_tnt' });
+                        for (const p of dim.getPlayers({ location: player.location, maxDistance: 18 })) {
+                            p.onScreenDisplay.setActionBar('§fSuper§4TNT §f§lhas been activated.');
                         }
-                        dim.playSound('mob.shulker.shoot', player.location, { volume: 1.1, pitch: 0.9 });
-                        consumeMainhandDurability(player, 10);
-                        break;
-                    }
-                    case 'effect:bee_sword': {
-                        if (!checkAndStartCooldown(player, 'bee_sword', 10))
-                            return;
-                        for (let i = 0; i < 3; i++) {
-                            const angle = (Math.PI * 2 * i) / 3;
-                            const bx = player.location.x + Math.cos(angle) * 1.5;
-                            const bz = player.location.z + Math.sin(angle) * 1.5;
-                            dim.spawnEntity('entity:bee_sword', { x: bx, y: player.location.y + 1.2, z: bz });
-                        }
-                        for (const e of dim.getEntities({ location: player.location, maxDistance: 7 })) {
-                            if (!isProtectedEntity(e, player)) {
-                                e.addEffect('poison', 140, { amplifier: 1, showParticles: true });
-                                e.applyDamage(5, { cause: EntityDamageCause.entityAttack, damagingEntity: player });
-                            }
-                        }
-                        dim.playSound('mob.bee.aggressive', player.location, { volume: 1.0, pitch: 1.0 });
-                        consumeMainhandDurability(player, 10);
-                        break;
-                    }
-                    case 'effect:ghost_sword': {
-                        if (!checkAndStartCooldown(player, 'ghost_sword', 2))
-                            return;
-                        shootCustomProjectile(player, 'entity:ghost_projectile', 1.4);
-                        dim.playSound('mob.vex.charge', player.location, { volume: 0.8, pitch: 0.7 });
-                        consumeMainhandDurability(player, 2);
-                        break;
-                    }
-                    case 'effect:creeper_sword': {
-                        if (!checkAndStartCooldown(player, 'creeper_sword', 3))
-                            return;
-                        shootCustomProjectile(player, 'entity:minicreeper', 1.35);
-                        dim.playSound('random.fuse', player.location, { volume: 1.0, pitch: 1.2 });
-                        consumeMainhandDurability(player, 6);
-                        break;
-                    }
-                    case 'effect:fire_sword': {
-                        if (!checkAndStartCooldown(player, 'fire_sword', 25))
-                            return;
-                        dim.playSound('mob.blaze.breathe', player.location, { volume: 1.2, pitch: 0.8 });
-                        for (let i = 0; i < 12; i++) {
-                            const angle = (Math.PI * 2 * i) / 12;
-                            const fx = player.location.x + Math.cos(angle) * 3.0;
-                            const fz = player.location.z + Math.sin(angle) * 3.0;
-                            try {
-                                dim.spawnEntity('entity:fire', { x: fx, y: player.location.y + 0.5, z: fz });
-                            }
-                            catch { }
-                        }
-                        for (const e of dim.getEntities({ location: player.location, maxDistance: 7 })) {
-                            if (!isProtectedEntity(e, player)) {
-                                e.setOnFire(12, true);
-                                e.applyDamage(12, { cause: EntityDamageCause.fireTick, damagingEntity: player });
-                                const dx = e.location.x - player.location.x;
-                                const dz = e.location.z - player.location.z;
-                                const len = Math.hypot(dx, dz) || 1;
-                                e.applyKnockback({ x: (dx / len) * 1.6, z: (dz / len) * 1.6 }, 0.5);
-                            }
-                        }
+                        dim.playSound('random.fuse', player.location, { volume: 1.2, pitch: 1.0 });
                         consumeMainhandDurability(player, 18);
                         break;
                     }
-                    case 'effect:spectral_sword': {
-                        if (!checkAndStartCooldown(player, 'spectral_sword', 18))
+                    case 'effect:shulker_sword': {
+                        // Exact 2.8.8: levitate entities within radius 6 (amplifier 18, 1s) + cauldron_explosion_emitter! (-8 durability)
+                        if (!checkAndStartCooldown(player, 'shulker_sword', 8))
                             return;
-                        shootCustomProjectile(player, 'entity:ender_crystal_projectile', 1.45);
-                        dim.playSound('mob.endermen.portal', player.location, { volume: 1.0, pitch: 1.4 });
-                        consumeMainhandDurability(player, 16);
-                        break;
-                    }
-                    case 'effect:ender_sword': {
-                        if (!checkAndStartCooldown(player, 'ender_sword', 2))
-                            return;
-                        const head = player.getHeadLocation();
-                        const dir = player.getViewDirection();
-                        let targetPos = { x: player.location.x, y: player.location.y, z: player.location.z };
-                        for (let dist = 1; dist <= 22; dist++) {
-                            const cx = head.x + dir.x * dist;
-                            const cy = head.y + dir.y * dist;
-                            const cz = head.z + dir.z * dist;
-                            const b = dim.getBlock({ x: Math.floor(cx), y: Math.floor(cy), z: Math.floor(cz) });
-                            if (!b || (!b.isAir && !b.isLiquid)) {
-                                break;
+                        const ringPts = [
+                            [3, 0],
+                            [0, 3],
+                            [-3, 0],
+                            [0, -3],
+                            [-2.5, 2.5],
+                            [2.5, -2.5],
+                            [2.5, 2.5],
+                            [-2.5, -2.5],
+                        ];
+                        for (const [ox, oz] of ringPts) {
+                            dim.spawnParticle('minecraft:cauldron_explosion_emitter', {
+                                x: player.location.x + ox,
+                                y: player.location.y,
+                                z: player.location.z + oz,
+                            });
+                        }
+                        for (const e of dim.getEntities({ location: player.location, maxDistance: 6.0 })) {
+                            if (!isProtectedEntity(e, player)) {
+                                e.addEffect('levitation', 25, { amplifier: 18, showParticles: false });
                             }
-                            targetPos = { x: cx, y: cy, z: cz };
                         }
-                        dim.spawnParticle('minecraft:portal_directional', player.location);
-                        dim.playSound('mob.endermen.portal', player.location, { volume: 1.0, pitch: 1.0 });
-                        player.teleport(targetPos);
-                        player.addEffect('slow_falling', 30, { amplifier: 0, showParticles: false });
-                        dim.spawnParticle('minecraft:portal_directional', targetPos);
-                        dim.playSound('mob.endermen.portal', targetPos, { volume: 1.0, pitch: 1.1 });
-                        consumeMainhandDurability(player, 4);
-                        break;
-                    }
-                    case 'effect:lightning_sword': {
-                        if (!checkAndStartCooldown(player, 'lightning_sword', 12))
-                            return;
-                        const origin = { ...player.location };
-                        // 41-bolt concentric storm ring around wielder (faithful to 2.8.8!)
-                        const innerCount = 17;
-                        const outerCount = 24;
-                        for (let i = 0; i < innerCount; i++) {
-                            const angle = (Math.PI * 2 * i) / innerCount;
-                            system.runTimeout(() => {
-                                try {
-                                    dim.spawnEntity('minecraft:lightning_bolt', {
-                                        x: origin.x + Math.cos(angle) * 5.5,
-                                        y: origin.y,
-                                        z: origin.z + Math.sin(angle) * 5.5,
-                                    });
-                                }
-                                catch { }
-                            }, Math.floor(i / 4));
-                        }
-                        for (let i = 0; i < outerCount; i++) {
-                            const angle = (Math.PI * 2 * i) / outerCount;
-                            system.runTimeout(() => {
-                                try {
-                                    dim.spawnEntity('minecraft:lightning_bolt', {
-                                        x: origin.x + Math.cos(angle) * 9.0,
-                                        y: origin.y,
-                                        z: origin.z + Math.sin(angle) * 9.0,
-                                    });
-                                }
-                                catch { }
-                            }, 3 + Math.floor(i / 4));
-                        }
-                        consumeMainhandDurability(player, 22);
-                        break;
-                    }
-                    case 'effect:wither_sword': {
-                        if (!checkAndStartCooldown(player, 'wither_sword', 3))
-                            return;
-                        shootCustomProjectile(player, 'minecraft:wither_skull_dangerous', 1.5, 'effect:player_shot', 1.8, 0);
-                        shootCustomProjectile(player, 'minecraft:wither_skull', 1.4, 'effect:player_shot', 1.8, 0.14);
-                        shootCustomProjectile(player, 'minecraft:wither_skull', 1.4, 'effect:player_shot', 1.8, 0.14);
-                        dim.playSound('mob.wither.shoot', player.location, { volume: 1.0, pitch: 1.0 });
+                        dim.playSound('mob.shulker.shoot', player.location, { volume: 1.1, pitch: 0.9 });
                         consumeMainhandDurability(player, 8);
                         break;
                     }
-                    case 'effect:time_sword': {
-                        if (!checkAndStartCooldown(player, 'time_sword', 12))
+                    case 'effect:bee_sword': {
+                        if (!checkAndStartCooldown(player, 'bee_sword', 8))
                             return;
-                        for (const e of dim.getEntities({ location: player.location, maxDistance: 10 })) {
-                            if (!isProtectedEntity(e, player)) {
-                                e.addEffect('slowness', 120, { amplifier: 6, showParticles: true });
-                                e.addEffect('weakness', 120, { amplifier: 2, showParticles: false });
+                        for (let i = 0; i < 3; i++) {
+                            shootCustomProjectile(player, 'entity:bee_sword', 1.1, undefined, 1.5, 0.2);
+                        }
+                        dim.playSound('mob.bee.aggressive', player.location, { volume: 1.0, pitch: 1.0 });
+                        consumeMainhandDurability(player, 4);
+                        break;
+                    }
+                    case 'effect:ghost_sword': {
+                        // Exact 2.8.8: teleport in any direction the player is looking via ghost_projectile / raycast! (-6 durability)
+                        if (!checkAndStartCooldown(player, 'ghost_sword', 2))
+                            return;
+                        shootCustomProjectile(player, 'entity:ghost_projectile', 2.2);
+                        const head = player.getHeadLocation();
+                        const dir = player.getViewDirection();
+                        let dest = { x: player.location.x, y: player.location.y, z: player.location.z };
+                        for (let d = 1; d <= 20; d++) {
+                            const cx = head.x + dir.x * d;
+                            const cy = head.y + dir.y * d;
+                            const cz = head.z + dir.z * d;
+                            const b = dim.getBlock({ x: Math.floor(cx), y: Math.floor(cy), z: Math.floor(cz) });
+                            if (b && b.isAir) {
+                                dest = { x: cx, y: cy, z: cz };
                             }
                         }
-                        dim.playSound('block.bell.hit', player.location, { volume: 1.2, pitch: 1.5 });
-                        consumeMainhandDurability(player, 12);
+                        player.teleport(dest);
+                        dim.playSound('mob.endermen.portal', dest, { volume: 0.8, pitch: 1.4 });
+                        consumeMainhandDurability(player, 6);
+                        break;
+                    }
+                    case 'effect:creeper_sword': {
+                        // Exact 2.8.8: player inflates like a Creeper (animation.player.explode) for 1.5s, then explodes and dies! (-1 durability)
+                        if (!checkAndStartCooldown(player, 'creeper_sword', 3))
+                            return;
+                        consumeMainhandDurability(player, 1);
+                        try {
+                            player.playAnimation('animation.player.explode');
+                        }
+                        catch { }
+                        player.addEffect('slowness', 32, { amplifier: 10, showParticles: false });
+                        dim.playSound('random.fuse', player.location, { volume: 1.2, pitch: 1.0 });
+                        system.runTimeout(() => {
+                            if (!player.isValid)
+                                return;
+                            try {
+                                player.dimension.spawnEntity('entity:instant_creeper_explode', {
+                                    x: player.location.x,
+                                    y: player.location.y + 1,
+                                    z: player.location.z,
+                                });
+                                if (player.getGameMode() !== GameMode.Creative) {
+                                    player.kill();
+                                }
+                            }
+                            catch { }
+                        }, 30);
+                        break;
+                    }
+                    case 'effect:fire_sword': {
+                        // Exact 2.8.8: "Rain of Fire" — shower of fireballs/living flames from above + actionbar! (-20 durability)
+                        if (!checkAndStartCooldown(player, 'fire_sword', 25))
+                            return;
+                        const loc = player.location;
+                        dim.spawnEntity('entity:living_flame', { x: loc.x, y: loc.y + 14, z: loc.z }, { spawnEvent: 'minecraft:target' });
+                        const offsets = [
+                            [0, 0],
+                            [3, 0],
+                            [0, 3],
+                            [-3, 0],
+                            [0, -3],
+                        ];
+                        for (const [ox, oz] of offsets) {
+                            dim.spawnEntity('entity:living_flame', { x: loc.x + ox, y: loc.y + 4, z: loc.z + oz }, { spawnEvent: 'fire_sword_skill' });
+                        }
+                        dim.spawnParticle('minecraft:example_linearcurve', { x: loc.x, y: loc.y + 0.2, z: loc.z });
+                        player.onScreenDisplay.setActionBar('§l§6Fire rain');
+                        dim.playSound('mob.blaze.breathe', loc, { volume: 1.2, pitch: 0.8 });
+                        consumeMainhandDurability(player, 20);
+                        break;
+                    }
+                    case 'effect:spectral_sword': {
+                        // Exact 2.8.8: fire explosive ender_crystal_projectile! (-15 durability)
+                        if (!checkAndStartCooldown(player, 'spectral_sword', 18))
+                            return;
+                        shootCustomProjectile(player, 'entity:ender_crystal_projectile', 1.45);
+                        dim.playSound('portal.travel', player.location, { volume: 1.0, pitch: 5.0 });
+                        consumeMainhandDurability(player, 15);
+                        break;
+                    }
+                    case 'effect:ender_sword': {
+                        // Exact 2.8.8: randomly teleport in a radius of between 16 to 32 blocks! (-5 durability)
+                        if (!checkAndStartCooldown(player, 'ender_sword', 2))
+                            return;
+                        safeRandomTeleport(player, 16, 32);
+                        consumeMainhandDurability(player, 5);
+                        break;
+                    }
+                    case 'effect:lightning_sword': {
+                        // Exact 2.8.8: 41 rays fall around you at exact 5-ring coordinates! (-9 durability)
+                        if (!checkAndStartCooldown(player, 'lightning_sword', 12))
+                            return;
+                        const origin = { ...player.location };
+                        LIGHTNING_RING_OFFSETS.forEach(([ox, oy, oz], idx) => {
+                            system.runTimeout(() => {
+                                try {
+                                    dim.spawnEntity('minecraft:lightning_bolt', {
+                                        x: origin.x + ox,
+                                        y: origin.y + oy,
+                                        z: origin.z + oz,
+                                    });
+                                }
+                                catch { }
+                            }, Math.floor(idx / 8));
+                        });
+                        consumeMainhandDurability(player, 9);
+                        break;
+                    }
+                    case 'effect:wither_sword': {
+                        // Exact 2.8.8: launch a dangerous blue wither skull! (-3 durability)
+                        if (!checkAndStartCooldown(player, 'wither_sword', 3))
+                            return;
+                        shootCustomProjectile(player, 'minecraft:wither_skull_dangerous', 1.5, 'effect:player_shot', 1.8, 0);
+                        dim.playSound('mob.wither.shoot', player.location, { volume: 1.0, pitch: 0.7 });
+                        consumeMainhandDurability(player, 3);
                         break;
                     }
                     case 'effect:ultra_instinct_sword': {
+                        // Exact 2.8.8: fire ultra_instinct_projectile (cooldown 61s, durability -48)
                         if (!checkAndStartCooldown(player, 'ultra_instinct_sword', 61))
                             return;
                         shootCustomProjectile(player, 'entity:ultra_instinct_projectile', 1.9, undefined, 2.0, 0);
-                        dim.playSound('mob.warden.sonic_boom', player.location, { volume: 1.2, pitch: 1.3 });
-                        consumeMainhandDurability(player, 35);
+                        dim.playSound('mob.wither.ambient', player.location, { volume: 2.0, pitch: 0.6 });
+                        consumeMainhandDurability(player, 48);
                         break;
                     }
                 }

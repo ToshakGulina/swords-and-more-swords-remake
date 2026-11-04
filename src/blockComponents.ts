@@ -15,8 +15,17 @@ const ORIGIN_MAP: Record<string, string> = {
   end_stone: 'minecraft:end_stone',
 };
 
+export const LIGHT_EMITTING_SWORDS = new Set([
+  'effect:glowstone_sword',
+  'effect:fire_sword',
+  'effect:time_sword',
+  'effect:lightning_sword',
+  'effect:wither_sword',
+  'effect:spectral_sword',
+]);
+
 export function registerBlockComponents(registry: BlockComponentRegistry): void {
-  // 1. Fake Ice (cracking temporary ice cage from Ice Sword)
+  // 1. Fake Ice (cracking temporary ice cage from Ice Sword, melts after ~8s)
   registry.registerCustomComponent('effect99:fake_ice', {
     onTick(event) {
       const { block, dimension } = event;
@@ -32,28 +41,30 @@ export function registerBlockComponents(registry: BlockComponentRegistry): void 
     },
   });
 
-  // 2. Dynamic Light Blocks (Glowstone Sword & Fire Sword)
+  // 2. Dynamic Light Blocks (Glowstone, Fire, Time, Lightning, Wither, Spectral Swords)
   registry.registerCustomComponent('effect99:lightblock', {
     onTick(event) {
       const { block, dimension } = event;
       try {
-        const players = dimension.getPlayers({ location: block.location, maxDistance: 3.8 });
+        const players = dimension.getPlayers({ location: block.location, maxDistance: 4.0 });
         let keepLight = false;
         for (const p of players) {
-          const mainId = getMainhandItem(p)?.typeId;
-          const offId = getOffhandItem(p)?.typeId;
-          if (
-            mainId === 'effect:glowstone_sword' ||
-            offId === 'effect:glowstone_sword' ||
-            mainId === 'effect:fire_sword' ||
-            offId === 'effect:fire_sword'
-          ) {
+          const mainId = getMainhandItem(p)?.typeId ?? '';
+          const offId = getOffhandItem(p)?.typeId ?? '';
+          if (LIGHT_EMITTING_SWORDS.has(mainId) || offId === 'effect:glowstone_sword' || offId === 'effect:fire_sword') {
             keepLight = true;
             break;
           }
         }
         if (!keepLight) {
-          block.setType('minecraft:air');
+          const centellas = dimension.getEntities({
+            location: block.location,
+            maxDistance: 3.0,
+            type: 'entity:centella',
+          });
+          if (centellas.length === 0) {
+            block.setType('minecraft:air');
+          }
         }
       } catch {}
     },
@@ -69,7 +80,7 @@ export function registerBlockComponents(registry: BlockComponentRegistry): void 
     },
   });
 
-  // 4. Stateful Spectral Block (Spectral Sword X-ray restoration)
+  // 4. Stateful Spectral Block (Spectral Sword & Ghost Sword wall X-ray restoration)
   registry.registerCustomComponent('effect99:spectral_block', {
     onTick(event) {
       const { block, dimension } = event;
@@ -77,7 +88,8 @@ export function registerBlockComponents(registry: BlockComponentRegistry): void 
         const players = dimension.getPlayers({ location: block.location, maxDistance: 7.5 });
         let activeSpectral = false;
         for (const p of players) {
-          if (getMainhandItem(p)?.typeId === 'effect:spectral_sword') {
+          const held = getMainhandItem(p)?.typeId;
+          if (held === 'effect:spectral_sword' || held === 'effect:ghost_sword') {
             activeSpectral = true;
             break;
           }
