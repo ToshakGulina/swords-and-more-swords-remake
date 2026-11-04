@@ -4,7 +4,7 @@
     "description": {
       "identifier": "effect99:silver_ore_feature"
     },
-    "count": 7,
+    "count": 1,
     "replace_rules": [
       {
         "places_block": "effect99:silver_ore",

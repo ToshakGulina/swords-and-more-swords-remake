@@ -728,7 +728,9 @@ writeJson(path.join(BP, 'features/quartz_diamond_ore_feature.json'), {
     description: {
       identifier: 'effect99:quartz_diamond_ore_feature',
     },
-    count: 4,
+    // 2.8.8 placed the 1x1x1 `mystructure:quartz_diamond_ore` structure, so one
+    // rule iteration equals one ore block.
+    count: 1,
     replace_rules: [
       {
         places_block: 'effect99:quartz_diamond_ore',
@@ -752,7 +754,9 @@ writeJson(path.join(BP, 'features/silver_ore_feature.json'), {
     description: {
       identifier: 'effect99:silver_ore_feature',
     },
-    count: 7,
+    // 2.8.8 placed the 1x1x1 `mystructure:silver_ore` structure, so one rule
+    // iteration equals one ore block, never a 7-block vein.
+    count: 1,
     replace_rules: [
       {
         places_block: 'effect99:silver_ore',
@@ -782,11 +786,14 @@ writeJson(path.join(BP, 'feature_rules/quartz_diamond_ore_overworld_rule.json'),
         { test: 'has_biome_tag', operator: '==', value: 'overworld' },
       ],
     },
+    // 2.8.8 `feature_rules/quartz_diamond_ore_feature.json` covers overworld and
+    // the End in one rule: 5 iterations, y gaussian 0-16, scatter 160/200.
     distribution: {
-      iterations: 4,
-      x: { distribution: 'uniform', extent: [0, 15] },
-      y: { distribution: 'triangle', extent: [-63, 16] },
-      z: { distribution: 'uniform', extent: [0, 15] },
+      iterations: 5,
+      scatter_chance: { numerator: 160, denominator: 200 },
+      x: { distribution: 'uniform', extent: [0, 16] },
+      y: { distribution: 'gaussian', extent: [0, 16] },
+      z: { distribution: 'uniform', extent: [0, 16] },
     },
   },
 });
@@ -804,12 +811,15 @@ writeJson(path.join(BP, 'feature_rules/quartz_diamond_ore_end_rule.json'), {
         { test: 'has_biome_tag', operator: '==', value: 'the_end' },
       ],
     },
+    // Separate End rule kept (2.8.8 relied on a `has_biome_tag: the_end` branch of
+    // its single rule). Kept at 5 iterations x 1 block and a y window that can hit
+    // the floating islands; the old 4-block ore_feature made this 12x denser.
     distribution: {
-      iterations: 3,
-      x: { distribution: 'uniform', extent: [0, 15] },
-      // End islands are typically around Y=60; the old 4..32 range mostly sampled void.
+      iterations: 5,
+      scatter_chance: { numerator: 160, denominator: 200 },
+      x: { distribution: 'uniform', extent: [0, 16] },
       y: { distribution: 'uniform', extent: [30, 80] },
-      z: { distribution: 'uniform', extent: [0, 15] },
+      z: { distribution: 'uniform', extent: [0, 16] },
     },
   },
 });
@@ -827,11 +837,15 @@ writeJson(path.join(BP, 'feature_rules/silver_ore_overworld_rule.json'), {
         { test: 'has_biome_tag', operator: '==', value: 'overworld' },
       ],
     },
+    // 2.8.8 `feature_rules/silver_ore_feature.json`: 5 iterations, x/z 0-16,
+    // y gaussian 10-35, scatter_chance 160/200. The Remake once ran 9 iterations
+    // of a 7-block `ore_feature`, i.e. ~63 blocks per chunk against 2.8.8's 4.
     distribution: {
-      iterations: 9,
-      x: { distribution: 'uniform', extent: [0, 15] },
-      y: { distribution: 'uniform', extent: [-58, 35] },
-      z: { distribution: 'uniform', extent: [0, 15] },
+      iterations: 5,
+      scatter_chance: { numerator: 160, denominator: 200 },
+      x: { distribution: 'uniform', extent: [0, 16] },
+      y: { distribution: 'gaussian', extent: [10, 35] },
+      z: { distribution: 'uniform', extent: [0, 16] },
     },
   },
 });

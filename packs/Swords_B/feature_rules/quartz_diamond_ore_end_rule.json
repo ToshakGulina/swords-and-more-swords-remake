@@ -16,12 +16,16 @@
       ]
     },
     "distribution": {
-      "iterations": 3,
+      "iterations": 5,
+      "scatter_chance": {
+        "numerator": 160,
+        "denominator": 200
+      },
       "x": {
         "distribution": "uniform",
         "extent": [
           0,
-          15
+          16
         ]
       },
       "y": {
@@ -35,7 +39,7 @@
         "distribution": "uniform",
         "extent": [
           0,
-          15
+          16
         ]
       }
     }

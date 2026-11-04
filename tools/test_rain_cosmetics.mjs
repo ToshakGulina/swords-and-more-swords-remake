@@ -1,4 +1,4 @@
-// Missing cosmetic assets must not stop the 5-second Fire Sword rain reaction.
+// Missing cosmetic assets must not stop the 5-6 second Fire Sword rain reaction.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -22,6 +22,11 @@ const ctx = vm.createContext({ ItemStack, EntityComponentTypes: { Item: 'item' }
   // Stripped utils import: the rain check asks whether the biome rains at all.
   isNonRainingBiome: (id) => /desert|snow|frozen/.test(id) });
 vm.runInContext(`${code}\nthis.start=registerWorldEvents`, ctx); ctx.start();
-for (let i = 0; i < 9; i++) { loop(); assert.deepEqual(drops, []); }
-loop(); assert.deepEqual(drops, ['effect:obsidian_sword']); assert.equal(item.isValid, false);
+// 2.8.8 runs a one-shot 5-6 s `randomInterval` timer, i.e. 10 to 12 ten-tick
+// checks. It must not transform before the shortest window and must by the
+// longest one.
+for (let i = 0; i < 9; i++) { loop(); assert.deepEqual(drops, [], `no transformation before 5 s (check ${i + 1})`); }
+for (let i = 10; i <= 12 && drops.length === 0; i++) loop();
+assert.deepEqual(drops, ['effect:obsidian_sword'], 'transforms within the 5-6 s window');
+assert.equal(item.isValid, false);
 console.log('Rain reaction: missing cosmetics do not prevent Fire Sword transformation');

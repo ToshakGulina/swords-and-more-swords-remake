@@ -4,7 +4,7 @@
     "description": {
       "identifier": "effect99:quartz_diamond_ore_feature"
     },
-    "count": 4,
+    "count": 1,
     "replace_rules": [
       {
         "places_block": "effect99:quartz_diamond_ore",

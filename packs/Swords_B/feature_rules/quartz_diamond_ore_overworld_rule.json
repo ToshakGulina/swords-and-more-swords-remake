@@ -16,18 +16,22 @@
       ]
     },
     "distribution": {
-      "iterations": 4,
+      "iterations": 5,
+      "scatter_chance": {
+        "numerator": 160,
+        "denominator": 200
+      },
       "x": {
         "distribution": "uniform",
         "extent": [
           0,
-          15
+          16
         ]
       },
       "y": {
-        "distribution": "triangle",
+        "distribution": "gaussian",
         "extent": [
-          -63,
+          0,
           16
         ]
       },
@@ -35,7 +39,7 @@
         "distribution": "uniform",
         "extent": [
           0,
-          15
+          16
         ]
       }
     }
