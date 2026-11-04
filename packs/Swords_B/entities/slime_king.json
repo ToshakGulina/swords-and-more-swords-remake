@@ -156,6 +156,9 @@
       "minecraft:pushable": {
         "is_pushable": true,
         "is_pushable_by_piston": true
+      },
+      "minecraft:loot": {
+        "table": "loot_tables/entities/slime_king.json"
       }
     },
     "events": {
@@ -205,7 +208,7 @@
           "command": [
             "effect @s jump_boost 1 0 true",
             "damage @p[r=1.8] 4 magic",
-            "damage @e[r=1.5,family=!slime_king] 2 magic"
+            "damage @e[r=1.5,type=!item,type=!xp_orb,family=!slime_king] 2 magic"
           ]
         }
       },

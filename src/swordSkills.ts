@@ -9,7 +9,6 @@ import {
   system,
   world,
 } from '@minecraft/server';
-import { openSwordsGuide } from './guideMenu.js';
 import {
   consumeMainhandDurability,
   getMainhandItem,
@@ -132,13 +131,6 @@ const LIGHTNING_RING_OFFSETS: ReadonlyArray<[number, number, number]> = [
 ];
 
 export function registerItemComponents(registry: ItemComponentRegistry): void {
-  // Interactive Encyclopedia Book
-  registry.registerCustomComponent('effect:guide', {
-    onUse(event) {
-      openSwordsGuide(event.source);
-    },
-  });
-
   // Unified V2 Custom Component for all 38 Swords + 2 Special Sticks
   registry.registerCustomComponent('effect:sword', {
     onBeforeDurabilityDamage(event) {
@@ -259,19 +251,17 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
             if (hitEntity.typeId === 'minecraft:wither') {
               hitEntity.addTag('slain_by_nether_star_sword');
             }
-            // Exact 2.8.8: shoot nether_star_projectile + summon 1 (80%) or 2 (20%) falling nether_star from sky (6 dmg each)
-            if (attackingEntity instanceof Player) {
-              shootCustomProjectile(attackingEntity, 'entity:nether_star_projectile', 1.3);
-            }
+            // Exact 2.8.8: mark target with `entity:objective` + summon 1 (80%) or 2 (20%) sky `entity:nether_star` turrets
+            // that rain glowing `entity:nether_star_projectile` stars (6 dmg each + thunder sound + nether_star_hit particle)!
+            dim.spawnEntity('entity:objective', hitEntity.location);
             const count = Math.random() < 0.2 ? 2 : 1;
             for (let i = 0; i < count; i++) {
               const skyY = Math.min(dim.heightRange.max - 2, hitEntity.location.y + 18 + i * 2);
-              const star = dim.spawnEntity('entity:nether_star', {
+              dim.spawnEntity('entity:nether_star', {
                 x: hitEntity.location.x + (Math.random() - 0.5) * 1.5,
                 y: skyY,
                 z: hitEntity.location.z + (Math.random() - 0.5) * 1.5,
               });
-              star.applyImpulse({ x: 0, y: -1.4, z: 0 });
             }
             // Exact 2.8.8: 0.01% (1/10000) unstable bedrock-shattering explosion on attack!
             if (Math.random() < 0.0001) {
@@ -518,20 +508,21 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
             const dir = player.getViewDirection();
             const origin = player.location;
             dim.playSound('mob.wither.shoot', origin, { volume: 1.0, pitch: 1.2 });
+            shootCustomProjectile(player, 'entity:nether_star_projectile', 1.5, 'effect:nether_star_tracer');
 
-            for (let i = 1; i <= 6; i++) {
+            for (let i = 1; i <= 3; i++) {
               system.runTimeout(() => {
                 if (!player.isValid) return;
-                const tx = origin.x + dir.x * (i * 2.8) + (Math.random() - 0.5) * 2.0;
-                const tz = origin.z + dir.z * (i * 2.8) + (Math.random() - 0.5) * 2.0;
-                const ty = Math.min(dim.heightRange.max - 2, origin.y + 15);
+                const tx = origin.x + dir.x * (i * 4.5);
+                const tz = origin.z + dir.z * (i * 4.5);
+                const ty = Math.min(dim.heightRange.max - 2, origin.y + 18);
                 try {
-                  const star = dim.spawnEntity('entity:nether_star', { x: tx, y: ty, z: tz });
-                  star.applyImpulse({ x: 0, y: -1.4, z: 0 });
+                  dim.spawnEntity('entity:objective', { x: tx, y: origin.y + 0.5, z: tz });
+                  dim.spawnEntity('entity:nether_star', { x: tx, y: ty, z: tz });
                 } catch {}
-              }, i * 3);
+              }, i * 4);
             }
-            consumeMainhandDurability(player, 10);
+            consumeMainhandDurability(player, 4);
             break;
           }
 

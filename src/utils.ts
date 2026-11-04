@@ -125,6 +125,7 @@ export function shootCustomProjectile(
     const proj = spawnEvent
       ? player.dimension.spawnEntity(entityId, spawnPos, { spawnEvent })
       : player.dimension.spawnEntity(entityId, spawnPos);
+    proj.addTag('effect_player_shot');
 
     const vx = dir.x + (inaccuracy > 0 ? (Math.random() - 0.5) * inaccuracy : 0);
     const vy = dir.y + (inaccuracy > 0 ? (Math.random() - 0.5) * inaccuracy : 0);

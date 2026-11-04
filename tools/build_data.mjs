@@ -29,93 +29,15 @@ function writeJson(filePath, data) {
 }
 
 // ---------------------------------------------------------------------------
-// 0. Generate crisp 16x16 pixel-art icon for `swords_guide.png`
-// ---------------------------------------------------------------------------
-function makeGuidebookPng(outPath) {
-  const w = 16, h = 16;
-  // Palette: 0=transparent, 1=dark outline, 2=royal purple cover, 3=rich purple, 4=gold trim, 5=bright gold/sword, 6=parchment pages
-  const pal = {
-    '.': [0, 0, 0, 0],
-    '#': [32, 18, 45, 255],
-    'P': [88, 36, 130, 255],
-    'p': [122, 54, 172, 255],
-    'G': [218, 165, 32, 255],
-    'Y': [255, 230, 95, 255],
-    'W': [245, 238, 218, 255],
-  };
-  const art = [
-    '....#########...',
-    '...#GGGGGGGGG#..',
-    '..#GPPppppppPG#.',
-    '..#GPpppppYppW#.',
-    '..#GPppppYYYpW#.',
-    '..#GPpppYYYppW#.',
-    '..#GPppYYYpppW#.',
-    '..#GPpYYYppppW#.',
-    '..#GPYGYYppppW#.',
-    '..#GPpGGpppppW#.',
-    '..#GPGGpGppppW#.',
-    '..#GYGpppppppW#.',
-    '..#GPPppppppPG#.',
-    '..#GGGGGGGGGGW#.',
-    '...#WWWWWWWWW#..',
-    '....#########...',
-  ];
-  const raw = Buffer.alloc(h * (1 + w * 4));
-  for (let y = 0; y < h; y++) {
-    const rowOff = y * (1 + w * 4);
-    raw[rowOff] = 0; // filter None
-    for (let x = 0; x < w; x++) {
-      const rgba = pal[art[y][x]] || [0, 0, 0, 0];
-      const px = rowOff + 1 + x * 4;
-      raw[px] = rgba[0];
-      raw[px + 1] = rgba[1];
-      raw[px + 2] = rgba[2];
-      raw[px + 3] = rgba[3];
-    }
-  }
-  function crc32(buf) {
-    let c = 0xffffffff;
-    for (let i = 0; i < buf.length; i++) {
-      c ^= buf[i];
-      for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (c & 1 ? 0xedb88320 : 0);
-    }
-    return (c ^ 0xffffffff) >>> 0;
-  }
-  function chunk(type, data) {
-    const t = Buffer.from(type, 'ascii');
-    const len = Buffer.alloc(4);
-    len.writeUInt32BE(data.length, 0);
-    const crc = Buffer.alloc(4);
-    crc.writeUInt32BE(crc32(Buffer.concat([t, data])), 0);
-    return Buffer.concat([len, t, data, crc]);
-  }
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(w, 0);
-  ihdr.writeUInt32BE(h, 4);
-  ihdr[8] = 8; ihdr[9] = 6; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
-  const png = Buffer.concat([
-    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
-    chunk('IHDR', ihdr),
-    chunk('IDAT', zlib.deflateSync(raw)),
-    chunk('IEND', Buffer.alloc(0)),
-  ]);
-  fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  fs.writeFileSync(outPath, png);
-}
-
-makeGuidebookPng(path.join(RP, 'textures/items/swords_guide.png'));
-
-// ---------------------------------------------------------------------------
 // 1. Manifests (Swords_B & Swords_R) — Zero experimental toggles required!
 // ---------------------------------------------------------------------------
 writeJson(path.join(BP, 'manifest.json'), {
   format_version: 2,
   header: {
     name: '§6§lSwords and More Swords §r§a(1.26+ Remake)',
-    description: '§eПолное восстановление всех 38+ мечей, боссов, руд и способностей мода Effect99 для Minecraft Bedrock 1.26.60+ (Android & Windows) без экспериментальных режимов.',
+    description: '§eПолное восстановление всех 38 мечей, боссов, руд и способностей мода Effect99 для Minecraft Bedrock 1.26.60+ (Android & Windows) без экспериментальных режимов.',
     uuid: UUIDS.bp_header,
-    version: [3, 0, 0],
+    version: [3, 0, 1],
     min_engine_version: [1, 26, 20],
   },
   modules: [
@@ -123,29 +45,25 @@ writeJson(path.join(BP, 'manifest.json'), {
       description: 'Swords and More Swords Behavior Data',
       type: 'data',
       uuid: UUIDS.bp_data,
-      version: [3, 0, 0],
+      version: [3, 0, 1],
     },
     {
       description: 'Swords and More Swords Script Engine',
       type: 'script',
       language: 'javascript',
       uuid: UUIDS.bp_script,
-      version: [3, 0, 0],
+      version: [3, 0, 1],
       entry: 'scripts/main.js',
     },
   ],
   dependencies: [
     {
       uuid: UUIDS.rp_header,
-      version: [3, 0, 0],
+      version: [3, 0, 1],
     },
     {
       module_name: '@minecraft/server',
       version: '2.6.0',
-    },
-    {
-      module_name: '@minecraft/server-ui',
-      version: '2.0.0',
     },
   ],
   metadata: {
@@ -157,9 +75,9 @@ writeJson(path.join(RP, 'manifest.json'), {
   format_version: 2,
   header: {
     name: '§6§lSwords and More Swords §r§bResources (1.26+)',
-    description: '§eРесурс-пак мода Swords and More Swords (текстуры, 3D-модели, анимации, звуки и русская/английская энциклопедия) для Minecraft Bedrock 1.26.60+.',
+    description: '§eРесурс-пак мода Swords and More Swords (текстуры, 3D-модели, анимации, звуки и встроенный справочник на русском и английском языках) для Minecraft Bedrock 1.26.60+.',
     uuid: UUIDS.rp_header,
-    version: [3, 0, 0],
+    version: [3, 0, 1],
     min_engine_version: [1, 26, 20],
   },
   modules: [
@@ -167,13 +85,13 @@ writeJson(path.join(RP, 'manifest.json'), {
       description: 'Swords and More Swords Resource Assets',
       type: 'resources',
       uuid: UUIDS.rp_res,
-      version: [3, 0, 0],
+      version: [3, 0, 1],
     },
   ],
   dependencies: [
     {
       uuid: UUIDS.bp_header,
-      version: [3, 0, 0],
+      version: [3, 0, 1],
     },
   ],
   metadata: {
@@ -243,13 +161,10 @@ writeJson(path.join(RP, 'blocks.json'), {
 });
 
 const itemTex = jsonc.parse(fs.readFileSync(path.join(SRC_288_RP, 'textures/item_texture.json'), 'utf8'));
-itemTex.texture_data.swords_guide = {
-  textures: 'textures/items/swords_guide',
-};
 writeJson(path.join(RP, 'textures/item_texture.json'), itemTex);
 
 // ---------------------------------------------------------------------------
-// 3. Migrate all 42 Original Items + `swords_guide.json` (`format_version: "1.26.0"`)
+// 3. Migrate all 42 Original Items (`format_version: "1.26.0"`)
 // ---------------------------------------------------------------------------
 const FIRE_RESISTANT_ITEMS = new Set([
   'effect:bedrock_sword',
@@ -422,30 +337,6 @@ for (const fileName of fs.readdirSync(path.join(SRC_288_BP, 'items')).sort()) {
     },
   });
 }
-
-// 43rd item: Interactive Guidebook (`effect:swords_guide`)
-writeJson(path.join(BP, 'items/swords_guide.json'), {
-  format_version: '1.26.0',
-  'minecraft:item': {
-    description: {
-      identifier: 'effect:swords_guide',
-      menu_category: {
-        category: 'items',
-      },
-    },
-    components: {
-      'minecraft:icon': {
-        textures: { default: 'swords_guide' },
-      },
-      'minecraft:display_name': {
-        value: 'item.effect:swords_guide',
-      },
-      'minecraft:max_stack_size': 1,
-      'minecraft:glint': { value: true },
-      'effect:guide': {},
-    },
-  },
-});
 
 // ---------------------------------------------------------------------------
 // 4. Custom Blocks (`packs/Swords_B/blocks/*.json`, `format_version: "1.26.0"`)
@@ -734,7 +625,7 @@ writeJson(path.join(BP, 'blocks/spectral_block.json'), {
 });
 
 // ---------------------------------------------------------------------------
-// 5. Modernize all 17 Original Recipes + Add `swords_guide` Recipe (`1.20.10`)
+// 5. Modernize all 17 Original Recipes (`1.20.10`)
 // ---------------------------------------------------------------------------
 for (const fileName of fs.readdirSync(path.join(SRC_288_BP, 'recipes')).sort()) {
   const raw = jsonc.parse(fs.readFileSync(path.join(SRC_288_BP, 'recipes', fileName), 'utf8'));
@@ -787,29 +678,6 @@ for (const fileName of fs.readdirSync(path.join(SRC_288_BP, 'recipes')).sort()) 
 
   writeJson(path.join(BP, 'recipes', fileName), raw);
 }
-
-// Add Shapeless Recipe for Swords Guidebook (`book` + `stick`)
-writeJson(path.join(BP, 'recipes/swords_guide.json'), {
-  format_version: '1.20.10',
-  'minecraft:recipe_shapeless': {
-    description: {
-      identifier: 'effect:swords_guide_recipe',
-    },
-    tags: ['crafting_table'],
-    ingredients: [
-      { item: 'minecraft:book' },
-      { item: 'minecraft:stick' },
-    ],
-    result: {
-      item: 'effect:swords_guide',
-      count: 1,
-    },
-    unlock: [
-      { item: 'minecraft:book' },
-      { item: 'minecraft:stick' },
-    ],
-  },
-});
 
 // ---------------------------------------------------------------------------
 // 6. Modern `1.21.10` Worldgen (`features/` & `feature_rules/`) — Stone, Deepslate & End!
@@ -1018,7 +886,41 @@ for (const [rel, data] of Object.entries(customLootTables)) {
   writeJson(path.join(BP, 'loot_tables', rel), data);
 }
 
-// 7.2 Rebase ONLY the 17 modified vanilla chest/fishing/entity loot tables onto Mojang v1.26.60.5!
+// 7.1b Grass Witch loot table = vanilla Witch drops + 20% Grass Sword drop (exact 2.8.8!)
+{
+  const grassWitchLoot = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/entities/witch.json'), 'utf8'));
+  grassWitchLoot.pools.push({
+    conditions: [
+      { condition: 'killed_by_player' },
+      { condition: 'random_chance_with_looting', chance: 0.2, looting_multiplier: 0.05 },
+    ],
+    rolls: 1,
+    entries: [{ type: 'item', name: 'effect:grass_sword', weight: 1 }],
+  });
+  writeJson(path.join(BP, 'loot_tables/entities/grass_witch.json'), grassWitchLoot);
+}
+
+// Remove stale `gameplay/fishing/treasure.json` override so regular Ocean/River fishing stays 100% vanilla,
+// while Jungle biome fishing (`gameplay/jungle_fishing.json` -> `jungle_treasure.json`) drops `effect:jungle_sword`!
+const staleTreasurePath = path.join(BP, 'loot_tables/gameplay/fishing/treasure.json');
+if (fs.existsSync(staleTreasurePath)) {
+  fs.unlinkSync(staleTreasurePath);
+}
+{
+  const jungleTreasure = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/gameplay/fishing/treasure.json'), 'utf8'));
+  jungleTreasure.pools[0].entries.push({ type: 'item', name: 'effect:jungle_sword', weight: 2 });
+  writeJson(path.join(BP, 'loot_tables/gameplay/fishing/jungle_treasure.json'), jungleTreasure);
+
+  const jungleFishing = jsonc.parse(fs.readFileSync(path.join(VANILLA_BP, 'loot_tables/gameplay/jungle_fishing.json'), 'utf8'));
+  for (const entry of jungleFishing.pools[0].entries) {
+    if (entry.name === 'loot_tables/gameplay/fishing/treasure.json') {
+      entry.name = 'loot_tables/gameplay/fishing/jungle_treasure.json';
+    }
+  }
+  writeJson(path.join(BP, 'loot_tables/gameplay/jungle_fishing.json'), jungleFishing);
+}
+
+// 7.2 Rebase ONLY the modified vanilla chest loot tables onto Mojang v1.26.60!
 // This preserves 100% of 1.20–1.26 Armor Trims, Pottery Sherds, Bundles & Music Discs!
 const chestInjections = [
   ['chests/abandoned_mineshaft.json', 1, [{ type: 'item', name: 'effect:spider_sword', weight: 3 }]],
@@ -1032,7 +934,6 @@ const chestInjections = [
   ]],
   ['chests/spawn_bonus_chest.json', 0, [
     { type: 'item', name: 'effect:coal_sword', weight: 5 },
-    { type: 'item', name: 'effect:swords_guide', weight: 10 },
   ]],
   ['chests/stronghold_corridor.json', 0, [
     { type: 'item', name: 'effect:emerald_sword', weight: 2 },
@@ -1042,7 +943,6 @@ const chestInjections = [
   ['chests/underwater_ruin_big.json', 0, [{ type: 'item', name: 'effect:magma_sword', weight: 2 }]],
   ['chests/village/village_snowy_house.json', 0, [{ type: 'item', name: 'effect:ice_sword', weight: 2 }]],
   ['chests/woodland_mansion.json', 0, [{ type: 'item', name: 'effect:emerald_sword', weight: 3 }]],
-  ['gameplay/fishing/treasure.json', 0, [{ type: 'item', name: 'effect:jungle_sword', weight: 1 }]],
 ];
 
 for (const [rel, poolIdx, entries] of chestInjections) {
@@ -1052,16 +952,13 @@ for (const [rel, poolIdx, entries] of chestInjections) {
   writeJson(path.join(BP, 'loot_tables', rel), base);
 }
 
-// Rebase entity loot tables (`blaze`, `elder_guardian`, `shulker`, `wither_skeleton`) onto v1.26.60.5
+// Rebase entity loot tables (`elder_guardian`, `shulker`, `wither_skeleton`) onto v1.26.60
+// Note: Blaze killed by Snow Golem (0.5%) is handled cleanly in `worldEvents.ts` so snowball kills are 100% reliable without double-rolling!
+const staleBlazeLoot = path.join(BP, 'loot_tables/entities/blaze.json');
+if (fs.existsSync(staleBlazeLoot)) {
+  fs.unlinkSync(staleBlazeLoot);
+}
 const entityPoolAdditions = [
-  ['entities/blaze.json', {
-    conditions: [
-      { condition: 'killed_by_entity', entity_type: 'minecraft:snow_golem' },
-      { condition: 'random_chance_with_looting', chance: 0.025, looting_multiplier: 0.02 },
-    ],
-    rolls: 1,
-    entries: [{ type: 'item', name: 'effect:blaze_sword', weight: 1 }],
-  }],
   ['entities/elder_guardian.json', {
     conditions: [
       { condition: 'killed_by_player' },
@@ -1133,6 +1030,7 @@ writeJson(path.join(BP, 'spawn_rules/alpha_wolf.json'), {
         'minecraft:spawns_on_surface': {},
         'minecraft:spawns_on_block_filter': ['minecraft:grass_block', 'minecraft:podzol', 'minecraft:snow_layer'],
         'minecraft:brightness_filter': { min: 0, max: 7, adjust_for_weather: true },
+        'minecraft:spawn_event': { event: 'effect:natural_spawn' },
         'minecraft:difficulty_filter': { min: 'easy', max: 'hard' },
         'minecraft:weight': { default: 10 },
         'minecraft:herd': { min_size: 1, max_size: 1 },
@@ -1225,7 +1123,6 @@ writeJson(path.join(BP, 'spawn_rules/slime_king.json'), {
 // 9. `/function give` (`packs/Swords_B/functions/give.mcfunction`)
 // ---------------------------------------------------------------------------
 const giveLines = [
-  'give @s effect:swords_guide 1',
   'give @s effect:blaze_sword 1',
   'give @s effect:coal_sword 1',
   'give @s effect:shulker_sword 1',

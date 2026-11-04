@@ -189,6 +189,13 @@
             "effect:instant_despawn"
           ]
         }
+      },
+      "effect:nether_star_tracer": {
+        "add": {
+          "component_groups": [
+            "nether_star_sword"
+          ]
+        }
       }
     }
   }

@@ -11,8 +11,7 @@
     "skipLibCheck": false,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@minecraft/server": ["/tmp/refs/check260/node_modules/@minecraft/server/index.d.ts"],
-      "@minecraft/server-ui": ["/tmp/refs/check260/node_modules/@minecraft/server-ui/index.d.ts"]
+      "@minecraft/server": ["/tmp/refs/node_modules/@minecraft/server/index.d.ts"]
     }
   },
   "include": ["src/**/*.ts"]

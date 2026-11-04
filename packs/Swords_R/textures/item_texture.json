@@ -127,9 +127,6 @@
     },
     "quartz_diamond_stick": {
       "textures": "textures/items/quartz_diamond_stick"
-    },
-    "swords_guide": {
-      "textures": "textures/items/swords_guide"
     }
   }
 }

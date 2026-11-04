@@ -14,7 +14,7 @@ function writeJson(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n', 'utf8');
 }
 
-// 1. Update `how_to_play_screen.json` to also include `cursed_pumpkin_sword`
+// 1. Update `how_to_play_screen.json` AND generate `encyclopedia_screen.json` (for 1.20.50-1.26.60 Inventory [?] button!)
 const htp = jsonc.parse(fs.readFileSync(path.join(SRC_288_RP, 'ui/how_to_play_screen.json'), 'utf8'));
 htp.selector_stack_panel.controls[0].how_to_play_selector_pane.controls.push({
   'cursed_pumpkin_sword_button@how_to_play.cursed_pumpkin_sword_button': {
@@ -51,12 +51,47 @@ htp['cursed_pumpkin_sword_section@how_to_play_common.main_sections'] = {
     { 'padding_1@how_to_play_common.padding': {} },
   ],
 };
-writeJson(path.join(RP, 'ui/how_to_play_screen.json'), htp);
+const selectorPane = htp.selector_stack_panel;
+const contentPanels = htp.section_content_panels;
+delete htp.selector_stack_panel;
+delete htp.section_content_panels;
+delete htp.namespace;
+delete htp['how_to_play_screen@how_to_play_common.screen_base'];
+
+const finalHtp = {
+  namespace: 'how_to_play',
+  'how_to_play_screen@how_to_play_common.screen_base': {
+    $selector_stack_panel: 'how_to_play.swords_selector_stack_panel',
+    $section_content_panels: 'how_to_play.swords_section_content_panels',
+    $header_safezone_control: 'common_store.store_top_bar_filler',
+    $header_bar_control: 'common_store.store_top_bar',
+    $is_full_screen_layout: true,
+    $fill_alpha: 0.5,
+  },
+  swords_selector_stack_panel: selectorPane,
+  swords_section_content_panels: contentPanels,
+  ...htp,
+};
+writeJson(path.join(RP, 'ui/how_to_play_screen.json'), finalHtp);
+
+const encStr = JSON.stringify(finalHtp, null, 2)
+  .replace('"namespace": "how_to_play"', '"namespace": "encyclopedia"')
+  .replace('"how_to_play_screen@how_to_play_common.screen_base"', '"encyclopedia_screen@how_to_play_common.screen_base"')
+  .replaceAll('"how_to_play.swords_', '"encyclopedia.swords_')
+  .replaceAll('@how_to_play.', '@encyclopedia.');
+fs.writeFileSync(path.join(RP, 'ui/encyclopedia_screen.json'), encStr + '\n', 'utf8');
+
+// Copy red-sword button textures to `*_light.png` as well so both Classic UI (`_light`) and Pocket UI show the original red sword icon!
+for (const state of ['default', 'hover', 'pressed']) {
+  const srcBtn = path.join(SRC_288_RP, `textures/ui/how_to_play_button_${state}.png`);
+  fs.copyFileSync(srcBtn, path.join(RP, `textures/ui/how_to_play_button_${state}.png`));
+  fs.copyFileSync(srcBtn, path.join(RP, `textures/ui/how_to_play_button_${state}_light.png`));
+}
 
 // 2. `languages.json`
 writeJson(path.join(RP, 'texts/languages.json'), ['en_US', 'ru_RU']);
 
-// 3. Build `en_US.lang` (preserving all 2.8.8 entries + updating 1.26 info + adding `.name` aliases + `cursed_pumpkin_sword` + `swords_guide`)
+// 3. Build `en_US.lang` (preserving all 2.8.8 entries + updating 1.26 info + adding `.name` aliases + `cursed_pumpkin_sword`)
 const srcLangRaw = fs.readFileSync(path.join(SRC_288_RP, 'texts/en_US.lang'), 'utf8').replace(/\r\n/g, '\n');
 const enMap = new Map();
 for (const line of srcLangRaw.split('\n')) {
@@ -69,17 +104,16 @@ for (const line of srcLangRaw.split('\n')) {
 }
 
 // Update obsolete 1.20 / Holiday Creator Features notice in en_US
-enMap.set('updates_changelog.header.title', '§l§6Changelog §r§fV3.0.0 (1.26.60+ Remake)');
+enMap.set('updates_changelog.header.title', '§l§6Changelog §r§fV3.0.1 (1.26.60+ Remake)');
 enMap.set('effect.updates_changelog.text_0', '• Full remake for Minecraft Bedrock 1.26.60+ (Android & Windows)');
 enMap.set('effect.updates_changelog.text_1', '• Works WITHOUT Holiday Creator Features or any experimental toggles!');
-enMap.set('effect.updates_changelog.text_2', '• Restored all 38 swords, bosses, custom ores (including Deepslate & End), Desert Well wishes, 3D animations & interactive Swords Guidebook');
+enMap.set('effect.updates_changelog.text_2', '• Restored all 38 swords, bosses, custom ores (including Deepslate & End), Desert Well wishes, 3D animations & Inventory red-sword Encyclopedia button');
 enMap.set('effect.updates_changelog.text_3', '• Fixed Clock Sword crafting recipe, Bedrock Sword mining tags, and Spectral Sword Deepslate restoration');
 enMap.set('effect.basic_information.text_0', '§a• No experimental world toggles are needed! Works natively on Minecraft Bedrock 1.26.60+ (Android & Windows).');
-enMap.set('effect.basic_information.text_1', '§e• Craft a Swords Guidebook (Book + Stick) or press the yellow Sword [?] icon in Inventory to view all swords and recipes.');
+enMap.set('effect.basic_information.text_1', '§e• Press the red Sword icon at the top right of the Inventory screen (next to X, or [?] in the Pause menu) to view all swords, recipes, and bosses.');
 enMap.set('effect.basic_information.text_3', '§6• Complete collection of 38+ legendary swords with unique abilities, bosses, and transformations.');
 
-// Add `swords_guide`, `minicreeper`, and `cursed_pumpkin_sword` encyclopedia entry
-enMap.set('item.effect:swords_guide', '§l§6Swords Encyclopedia');
+// Add `minicreeper` and `cursed_pumpkin_sword` encyclopedia entry
 enMap.set('entity.entity:minicreeper.name', '§aMini Creeper');
 enMap.set('tile.effect99:spectral_block.name', 'Spectral Block');
 enMap.set('howtoplay.cursed_pumpkin_sword.title', '§lSwords');
@@ -159,7 +193,6 @@ const ruOverrides = {
   'item.effect:silver_ingot': 'Серебряный слиток',
   'item.effect:quartz_diamond': 'Кварцевый алмаз',
   'item.effect:quartz_diamond_stick': 'Кварцево-алмазная палка',
-  'item.effect:swords_guide': '§l§6Энциклопедия Мечей',
 
   // Entities & Spawn Eggs & Mount Hints
   'entity.entity:slime_king.name': '§l§aКороль Слизней',
@@ -181,7 +214,7 @@ const ruOverrides = {
   'action.hint.exit.spider': 'Нажмите красться, чтобы слезть с паука',
 
   // How-To-Play Headers & Categories
-  'updates_changelog.header.title': '§l§6Список изменений §r§fV3.0.0 (1.26.60+)',
+  'updates_changelog.header.title': '§l§6Список изменений §r§fV3.0.1 (1.26.60+)',
   'basic_information.header.title': '§l§6О моде Swords and More Swords',
   'howtoplay.updates_changelog.title': '§lИнформация',
   'howtoplay.basic_information.title': '§lИнформация',
@@ -199,11 +232,11 @@ const ruOverrides = {
 
   'effect.updates_changelog.text_0': '• Полный ремейк для актуального Minecraft Bedrock 1.26.60+ (Android и Windows)',
   'effect.updates_changelog.text_1': '• Работает БЕЗ «Возможностей создателя праздника» (Holiday Creator Features) и без экспериментальных настроек!',
-  'effect.updates_changelog.text_2': '• Восстановлены все 38 мечей, боссы, руды (включая глубинный сланец и Энд), колодец желаний, 3D-анимации и Энциклопедия Мечей',
+  'effect.updates_changelog.text_2': '• Восстановлены все 38 мечей, боссы, руды (включая глубинный сланец и Энд), колодец желаний, 3D-анимации и кнопка-меч справочника в инвентаре',
   'effect.updates_changelog.text_3': '• Исправлен крафт Часового меча, копание Бедроковым мечом и восстановление сланца Спектральным мечом',
 
   'effect.basic_information.text_0': '§a• Никакие экспериментальные переключатели больше не требуются! Просто активируйте наборы в мире.',
-  'effect.basic_information.text_1': '§e• Скрафтите «Энциклопедию Мечей» (Книга + Палка) или нажмите на жёлтую кнопку с мечом в инвентаре для просмотра рецептов и способностей.',
+  'effect.basic_information.text_1': '§e• Нажмите на красную иконку меча в правом верхнем углу экрана Инвентаря (рядом с крестиком X, либо [?] в меню паузы), чтобы открыть справочник мечей, руд и боссов.',
   'effect.basic_information.text_3': '§6• Полный набор из 38+ уникальных мечей со способностями, боссами и превращениями.',
   'effect.basic_information.text_4': '• Команда «/function give» выдаёт все мечи и материалы мода.',
   'effect.basic_information.text_5': '• Все мечи доступны во вкладке «Мечи» творческого инвентаря.',

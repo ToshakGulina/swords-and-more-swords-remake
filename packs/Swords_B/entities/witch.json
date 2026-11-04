@@ -433,6 +433,9 @@
         "minecraft:variant": {
           "value": 1
         },
+        "minecraft:scale": {
+          "value": 1.1
+        },
         "minecraft:type_family": {
           "family": [
             "witch",
@@ -445,15 +448,24 @@
           "value": 32,
           "max": 32
         },
-        "minecraft:behavior.ranged_attack": {
-          "priority": 2,
-          "speed_multiplier": 1,
-          "attack_interval_min": 3,
-          "attack_interval_max": 3.5,
-          "attack_radius": 12
+        "minecraft:follow_range": {
+          "value": 80,
+          "max": 80
         },
-        "minecraft:shooter": {
-          "def": "entity:nether_star_projectile"
+        "minecraft:loot": {
+          "table": "loot_tables/entities/grass_witch.json"
+        },
+        "minecraft:timer": {
+          "time": [
+            1.5,
+            2.5
+          ],
+          "looping": true,
+          "randomInterval": true,
+          "time_down_event": {
+            "event": "effect:grass_witch_skill",
+            "target": "self"
+          }
         }
       }
     },
@@ -534,6 +546,21 @@
         "add": {
           "component_groups": [
             "effect:grass_witch"
+          ]
+        }
+      },
+      "minecraft:grass_witch": {
+        "add": {
+          "component_groups": [
+            "effect:grass_witch"
+          ]
+        }
+      },
+      "effect:grass_witch_skill": {
+        "queue_command": {
+          "command": [
+            "execute at @e[family=!grass_witch,type=!item,type=!entity:grass,type=!xp_orb,type=!arrow,r=8,tag=!grass,family=!shulker_sword] if block ~ ~-0.1 ~ grass_block if block ~ ~ ~ air run summon entity:grass ~ ~ ~",
+            "execute at @e[family=!grass_witch,type=!item,type=!entity:grass,type=!xp_orb,type=!arrow,r=8,tag=!grass,family=!shulker_sword] if block ~ ~-0.1 ~ grass_block if block ~ ~ ~ short_grass run summon entity:grass ~ ~ ~"
           ]
         }
       }

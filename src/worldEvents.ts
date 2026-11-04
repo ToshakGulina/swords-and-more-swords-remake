@@ -11,11 +11,12 @@ import {
   WeatherType,
   world,
 } from '@minecraft/server';
-import { openSwordsGuide } from './guideMenu.js';
 import { getActiveShulkerShieldOwner } from './passiveEngine.js';
-import { getMainhandItem, giveOrDropItem, isDesertWellWater, safeRandomTeleport } from './utils.js';
+import { getMainhandItem, isDesertWellWater, safeRandomTeleport } from './utils.js';
 
 let isRainingOverworld = false;
+let lastCentellaDeathTick = -1000;
+let lastCentellaDeathLoc: Vector3 | undefined;
 
 function convertSurroundingSand(dim: Dimension, center: Vector3, targetBlockId: string): void {
   const cx = Math.floor(center.x);
@@ -41,25 +42,8 @@ export function registerWorldEvents(): void {
     isRainingOverworld = ev.newWeather !== WeatherType.Clear;
   });
 
-  // 1. Give Swords Encyclopedia on a player's very first join to the world
-  world.afterEvents.playerSpawn.subscribe((ev) => {
-    if (!ev.initialSpawn) return;
-    const player = ev.player;
-    try {
-      if (!player.getDynamicProperty('effect:received_guide')) {
-        player.setDynamicProperty('effect:received_guide', true);
-        giveOrDropItem(player, new ItemStack('effect:swords_guide', 1));
-      }
-    } catch {}
-  });
-
-  // 2. Handle player.json pre-damage dodges & /scriptevent effect:guide
+  // 1. Handle player.json pre-damage dodges & blast-safe Charged Creeper Sword drop
   system.afterEvents.scriptEventReceive.subscribe((ev) => {
-    if (ev.id === 'effect:guide' && ev.sourceEntity instanceof Player) {
-      openSwordsGuide(ev.sourceEntity);
-      return;
-    }
-
     if (ev.id === 'effect:dodge' && ev.sourceEntity instanceof Player) {
       const player = ev.sourceEntity;
       if (ev.message === 'ultra_instinct') {
@@ -70,6 +54,19 @@ export function registerWorldEvents(): void {
       } else if (ev.message === 'ender_always' || ev.message === 'ender_melee') {
         safeRandomTeleport(player, 2.0, 16.0);
       }
+    } else if (ev.id === 'effect:creeper_sword_drop' && ev.sourceEntity) {
+      const dim = ev.sourceEntity.dimension;
+      const dropPos = {
+        x: ev.sourceEntity.location.x,
+        y: ev.sourceEntity.location.y + 0.6,
+        z: ev.sourceEntity.location.z,
+      };
+      // Spawn 6 ticks later so the Charged Creeper's t=1.5s Power-6 blast has already finished!
+      system.runTimeout(() => {
+        try {
+          dim.spawnItem(new ItemStack('effect:creeper_sword', 1), dropPos);
+        } catch {}
+      }, 6);
     }
   });
 
@@ -126,21 +123,25 @@ export function registerWorldEvents(): void {
     } catch {}
   });
 
-  // 6. Natural Lightning Strike -> 20% Centella spawn & Alpha Wolf distant howl!
+  // 6. Natural Lightning Strike -> 20% Centella spawn!
   world.afterEvents.entitySpawn.subscribe((ev) => {
     try {
       if (ev.entity.typeId === 'minecraft:lightning_bolt') {
         const dim = ev.entity.dimension;
+        const loc = ev.entity.location;
+        // Skip lightning bolts summoned by a dying Centella or by a Lightning Sword wielder
+        if (
+          system.currentTick - lastCentellaDeathTick <= 10 &&
+          lastCentellaDeathLoc &&
+          Math.hypot(loc.x - lastCentellaDeathLoc.x, loc.z - lastCentellaDeathLoc.z) < 6
+        ) {
+          return;
+        }
         const nearbyHolder = dim
-          .getPlayers({ location: ev.entity.location, maxDistance: 45 })
+          .getPlayers({ location: loc, maxDistance: 45 })
           .some((p) => getMainhandItem(p)?.typeId === 'effect:lightning_sword');
         if (!nearbyHolder && Math.random() < 0.2) {
-          dim.spawnEntity('entity:centella', ev.entity.location);
-        }
-      } else if (ev.entity.typeId === 'entity:alpha_wolf') {
-        const dim = ev.entity.dimension;
-        for (const p of dim.getPlayers({ location: ev.entity.location, maxDistance: 96 })) {
-          p.playSound('wolf_sword.distant_howl', { volume: 1.0, pitch: 1.0 });
+          dim.spawnEntity('entity:centella', loc);
         }
       }
     } catch {}
@@ -187,9 +188,35 @@ export function registerWorldEvents(): void {
           break;
         }
 
+        case 'entity:centella': {
+          lastCentellaDeathTick = system.currentTick;
+          lastCentellaDeathLoc = { ...loc };
+          // Exact 2.8.8: 2% Lightning Sword drop when killed by a player (works for both melee and Bow/Trident, spawned post-lightning!)
+          if (killer instanceof Player && Math.random() < 0.02) {
+            const dropLoc = { x: loc.x, y: loc.y + 1.0, z: loc.z };
+            system.runTimeout(() => {
+              try {
+                dim.spawnItem(new ItemStack('effect:lightning_sword', 1), dropLoc);
+              } catch {}
+            }, 5);
+          }
+          break;
+        }
+
+        case 'minecraft:witch': {
+          if (deadEntity.matches({ families: ['grass_witch'] })) {
+            const foot = dim.getBlock(loc);
+            if (foot && foot.isAir) {
+              foot.setType('minecraft:short_grass');
+            }
+            dim.playSound('dig.grass', loc, { volume: 1.0, pitch: 1.0 });
+          }
+          break;
+        }
+
         case 'minecraft:blaze': {
-          // Killed by a Snow Golem -> Blaze Sword!
-          if (killer?.typeId === 'minecraft:snow_golem' && Math.random() < 0.025) {
+          // Exact 2.8.8: killed by a Snow Golem -> 0.5% Blaze Sword!
+          if (killer?.typeId === 'minecraft:snow_golem' && Math.random() < 0.005) {
             dim.spawnItem(new ItemStack('effect:blaze_sword', 1), loc);
           }
           break;
@@ -341,6 +368,27 @@ export function registerWorldEvents(): void {
             itemEnt.remove();
             block.setType('minecraft:air');
             dim.spawnEntity('entity:ultra_instinct_explode', loc);
+            continue;
+          }
+
+          // F2. Exact 2.8.8 fire/lava reactions for Bedrock Sword (fireproof!), Ender Sword & Wither Sword!
+          if (id === 'effect:bedrock_sword' && inFire) {
+            const safeStack = stack.clone();
+            itemEnt.remove();
+            const safeItem = dim.spawnItem(safeStack, { x: loc.x, y: loc.y + 1.4, z: loc.z });
+            safeItem.applyImpulse({ x: (Math.random() - 0.5) * 0.25, y: 0.35, z: (Math.random() - 0.5) * 0.25 });
+            continue;
+          }
+          if (id === 'effect:ender_sword' && inFire) {
+            itemEnt.remove();
+            dim.spawnParticle('minecraft:example_linearcurve', loc);
+            dim.playSound('mob.endermen.death', loc, { volume: 1.0, pitch: 0.5 });
+            continue;
+          }
+          if (id === 'effect:wither_sword' && inFire) {
+            itemEnt.remove();
+            dim.spawnParticle('minecraft:example_linearcurve', loc);
+            dim.playSound('mob.wither.death', loc, { volume: 1.0, pitch: 0.5 });
             continue;
           }
 

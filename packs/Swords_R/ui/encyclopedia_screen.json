@@ -1,0 +1,4098 @@
+{
+  "namespace": "encyclopedia",
+  "encyclopedia_screen@how_to_play_common.screen_base": {
+    "$selector_stack_panel": "encyclopedia.swords_selector_stack_panel",
+    "$section_content_panels": "encyclopedia.swords_section_content_panels",
+    "$header_safezone_control": "common_store.store_top_bar_filler",
+    "$header_bar_control": "common_store.store_top_bar",
+    "$is_full_screen_layout": true,
+    "$fill_alpha": 0.5
+  },
+  "swords_selector_stack_panel": {
+    "type": "stack_panel",
+    "anchor_from": "top_left",
+    "anchor_to": "top_left",
+    "orientation": "vertical",
+    "$default_selector_toggle_index": 0,
+    "controls": [
+      {
+        "how_to_play_selector_pane": {
+          "type": "stack_panel",
+          "controls": [
+            {
+              "padding_0": {
+                "type": "panel",
+                "size": [
+                  0,
+                  6
+                ]
+              }
+            },
+            {
+              "basic_information_category@how_to_play_common.topic_category": {
+                "$category": "basic_information"
+              }
+            },
+            {
+              "basic_information_button@encyclopedia.basic_information_button": {
+                "$toggle_group_forced_index": 0
+              }
+            },
+            {
+              "updates_changelog_button@encyclopedia.updates_changelog_button": {
+                "$toggle_group_forced_index": 14
+              }
+            },
+            {
+              "blocks_and_items_category@how_to_play_common.topic_category": {
+                "$category": "blocks_and_items"
+              }
+            },
+            {
+              "blocks_and_items_button@encyclopedia.blocks_and_items_button": {
+                "$toggle_group_forced_index": 38
+              }
+            },
+            {
+              "sword_mobs_button@encyclopedia.sword_mobs_button": {
+                "$toggle_group_forced_index": 39
+              }
+            },
+            {
+              "swords_category@how_to_play_common.topic_category": {
+                "$category": "swords"
+              }
+            },
+            {
+              "coal_sword_button@encyclopedia.coal_sword_button": {
+                "$toggle_group_forced_index": 1
+              }
+            },
+            {
+              "silver_sword_button@encyclopedia.silver_sword_button": {
+                "$toggle_group_forced_index": 2
+              }
+            },
+            {
+              "lapis_sword_button@encyclopedia.lapis_sword_button": {
+                "$toggle_group_forced_index": 3
+              }
+            },
+            {
+              "glowstone_sword_button@encyclopedia.glowstone_sword_button": {
+                "$toggle_group_forced_index": 4
+              }
+            },
+            {
+              "glass_sword_button@encyclopedia.glass_sword_button": {
+                "$toggle_group_forced_index": 5
+              }
+            },
+            {
+              "jungle_sword_button@encyclopedia.jungle_sword_button": {
+                "$toggle_group_forced_index": 6
+              }
+            },
+            {
+              "cactus_sword_button@encyclopedia.cactus_sword_button": {
+                "$toggle_group_forced_index": 7
+              }
+            },
+            {
+              "sponge_sword_button@encyclopedia.sponge_sword_button": {
+                "$toggle_group_forced_index": 8
+              }
+            },
+            {
+              "emerald_sword_button@encyclopedia.emerald_sword_button": {
+                "$toggle_group_forced_index": 9
+              }
+            },
+            {
+              "bone_sword_button@encyclopedia.bone_sword_button": {
+                "$toggle_group_forced_index": 10
+              }
+            },
+            {
+              "wither_skeleton_sword_button@encyclopedia.wither_skeleton_sword_button": {
+                "$toggle_group_forced_index": 11
+              }
+            },
+            {
+              "slime_sword_button@encyclopedia.slime_sword_button": {
+                "$toggle_group_forced_index": 12
+              }
+            },
+            {
+              "obsidian_sword_button@encyclopedia.obsidian_sword_button": {
+                "$toggle_group_forced_index": 13
+              }
+            },
+            {
+              "magma_sword_button@encyclopedia.magma_sword_button": {
+                "$toggle_group_forced_index": 15
+              }
+            },
+            {
+              "clock_sword_button@encyclopedia.clock_sword_button": {
+                "$toggle_group_forced_index": 16
+              }
+            },
+            {
+              "grass_sword_button@encyclopedia.grass_sword_button": {
+                "$toggle_group_forced_index": 17
+              }
+            },
+            {
+              "sea_sword_button@encyclopedia.sea_sword_button": {
+                "$toggle_group_forced_index": 18
+              }
+            },
+            {
+              "blaze_sword_button@encyclopedia.blaze_sword_button": {
+                "$toggle_group_forced_index": 19
+              }
+            },
+            {
+              "nether_star_sword_button@encyclopedia.nether_star_sword_button": {
+                "$toggle_group_forced_index": 20
+              }
+            },
+            {
+              "ice_sword_button@encyclopedia.ice_sword_button": {
+                "$toggle_group_forced_index": 21
+              }
+            },
+            {
+              "quartz_sword_button@encyclopedia.quartz_sword_button": {
+                "$toggle_group_forced_index": 22
+              }
+            },
+            {
+              "spider_sword_button@encyclopedia.spider_sword_button": {
+                "$toggle_group_forced_index": 23
+              }
+            },
+            {
+              "tnt_sword_button@encyclopedia.tnt_sword_button": {
+                "$toggle_group_forced_index": 24
+              }
+            },
+            {
+              "wolf_sword_button@encyclopedia.wolf_sword_button": {
+                "$toggle_group_forced_index": 25
+              }
+            },
+            {
+              "shulker_sword_button@encyclopedia.shulker_sword_button": {
+                "$toggle_group_forced_index": 26
+              }
+            },
+            {
+              "bee_sword_button@encyclopedia.bee_sword_button": {
+                "$toggle_group_forced_index": 27
+              }
+            },
+            {
+              "ghost_sword_button@encyclopedia.ghost_sword_button": {
+                "$toggle_group_forced_index": 28
+              }
+            },
+            {
+              "creeper_sword_button@encyclopedia.creeper_sword_button": {
+                "$toggle_group_forced_index": 29
+              }
+            },
+            {
+              "fire_sword_button@encyclopedia.fire_sword_button": {
+                "$toggle_group_forced_index": 30
+              }
+            },
+            {
+              "spectral_sword_button@encyclopedia.spectral_sword_button": {
+                "$toggle_group_forced_index": 31
+              }
+            },
+            {
+              "bedrock_sword_button@encyclopedia.bedrock_sword_button": {
+                "$toggle_group_forced_index": 32
+              }
+            },
+            {
+              "ender_sword_button@encyclopedia.ender_sword_button": {
+                "$toggle_group_forced_index": 33
+              }
+            },
+            {
+              "lightning_sword_button@encyclopedia.lightning_sword_button": {
+                "$toggle_group_forced_index": 34
+              }
+            },
+            {
+              "wither_sword_button@encyclopedia.wither_sword_button": {
+                "$toggle_group_forced_index": 35
+              }
+            },
+            {
+              "time_sword_button@encyclopedia.time_sword_button": {
+                "$toggle_group_forced_index": 36
+              }
+            },
+            {
+              "ultra_instinct_sword_button@encyclopedia.ultra_instinct_sword_button": {
+                "$toggle_group_forced_index": 37
+              }
+            },
+            {
+              "cursed_pumpkin_sword_button@encyclopedia.cursed_pumpkin_sword_button": {
+                "$toggle_group_forced_index": 40
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "swords_section_content_panels": {
+    "type": "stack_panel",
+    "anchor_from": "top_left",
+    "anchor_to": "top_left",
+    "size": [
+      "100% - 5px",
+      "100%c + 5px"
+    ],
+    "offset": [
+      2,
+      0
+    ],
+    "controls": [
+      {
+        "general_tips_sections": {
+          "type": "stack_panel",
+          "controls": [
+            {
+              "basic_information_section@encyclopedia.basic_information_section": {}
+            },
+            {
+              "updates_changelog_section@encyclopedia.updates_changelog_section": {}
+            },
+            {
+              "blocks_and_items_section@encyclopedia.blocks_and_items_section": {}
+            },
+            {
+              "sword_mobs_section@encyclopedia.sword_mobs_section": {}
+            },
+            {
+              "coal_sword_section@encyclopedia.coal_sword_section": {}
+            },
+            {
+              "silver_sword_section@encyclopedia.silver_sword_section": {}
+            },
+            {
+              "lapis_sword_section@encyclopedia.lapis_sword_section": {}
+            },
+            {
+              "glowstone_sword_section@encyclopedia.glowstone_sword_section": {}
+            },
+            {
+              "glass_sword_section@encyclopedia.glass_sword_section": {}
+            },
+            {
+              "jungle_sword_section@encyclopedia.jungle_sword_section": {}
+            },
+            {
+              "cactus_sword_section@encyclopedia.cactus_sword_section": {}
+            },
+            {
+              "sponge_sword_section@encyclopedia.sponge_sword_section": {}
+            },
+            {
+              "emerald_sword_section@encyclopedia.emerald_sword_section": {}
+            },
+            {
+              "bone_sword_section@encyclopedia.bone_sword_section": {}
+            },
+            {
+              "wither_skeleton_sword_section@encyclopedia.wither_skeleton_sword_section": {}
+            },
+            {
+              "slime_sword_section@encyclopedia.slime_sword_section": {}
+            },
+            {
+              "obsidian_sword_section@encyclopedia.obsidian_sword_section": {}
+            },
+            {
+              "magma_sword_section@encyclopedia.magma_sword_section": {}
+            },
+            {
+              "clock_sword_section@encyclopedia.clock_sword_section": {}
+            },
+            {
+              "grass_sword_section@encyclopedia.grass_sword_section": {}
+            },
+            {
+              "sea_sword_section@encyclopedia.sea_sword_section": {}
+            },
+            {
+              "blaze_sword_section@encyclopedia.blaze_sword_section": {}
+            },
+            {
+              "nether_star_sword_section@encyclopedia.nether_star_sword_section": {}
+            },
+            {
+              "ice_sword_section@encyclopedia.ice_sword_section": {}
+            },
+            {
+              "quartz_sword_section@encyclopedia.quartz_sword_section": {}
+            },
+            {
+              "spider_sword_section@encyclopedia.spider_sword_section": {}
+            },
+            {
+              "tnt_sword_section@encyclopedia.tnt_sword_section": {}
+            },
+            {
+              "wolf_sword_section@encyclopedia.wolf_sword_section": {}
+            },
+            {
+              "shulker_sword_section@encyclopedia.shulker_sword_section": {}
+            },
+            {
+              "bee_sword_section@encyclopedia.bee_sword_section": {}
+            },
+            {
+              "ghost_sword_section@encyclopedia.ghost_sword_section": {}
+            },
+            {
+              "creeper_sword_section@encyclopedia.creeper_sword_section": {}
+            },
+            {
+              "fire_sword_section@encyclopedia.fire_sword_section": {}
+            },
+            {
+              "spectral_sword_section@encyclopedia.spectral_sword_section": {}
+            },
+            {
+              "bedrock_sword_section@encyclopedia.bedrock_sword_section": {}
+            },
+            {
+              "ender_sword_section@encyclopedia.ender_sword_section": {}
+            },
+            {
+              "lightning_sword_section@encyclopedia.lightning_sword_section": {}
+            },
+            {
+              "wither_sword_section@encyclopedia.wither_sword_section": {}
+            },
+            {
+              "time_sword_section@encyclopedia.time_sword_section": {}
+            },
+            {
+              "ultra_instinct_sword_section@encyclopedia.ultra_instinct_sword_section": {}
+            },
+            {
+              "cursed_pumpkin_sword_section@encyclopedia.cursed_pumpkin_sword_section": {}
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "basic_information_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "basic_information"
+  },
+  "basic_information_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "basic_information_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "basic_information.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "paragraph_text_0@how_to_play_common.paragraph": {
+          "$text": "effect.basic_information.text_0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.basic_information.text_1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.basic_information.text_2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.basic_information.text_3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.basic_information.text_4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.basic_information.text_5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.basic_information.text_6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.basic_information.text_7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.basic_information.text_8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.basic_information.text_9"
+        }
+      },
+      {
+        "header_1@how_to_play_common.header": {
+          "$text": "basic_information.header.title_1"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      },
+      {
+        "image_swords@how_to_play_common.image": {
+          "texture": "textures/ui/swords_and_more_swords"
+        }
+      }
+    ]
+  },
+  "updates_changelog_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "updates_changelog"
+  },
+  "updates_changelog_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "updates_changelog_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "updates_changelog.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "paragraph_text_0@how_to_play_common.paragraph": {
+          "$text": "effect.updates_changelog.text_0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.updates_changelog.text_1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.updates_changelog.text_2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.updates_changelog.text_3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.updates_changelog.text_4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.updates_changelog.text_5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.updates_changelog.text_6"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "blocks_and_items_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "blocks_and_items"
+  },
+  "blocks_and_items_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "blocks_and_items_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "blocks_and_items.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "header_1@how_to_play_common.header": {
+          "$text": "blocks_and_items.header.title_1"
+        }
+      },
+      {
+        "image_ore@how_to_play_common.image": {
+          "texture": "textures/blocks/quartz_diamond_ore",
+          "size": [
+            12,
+            12
+          ]
+        }
+      },
+      {
+        "paragraph_text_0@how_to_play_common.paragraph": {
+          "$text": "effect.blocks_and_items.text_0"
+        }
+      },
+      {
+        "header_2@how_to_play_common.header": {
+          "$text": "blocks_and_items.header.title_2"
+        }
+      },
+      {
+        "image_diamond@how_to_play_common.image": {
+          "texture": "textures/items/quartz_diamond",
+          "size": [
+            12,
+            12
+          ]
+        }
+      },
+      {
+        "header_7@how_to_play_common.header": {
+          "$text": "blocks_and_items.header.title_7"
+        }
+      },
+      {
+        "image_block@how_to_play_common.image": {
+          "texture": "textures/items/quartz_diamond_block",
+          "size": [
+            12,
+            12
+          ]
+        }
+      },
+      {
+        "header_3@how_to_play_common.header": {
+          "$text": "blocks_and_items.header.title_3"
+        }
+      },
+      {
+        "image_stick@how_to_play_common.image": {
+          "texture": "textures/items/quartz_diamond_stick",
+          "size": [
+            12,
+            12
+          ]
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.blocks_and_items.text_1"
+        }
+      },
+      {
+        "header_4@how_to_play_common.header": {
+          "$text": "blocks_and_items.header.title_4"
+        }
+      },
+      {
+        "image_ore1@how_to_play_common.image": {
+          "texture": "textures/blocks/silver_ore",
+          "size": [
+            12,
+            12
+          ]
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.blocks_and_items.text_2"
+        }
+      },
+      {
+        "header_5@how_to_play_common.header": {
+          "$text": "blocks_and_items.header.title_5"
+        }
+      },
+      {
+        "image_ingot@how_to_play_common.image": {
+          "texture": "textures/items/silver_ingot",
+          "size": [
+            12,
+            12
+          ]
+        }
+      },
+      {
+        "header_6@how_to_play_common.header": {
+          "$text": "blocks_and_items.header.title_6"
+        }
+      },
+      {
+        "image_stick1@how_to_play_common.image": {
+          "texture": "textures/items/bedrock_stick",
+          "size": [
+            12,
+            12
+          ]
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.blocks_and_items.text_3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.blocks_and_items.text_4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.blocks_and_items.text_5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.blocks_and_items.text_6"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "sword_mobs_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "sword_mobs"
+  },
+  "sword_mobs_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "sword_mobs_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "sword_mobs.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "header_1@how_to_play_common.header": {
+          "$text": "sword_mobs.header.title.1"
+        }
+      },
+      {
+        "image_ghost_@how_to_play_common.image": {
+          "texture": "textures/ui/ghost_"
+        }
+      },
+      {
+        "paragraph_text_0@how_to_play_common.paragraph": {
+          "$text": "effect.sword_mobs.text_0"
+        }
+      },
+      {
+        "header_2@how_to_play_common.header": {
+          "$text": "sword_mobs.header.title.2"
+        }
+      },
+      {
+        "image_witch@how_to_play_common.image": {
+          "texture": "textures/ui/grass_witch"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.sword_mobs.text_1"
+        }
+      },
+      {
+        "header_3@how_to_play_common.header": {
+          "$text": "sword_mobs.header.title.3"
+        }
+      },
+      {
+        "image_wolf@how_to_play_common.image": {
+          "texture": "textures/ui/apha_wolf"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.sword_mobs.text_2"
+        }
+      },
+      {
+        "header_4@how_to_play_common.header": {
+          "$text": "sword_mobs.header.title.4"
+        }
+      },
+      {
+        "image_enderman_@how_to_play_common.image": {
+          "texture": "textures/ui/red_enderman_"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.sword_mobs.text_3"
+        }
+      },
+      {
+        "header_5@how_to_play_common.header": {
+          "$text": "sword_mobs.header.title.5"
+        }
+      },
+      {
+        "image_king@how_to_play_common.image": {
+          "texture": "textures/ui/slime_king"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.sword_mobs.text_4"
+        }
+      },
+      {
+        "header_6@how_to_play_common.header": {
+          "$text": "sword_mobs.header.title.6"
+        }
+      },
+      {
+        "image_centella@how_to_play_common.image": {
+          "texture": "textures/ui/centella"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.sword_mobs.text_5"
+        }
+      },
+      {
+        "header_7@how_to_play_common.header": {
+          "$text": "sword_mobs.header.title.7"
+        }
+      },
+      {
+        "image_baby@how_to_play_common.image": {
+          "texture": "textures/ui/slime_baby"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.sword_mobs.text_6"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "coal_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "coal_sword"
+  },
+  "coal_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "coal_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "coal_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/coal_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.coal_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.coal_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.coal_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.coal_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.coal_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.coal_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.coal_sword.text.6"
+        }
+      },
+      {
+        "image_fuel@how_to_play_common.image": {
+          "texture": "textures/ui/coal_sword_fuel"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "silver_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "silver_sword"
+  },
+  "silver_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "silver_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "silver_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/silver_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.silver_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.silver_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.silver_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.silver_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.silver_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.silver_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.silver_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.silver_sword.text.7"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "lapis_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "lapis_sword"
+  },
+  "lapis_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "lapis_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "lapis_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/lapis_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.lapis_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.lapis_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.lapis_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.lapis_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.lapis_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.lapis_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.lapis_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.lapis_sword.text.7"
+        }
+      },
+      {
+        "image_xp@how_to_play_common.image": {
+          "texture": "textures/ui/lapis_sword_xp"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "glowstone_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "glowstone_sword"
+  },
+  "glowstone_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "glowstone_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "glowstone_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/glowstone_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.glowstone_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.glowstone_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.glowstone_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.glowstone_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.glowstone_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.glowstone_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.glowstone_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.glowstone_sword.text.7"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "glass_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "glass_sword"
+  },
+  "glass_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "glass_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "glass_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/glass_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.glass_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.glass_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.glass_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.glass_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.glass_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.glass_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.glass_sword.text.6"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "jungle_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "jungle_sword"
+  },
+  "jungle_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "jungle_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "jungle_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/jungle_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.jungle_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.jungle_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.jungle_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.jungle_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.jungle_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.jungle_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.jungle_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.jungle_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.jungle_sword.text.8"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "cactus_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "cactus_sword"
+  },
+  "cactus_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "cactus_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "cactus_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/cactus_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.cactus_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.cactus_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.cactus_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.cactus_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.cactus_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.cactus_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.cactus_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.cactus_sword.text.7"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "sponge_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "sponge_sword"
+  },
+  "sponge_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "sponge_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "sponge_sword.header.title.0"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/sponge_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.sponge_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.sponge_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.sponge_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.sponge_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.sponge_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.sponge_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.sponge_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.sponge_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.sponge_sword.text.8"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      },
+      {
+        "header_1@how_to_play_common.header": {
+          "$text": "sponge_sword.header.title.1"
+        }
+      },
+      {
+        "image_sword1@how_to_play_common.image": {
+          "texture": "textures/items/wet_sponge_sword"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.sponge_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.sponge_sword.text.10"
+        }
+      },
+      {
+        "paragraph_11@how_to_play_common.paragraph": {
+          "$text": "effect.sponge_sword.text.11"
+        }
+      },
+      {
+        "paragraph_12@how_to_play_common.paragraph": {
+          "$text": "effect.sponge_sword.text.12"
+        }
+      },
+      {
+        "paragraph_13@how_to_play_common.paragraph": {
+          "$text": "effect.sponge_sword.text.13"
+        }
+      },
+      {
+        "padding_2@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "emerald_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "emerald_sword"
+  },
+  "emerald_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "emerald_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "emerald_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/emerald_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.emerald_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.emerald_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.emerald_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.emerald_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.emerald_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.emerald_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.emerald_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.emerald_sword.text.7"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "bone_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "bone_sword"
+  },
+  "bone_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "bone_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "bone_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/bone_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.bone_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.bone_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.bone_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.bone_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.bone_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.bone_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.bone_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.bone_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.bone_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.bone_sword.text.9"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "wither_skeleton_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "wither_skeleton_sword"
+  },
+  "wither_skeleton_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "wither_skeleton_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "wither_skeleton_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/wither_skeleton_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.wither_skeleton_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.wither_skeleton_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.wither_skeleton_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.wither_skeleton_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.wither_skeleton_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.wither_skeleton_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.wither_skeleton_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.wither_skeleton_sword.text.7"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "slime_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "slime_sword"
+  },
+  "slime_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "slime_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "slime_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/slime_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.slime_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.slime_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.slime_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.slime_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.slime_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.slime_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.slime_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.slime_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.slime_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.slime_sword.text.9"
+        }
+      },
+      {
+        "image_baby@how_to_play_common.image": {
+          "texture": "textures/ui/slime_baby"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "obsidian_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "obsidian_sword"
+  },
+  "obsidian_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "obsidian_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "obsidian_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/obsidian_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.obsidian_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.obsidian_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.obsidian_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.obsidian_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.obsidian_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.obsidian_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.obsidian_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.obsidian_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.obsidian_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.obsidian_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.obsidian_sword.text.10"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "magma_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "magma_sword"
+  },
+  "magma_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "magma_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "magma_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/magma_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.magma_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.magma_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.magma_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.magma_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.magma_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.magma_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.magma_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.magma_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.magma_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.magma_sword.text.9"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "clock_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "clock_sword"
+  },
+  "clock_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "clock_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "clock_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/clock_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.clock_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.clock_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.clock_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.clock_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.clock_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.clock_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.clock_sword.text.6"
+        }
+      },
+      {
+        "image_sword1@how_to_play_common.image": {
+          "texture": "textures/ui/crafting_clock_sword"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "grass_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "grass_sword"
+  },
+  "grass_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "grass_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "grass_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/grass_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.grass_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.grass_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.grass_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.grass_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.grass_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.grass_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.grass_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.grass_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.grass_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.grass_sword.text.9"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "sea_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "sea_sword"
+  },
+  "sea_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "sea_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "sea_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/sea_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.sea_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.sea_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.sea_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.sea_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.sea_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.sea_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.sea_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.sea_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.sea_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.sea_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.sea_sword.text.10"
+        }
+      },
+      {
+        "paragraph_11@how_to_play_common.paragraph": {
+          "$text": "effect.sea_sword.text.11"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "blaze_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "blaze_sword"
+  },
+  "blaze_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "blaze_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "blaze_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/blaze_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.blaze_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.blaze_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.blaze_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.blaze_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.blaze_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.blaze_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.blaze_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.blaze_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.blaze_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.blaze_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.blaze_sword.text.10"
+        }
+      },
+      {
+        "paragraph_11@how_to_play_common.paragraph": {
+          "$text": "effect.blaze_sword.text.11"
+        }
+      },
+      {
+        "paragraph_12@how_to_play_common.paragraph": {
+          "$text": "effect.blaze_sword.text.12"
+        }
+      },
+      {
+        "paragraph_13@how_to_play_common.paragraph": {
+          "$text": "effect.blaze_sword.text.13"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "nether_star_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "nether_star_sword"
+  },
+  "nether_star_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "nether_star_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "nether_star_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/nether_star_sword"
+        }
+      },
+      {
+        "paragraph_13@how_to_play_common.paragraph": {
+          "$text": "effect.nether_star_sword.text.13"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.nether_star_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.nether_star_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.nether_star_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.nether_star_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.nether_star_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.nether_star_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.nether_star_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.nether_star_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.nether_star_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.nether_star_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.nether_star_sword.text.10"
+        }
+      },
+      {
+        "paragraph_11@how_to_play_common.paragraph": {
+          "$text": "effect.nether_star_sword.text.11"
+        }
+      },
+      {
+        "paragraph_12@how_to_play_common.paragraph": {
+          "$text": "effect.nether_star_sword.text.12"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "ice_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "ice_sword"
+  },
+  "ice_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "ice_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "ice_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/ice_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.ice_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.ice_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.ice_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.ice_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.ice_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.ice_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.ice_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.ice_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.ice_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.ice_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.ice_sword.text.10"
+        }
+      },
+      {
+        "paragraph_11@how_to_play_common.paragraph": {
+          "$text": "effect.ice_sword.text.11"
+        }
+      },
+      {
+        "paragraph_12@how_to_play_common.paragraph": {
+          "$text": "effect.ice_sword.text.12"
+        }
+      },
+      {
+        "paragraph_13@how_to_play_common.paragraph": {
+          "$text": "effect.ice_sword.text.13"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "quartz_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "quartz_sword"
+  },
+  "quartz_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "quartz_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "quartz_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/quartz_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.quartz_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.quartz_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.quartz_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.quartz_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.quartz_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.quartz_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.quartz_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.quartz_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.quartz_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.quartz_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.quartz_sword.text.10"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "spider_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "spider_sword"
+  },
+  "spider_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "spider_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "spider_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/spider_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.spider_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.spider_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.spider_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.spider_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.spider_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.spider_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.spider_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.spider_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.spider_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.spider_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.spider_sword.text.10"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "tnt_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "tnt_sword"
+  },
+  "tnt_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "tnt_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "tnt_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/tnt_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.tnt_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.tnt_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.tnt_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.tnt_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.tnt_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.tnt_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.tnt_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.tnt_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.tnt_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.tnt_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.tnt_sword.text.10"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "wolf_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "wolf_sword"
+  },
+  "wolf_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "wolf_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "wolf_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/wolf_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.10"
+        }
+      },
+      {
+        "paragraph_11@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.11"
+        }
+      },
+      {
+        "paragraph_12@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.12"
+        }
+      },
+      {
+        "paragraph_13@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.13"
+        }
+      },
+      {
+        "paragraph_14@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.14"
+        }
+      },
+      {
+        "paragraph_15@how_to_play_common.paragraph": {
+          "$text": "effect.wolf_sword.text.15"
+        }
+      },
+      {
+        "image_werewolf@how_to_play_common.image": {
+          "texture": "textures/ui/werewolf"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "shulker_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "shulker_sword"
+  },
+  "shulker_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "shulker_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "shulker_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/shulker_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.shulker_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.shulker_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.shulker_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.shulker_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.shulker_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.shulker_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.shulker_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.shulker_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.shulker_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.shulker_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.shulker_sword.text.10"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "bee_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "bee_sword"
+  },
+  "bee_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "bee_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "bee_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/bee_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.bee_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.bee_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.bee_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.bee_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.bee_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.bee_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.bee_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.bee_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.bee_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.bee_sword.text.9"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "ghost_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "ghost_sword"
+  },
+  "ghost_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "ghost_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "ghost_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/ghost_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.10"
+        }
+      },
+      {
+        "paragraph_11@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.11"
+        }
+      },
+      {
+        "paragraph_12@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.12"
+        }
+      },
+      {
+        "paragraph_13@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.13"
+        }
+      },
+      {
+        "paragraph_14@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.14"
+        }
+      },
+      {
+        "paragraph_15@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.15"
+        }
+      },
+      {
+        "paragraph_16@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.16"
+        }
+      },
+      {
+        "paragraph_17@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.17"
+        }
+      },
+      {
+        "paragraph_18@how_to_play_common.paragraph": {
+          "$text": "effect.ghost_sword.text.18"
+        }
+      },
+      {
+        "image_ghost@how_to_play_common.image": {
+          "texture": "textures/ui/ghost"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "creeper_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "creeper_sword"
+  },
+  "creeper_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "creeper_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "creeper_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/creeper_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.creeper_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.creeper_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.creeper_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.creeper_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.creeper_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.creeper_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.creeper_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.creeper_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.creeper_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.creeper_sword.text.9"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "fire_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "fire_sword"
+  },
+  "fire_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "fire_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "fire_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/fire_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.10"
+        }
+      },
+      {
+        "paragraph_11@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.11"
+        }
+      },
+      {
+        "paragraph_12@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.12"
+        }
+      },
+      {
+        "paragraph_13@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.13"
+        }
+      },
+      {
+        "paragraph_14@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.14"
+        }
+      },
+      {
+        "paragraph_15@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.15"
+        }
+      },
+      {
+        "paragraph_16@how_to_play_common.paragraph": {
+          "$text": "effect.fire_sword.text.16"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "spectral_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "spectral_sword"
+  },
+  "spectral_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "spectral_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "spectral_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/spectral_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.10"
+        }
+      },
+      {
+        "paragraph_11@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.11"
+        }
+      },
+      {
+        "paragraph_12@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.12"
+        }
+      },
+      {
+        "paragraph_13@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.13"
+        }
+      },
+      {
+        "paragraph_14@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.14"
+        }
+      },
+      {
+        "paragraph_15@how_to_play_common.paragraph": {
+          "$text": "effect.spectral_sword.text.15"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "bedrock_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "bedrock_sword"
+  },
+  "bedrock_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "bedrock_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "bedrock_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/bedrock_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.bedrock_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.bedrock_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.bedrock_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.bedrock_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.bedrock_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.bedrock_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.bedrock_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.bedrock_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.bedrock_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.bedrock_sword.text.9"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "ender_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "ender_sword"
+  },
+  "ender_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "ender_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "ender_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/ender_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.ender_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.ender_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.ender_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.ender_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.ender_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.ender_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.ender_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.ender_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.ender_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.ender_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.ender_sword.text.10"
+        }
+      },
+      {
+        "paragraph_11@how_to_play_common.paragraph": {
+          "$text": "effect.ender_sword.text.11"
+        }
+      },
+      {
+        "image_enderman@how_to_play_common.image": {
+          "texture": "textures/ui/red_enderman"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "lightning_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "lightning_sword"
+  },
+  "lightning_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "lightning_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "lightning_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/lightning_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.lightning_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.lightning_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.lightning_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.lightning_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.lightning_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.lightning_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.lightning_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.lightning_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.lightning_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.lightning_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.lightning_sword.text.10"
+        }
+      },
+      {
+        "paragraph_11@how_to_play_common.paragraph": {
+          "$text": "effect.lightning_sword.text.11"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "wither_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "wither_sword"
+  },
+  "wither_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "wither_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "wither_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/wither_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.10"
+        }
+      },
+      {
+        "paragraph_11@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.11"
+        }
+      },
+      {
+        "paragraph_12@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.12"
+        }
+      },
+      {
+        "paragraph_13@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.13"
+        }
+      },
+      {
+        "paragraph_14@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.14"
+        }
+      },
+      {
+        "paragraph_15@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.15"
+        }
+      },
+      {
+        "paragraph_16@how_to_play_common.paragraph": {
+          "$text": "effect.wither_sword.text.16"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "time_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "time_sword"
+  },
+  "time_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "time_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "time_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/time_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.time_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.time_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.time_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.time_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.time_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.time_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.time_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.time_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.time_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.time_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.time_sword.text.10"
+        }
+      },
+      {
+        "image_well@how_to_play_common.image": {
+          "texture": "textures/ui/well"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "ultra_instinct_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "ultra_instinct_sword"
+  },
+  "ultra_instinct_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "ultra_instinct_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "ultra_instinct_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/ultra_instinct_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.ultra_instinct_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.ultra_instinct_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.ultra_instinct_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.ultra_instinct_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.ultra_instinct_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.ultra_instinct_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.ultra_instinct_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.ultra_instinct_sword.text.7"
+        }
+      },
+      {
+        "paragraph_8@how_to_play_common.paragraph": {
+          "$text": "effect.ultra_instinct_sword.text.8"
+        }
+      },
+      {
+        "paragraph_9@how_to_play_common.paragraph": {
+          "$text": "effect.ultra_instinct_sword.text.9"
+        }
+      },
+      {
+        "paragraph_10@how_to_play_common.paragraph": {
+          "$text": "effect.ultra_instinct_sword.text.10"
+        }
+      },
+      {
+        "paragraph_11@how_to_play_common.paragraph": {
+          "$text": "effect.ultra_instinct_sword.text.11"
+        }
+      },
+      {
+        "image_well@how_to_play_common.image": {
+          "texture": "textures/ui/well"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  },
+  "cursed_pumpkin_sword_button@how_to_play_common.section_toggle_button": {
+    "$section_topic": "cursed_pumpkin_sword"
+  },
+  "cursed_pumpkin_sword_section@how_to_play_common.main_sections": {
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "cursed_pumpkin_sword_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "header_0@how_to_play_common.header": {
+          "$text": "cursed_pumpkin_sword.header.title"
+        }
+      },
+      {
+        "padding_0@how_to_play_common.padding": {}
+      },
+      {
+        "image_sword@how_to_play_common.image": {
+          "texture": "textures/items/cursed_pumpkin_sword"
+        }
+      },
+      {
+        "paragraph_0@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.0"
+        }
+      },
+      {
+        "paragraph_1@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.1"
+        }
+      },
+      {
+        "paragraph_2@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.2"
+        }
+      },
+      {
+        "paragraph_3@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.3"
+        }
+      },
+      {
+        "paragraph_4@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.4"
+        }
+      },
+      {
+        "paragraph_5@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.5"
+        }
+      },
+      {
+        "paragraph_6@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.6"
+        }
+      },
+      {
+        "paragraph_7@how_to_play_common.paragraph": {
+          "$text": "effect.cursed_pumpkin_sword.text.7"
+        }
+      },
+      {
+        "padding_1@how_to_play_common.padding": {}
+      }
+    ]
+  }
+}
