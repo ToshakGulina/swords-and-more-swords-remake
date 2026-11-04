@@ -1076,8 +1076,18 @@ econWeaponsmith.tiers.push({
 writeJson(path.join(BP, 'trading/economy_trades/weapon_smith_trades.json'), econWeaponsmith);
 
 // ---------------------------------------------------------------------------
-// 8. Spawn Rules (`alpha_wolf`, `ghost`, `living_flame`, `slime_king`) — Updated for 1.26!
+// 8. Spawn Rules (`alpha_wolf`, `ghost`, `living_flame`, `slime_king`)
 // ---------------------------------------------------------------------------
+// Deliberate deviations from 2.8.8, all forced by modern block/spawn data or by
+// behaviour the original clearly intended:
+//  * `spawns_on_block_filter` — 2.8.8 used the removed ids `minecraft:grass`
+//    (-> `minecraft:grass_block`, plus podzol/snow_layer for a taiga wolf) and a
+//    bare `minecraft:stone`, which no longer covers deepslate caves.
+//  * `spawn_event` — 2.8.8 never fired any of these events, so a naturally
+//    spawned Ghost was silent and a Living Flame stayed passive. The entity
+//    events already existed in the original; only the hook was missing.
+//  * `slime_king` gets the standard hostile brightness window and also spawns in
+//    mangrove swamps, matching the vanilla slime it is a reskin of.
 writeJson(path.join(BP, 'spawn_rules/alpha_wolf.json'), {
   format_version: '1.8.0',
   'minecraft:spawn_rules': {
