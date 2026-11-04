@@ -798,9 +798,6 @@
             "fire_sword"
           ]
         },
-        "minecraft:hurt_on_condition": {
-          "damage_conditions": []
-        },
         "minecraft:damage_sensor": {
           "triggers": [
             {

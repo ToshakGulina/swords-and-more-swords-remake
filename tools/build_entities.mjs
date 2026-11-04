@@ -433,7 +433,8 @@ const SWORD_PLAYER_GROUPS = {
 
   'effect:fire_sword': {
     'minecraft:type_family': { family: ['player', 'fire_sword'] },
-    'minecraft:hurt_on_condition': { damage_conditions: [] },
+    // No `hurt_on_condition` here: 2.8.8 carried none in this group, and an empty
+    // `damage_conditions: []` only adds a component that does nothing.
     'minecraft:damage_sensor': {
       triggers: [
         { cause: 'fire', deals_damage: false },
