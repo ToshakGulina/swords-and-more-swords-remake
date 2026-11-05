@@ -455,21 +455,27 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
           }
 
           case 'effect:quartz_sword': {
-            // The item already deals its native 600 damage; do not apply it twice.
+            // Exact 2.8.8 `weapon` step 2: `effect @a[r=1] instant_damage 1 99 true`
+            // plus the roar particle, after the 10-point durability cost. `@a` is
+            // PLAYERS ONLY and is centred on the holder, so the swing kills every
+            // player within one block — the holder included — and leaves mobs
+            // alone. The remake killed only the attacker, forbade the damage in
+            // Creative and added a thunder clap the original never plays.
             dim.spawnParticle('minecraft:knockback_roar_particle', {
               x: hitEntity.location.x,
               y: hitEntity.location.y + 1,
               z: hitEntity.location.z,
             });
-            dim.playSound('ambient.weather.thunder', hitEntity.location, { volume: 1.5, pitch: 0.8 });
-            if (attackingEntity instanceof Player && attackingEntity.getGameMode() !== GameMode.Creative) {
-              const eq = attackingEntity.getComponent(EntityComponentTypes.Equippable);
-              eq?.setEquipment('Mainhand' as never, undefined);
-              system.run(() => {
+            if (attackingEntity instanceof Player) {
+              for (const victim of attackingEntity.dimension.getEntities({
+                location: attackingEntity.location,
+                maxDistance: 1.0,
+              })) {
+                if (!(victim instanceof Player)) continue; // `@a`, not `@e`
                 try {
-                  attackingEntity.kill();
+                  victim.addEffect('instant_damage', 20, { amplifier: 99, showParticles: false });
                 } catch {}
-              });
+              }
             }
             break;
           }
