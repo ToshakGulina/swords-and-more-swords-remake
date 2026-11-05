@@ -57,15 +57,23 @@ cloneSparse('https://github.com/Blockception/Minecraft-bedrock-json-schemas.git'
   path.join(REFS, 'schemas'));
 
 if (!samplesOnly) {
+  // The original addon lives in the user's Google Drive folder "Swords and more
+  // swords" and is NOT in the repository: it is Effect99's work, and the parity
+  // tools only need it locally. A .mcaddon is a zip, so an already-fetched
+  // archive is reused instead of calling Drive again on every restart.
   const original = path.join(ADDONS, '2.8.8');
+  const archive = path.join(ADDONS, 'swordsandmoreswords_2_8_8.mcaddon');
   if (fs.existsSync(path.join(original, 'Swords_B'))) {
     console.log(`refs: ${original} already present`);
+  } else if (fs.existsSync(archive)) {
+    fs.mkdirSync(original, {recursive: true});
+    execFileSync('unzip', ['-q', '-o', archive, '-d', original], {stdio: 'inherit'});
+    console.log(`refs: unpacked ${archive} into ${original}`);
   } else {
-    // The original addon is not in the repository and there is no public copy of
-    // 2.8.8 to download, so this step only explains what to drop in place.
     console.log(
-      `refs: MISSING original 2.8.8 — unpack "Swords and More Swords 2.8.8.mcaddon"\n` +
-      `      into ${original} so that ${original}/Swords_B and ${original}/Swords_R exist.\n` +
+      `refs: MISSING original 2.8.8 — download "swordsandmoreswords_2_8_8.mcaddon"\n` +
+      `      from the Google Drive folder "Swords and more swords" to ${archive}\n` +
+      `      (or unpack it into ${original} yourself).\n` +
       `      tools/test_original_items.mjs skips without it; nothing else needs it.`
     );
   }
