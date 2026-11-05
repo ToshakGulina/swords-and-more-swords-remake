@@ -1133,11 +1133,37 @@ export function startPassiveEngine(): void {
           }
 
           case 'effect:spider_sword': {
-            // Climbing assist on spider mount + re-mount on sneak
+            // Climbing assist on spider mount + re-mount on sneak.
+            //
+            // 2.8.8 `controller.animation.climb_spider` fires as soon as the spider
+            // has a rider: `/effect @s levitation 10 3 true`, i.e. 10 ticks at
+            // amplifier 3. `not_climb` clears it only when ALL four horizontal
+            // neighbours of the spider are air (`detect` on ~0.8, ~-0.8, ~0.8 on z
+            // and ~-0.8 on z), so the mount keeps levitating while it is still up
+            // against a wall. The remake used 8 ticks at amplifier 2 and only while
+            // `isClimbing`.
             const spiderMount = playerSpiderMount.get(player.id);
             if (spiderMount && spiderMount.isValid) {
-              if (spiderMount.isClimbing) {
-                spiderMount.addEffect('levitation', 8, { amplifier: 2, showParticles: false });
+              const loc = spiderMount.location;
+              const sides = [
+                [0.8, 0],
+                [-0.8, 0],
+                [0, 0.8],
+                [0, -0.8],
+              ];
+              const allAir = sides.every(([dx, dz]) => {
+                try {
+                  return dim.getBlock({ x: Math.floor(loc.x + dx), y: Math.floor(loc.y), z: Math.floor(loc.z + dz) })?.isAir;
+                } catch {
+                  return true;
+                }
+              });
+              if (allAir) {
+                try {
+                  spiderMount.removeEffect('levitation');
+                } catch {}
+              } else {
+                spiderMount.addEffect('levitation', 10, { amplifier: 3, showParticles: false });
               }
             } else if (player.isSneaking) {
               const riding = player.getComponent(EntityComponentTypes.Riding) as EntityRidingComponent | undefined;
