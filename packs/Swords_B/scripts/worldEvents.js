@@ -404,13 +404,17 @@ export function registerWorldEvents() {
                             }
                         }
                         // A. Dropped Fire Sword elemental transformations (100% faithful to 2.8.8 item.json!)
+                        //
+                        // `item.json` `fire_sword_event_2` (`in_water`) loads the GLASS sword, not the
+                        // obsidian one: the glass sword is what the sword becomes in water, while the
+                        // 5-6 s rain timer (`fire_sword_event_1`) is what turns it into obsidian.
                         if (id === 'effect:fire_sword') {
                             if (inWater) {
                                 fadingFireSwordTicks.delete(itemEnt.id);
                                 fadingFireSwordTargets.delete(itemEnt.id);
                                 itemEnt.remove();
                                 dim.spawnItem(new ItemStack('effect:glass_sword', 1), loc);
-                                dim.playSound('random.fizz', loc, { volume: 0.8, pitch: 1.0 });
+                                dim.playSound('random.fizz', loc, { volume: 0.6, pitch: 1.0 });
                                 dim.spawnParticle('minecraft:cauldron_explosion_emitter', loc);
                                 continue;
                             }
@@ -478,11 +482,54 @@ export function registerWorldEvents() {
                                 continue;
                             }
                         }
-                        // B. Dropped Sponge Sword -> Wet Sponge Sword
+                        // B. Dropped Sponge Sword -> Wet Sponge Sword.
+                        //
+                        // 2.8.8 `item.json` `sponge_sword_event` runs
+                        //   fill ~2 ~2 ~2 ~-2 ~-2 ~-2 sponge 0 replace water
+                        //   playsound random.fizz @a[r=12] 0.5 + cauldron_explosion_emitter
+                        //   fill ~2 ~2 ~2 ~-2 ~-2 ~-2 air 0 replace sponge
+                        //   fill ~2 ~2 ~2 ~-2 ~-2 ~-2 air 0 replace seagrass
+                        // then `structure load wet_sponge_sword` and `kill @s`. The remake only
+                        // replaced the single block it was standing in, so the sword barely dried
+                        // anything and left the kelp behind.
                         if (id === 'effect:sponge_sword' && (inWater || inRain)) {
                             itemEnt.remove();
-                            if (inWater)
-                                block.setType('minecraft:air');
+                            // Only water becomes sponge first; the sponge and seagrass sweeps are
+                            // unconditional in the original, exactly as written.
+                            for (let dx = -2; dx <= 2; dx++) {
+                                for (let dy = -2; dy <= 2; dy++) {
+                                    for (let dz = -2; dz <= 2; dz++) {
+                                        const b = dim.getBlock({
+                                            x: Math.floor(loc.x) + dx,
+                                            y: Math.floor(loc.y) + dy,
+                                            z: Math.floor(loc.z) + dz,
+                                        });
+                                        if (!b)
+                                            continue;
+                                        const t = b.typeId;
+                                        if (t === 'minecraft:water' || t === 'minecraft:flowing_water') {
+                                            b.setType('minecraft:sponge');
+                                        }
+                                    }
+                                }
+                            }
+                            for (let dx = -2; dx <= 2; dx++) {
+                                for (let dy = -2; dy <= 2; dy++) {
+                                    for (let dz = -2; dz <= 2; dz++) {
+                                        const b = dim.getBlock({
+                                            x: Math.floor(loc.x) + dx,
+                                            y: Math.floor(loc.y) + dy,
+                                            z: Math.floor(loc.z) + dz,
+                                        });
+                                        if (!b)
+                                            continue;
+                                        const t = b.typeId;
+                                        if (t === 'minecraft:sponge' || t === 'minecraft:seagrass') {
+                                            b.setType('minecraft:air');
+                                        }
+                                    }
+                                }
+                            }
                             dim.spawnItem(new ItemStack('effect:wet_sponge_sword', 1), loc);
                             dim.playSound('random.fizz', loc, { volume: 0.6, pitch: 1.1 });
                             dim.spawnParticle('minecraft:cauldron_explosion_emitter', loc);
