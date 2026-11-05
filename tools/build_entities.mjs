@@ -1196,11 +1196,20 @@ for (const f of customEntityFiles.sort()) {
     ent.components['minecraft:is_baby'] = {};
   }
   if (f === 'shulker_shield.json') {
-    // Clean despawn without calling nonexistent `stop_shulker_sword_event` on player
+    // 2.8.8 `minecraft:despawn` on the shell releases the player:
+    //   event entity @p[family=shulker_sword,r=6] stop_shulker_sword_event
+    // That event DOES exist in `player.json` (it strips `minecraft:shulker_sword`,
+    // restores `minecraft:default_player` and runs `ride @s stop_riding`). The remake
+    // had replaced it with a bare shulker sound, so a shell that died on its own left
+    // the player stuck in the hiding state. `queue_command` is the current name of
+    // the response — `run_command` was renamed in 1.20.60.
     ent.events['minecraft:despawn'] = {
       add: { component_groups: ['despawn'] },
       queue_command: {
-        command: ['playsound mob.shulker.open @a[r=12] ~ ~ ~ 0.9 1.0'],
+        command: [
+          'event entity @p[family=shulker_sword,r=6] stop_shulker_sword_event',
+          'playsound mob.shulker.open @a[r=12] ~ ~ ~ 0.9 1.0',
+        ],
       },
     };
   }

@@ -99,6 +99,7 @@
         },
         "queue_command": {
           "command": [
+            "event entity @p[family=shulker_sword,r=6] stop_shulker_sword_event",
             "playsound mob.shulker.open @a[r=12] ~ ~ ~ 0.9 1.0"
           ]
         }

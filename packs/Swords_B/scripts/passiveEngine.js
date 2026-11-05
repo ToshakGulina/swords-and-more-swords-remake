@@ -278,6 +278,34 @@ export function startPassiveEngine() {
         lastEquipKey.delete(pid);
         lastMainhandId.delete(pid);
     });
+    // 2.8.8 releases the player through the shell's own entity event:
+    //   enter  -> ride @s summon_ride entity:shulker_shield ...  + effect:shulker_hiding
+    //   leave  -> event entity @p[family=shulker_sword,r=6] stop_shulker_sword_event
+    //             (ride @s stop_riding, strip shulker_sword, back to default_player)
+    // The remake had no `stop_*_event` plumbing at all, so hiding had to be undone by
+    // a script guess. Listen for the real event instead: whether the player left the
+    // shell by sneak or the shell was destroyed, the handler restores the sword state.
+    try {
+        world.afterEvents.dataDrivenEntityTrigger.subscribe((ev) => {
+            if (ev.eventId !== 'stop_shulker_sword_event')
+                return;
+            const entity = ev.entity;
+            // `entityTypes: ['minecraft:player']` already narrows the event; the typeId
+            // check keeps this readable and mirrors the rest of the engine.
+            if (entity.typeId !== 'minecraft:player')
+                return;
+            playerShulkerShield.delete(entity.id);
+            shulkerToggleCooldown.set(entity.id, system.currentTick + 16);
+            try {
+                entity.triggerEvent('effect:equip_shulker_sword');
+            }
+            catch { }
+        }, 
+        // Narrow to the player and the one event this handler cares about: every
+        // player-triggered data event would otherwise cross into the script.
+        { entityTypes: ['minecraft:player'], eventTypes: ['stop_shulker_sword_event'] });
+    }
+    catch { }
     world.afterEvents.playerSpawn.subscribe((ev) => {
         const p = ev.player;
         lastEquipKey.delete(p.id);
@@ -1022,14 +1050,21 @@ export function startPassiveEngine() {
                     case 'effect:shulker_sword': {
                         // Immune to levitation effect!
                         player.removeEffect('levitation');
-                        // Exact 2.8.8: pressing Sneak enters the Shulker Shell (`shulker_shield`, scale 0.7, damage-immune);
-                        // the player stays inside until pressing Sneak again to dismount (or until the 20-HP shell is destroyed)!
+                        // Exact 2.8.8: sneak enters the Shulker Shell. `shulker_sword` in
+                        // `player.json` runs
+                        //   ride @s summon_ride entity:shulker_shield <no_ride_change> <shulker_hiding>
+                        // so the shell is spawned as part of the ride, the player is switched to
+                        // the `shulker_hiding` group (scale 0.7, immune) and `entity:shulker_shield`
+                        // is left riding. Leaving is driven by the shell itself
+                        // (`stop_shulker_sword_event`), handled in `startPassiveEngine`.
                         const existingShield = playerShulkerShield.get(player.id);
                         const ridingComp = player.getComponent(EntityComponentTypes.Riding);
                         const currentlyMountedOn = ridingComp?.entityRidingOn;
                         if (existingShield) {
                             if (!existingShield.isValid || currentlyMountedOn?.id !== existingShield.id) {
-                                // Player dismounted via Sneak or shell was destroyed -> restore normal player state!
+                                // The shell vanished without its own despawn event (chunk unload,
+                                // /kill, explosion). Restore the player instead of leaving them
+                                // shrunk and damage-immune forever.
                                 cleanupHelperEntity(playerShulkerShield, player.id);
                                 shulkerToggleCooldown.set(player.id, tick + 16);
                                 try {
@@ -1038,9 +1073,8 @@ export function startPassiveEngine() {
                                 }
                                 catch { }
                             }
-                            else {
-                                player.addEffect('resistance', 15, { amplifier: 4, showParticles: false });
-                            }
+                            // No invented Resistance V while hiding: 2.8.8 relies purely on the
+                            // `shulker_hiding` group's `damage_sensor` (cause all, no damage).
                         }
                         else if (player.isSneaking &&
                             !currentlyMountedOn &&
