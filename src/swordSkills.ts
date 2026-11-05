@@ -2,6 +2,7 @@ import { spawnSwordLightning } from './lightningOrigin.js';
 import {
   BlockPermutation,
   EntityComponentTypes,
+  Entity,
   EntityDamageCause,
   EntityEquippableComponent,
   EntityRideableComponent,
@@ -207,12 +208,29 @@ function applyProjectileBranchDurability(itemId: string, attacker: unknown): voi
   consumeMainhandDurability(attacker, 1);
 }
 
+/**
+ * 2.8.8 target: `@e[type=ender_crystal,family=!ender_crystal_default,family=!ender_crystal_scale,c=1]`.
+ * It is a plain selector around the player — NOT the rider list. The remake used
+ * `getRiders()`, and the crystal it spawned was never actually riding, so the
+ * 1 % `weapon`/air-swing explosion never happened at all.
+ */
+function findOverheadCrystal(player: Player, maxDistance = 4): Entity | undefined {
+  try {
+    return player.dimension
+      .getEntities({
+        location: player.location,
+        maxDistance,
+        type: 'minecraft:ender_crystal',
+        excludeFamilies: ['ender_crystal_default', 'ender_crystal_scale'],
+      })
+      .find((e) => e.isValid);
+  } catch {
+    return undefined;
+  }
+}
+
 function explodeSpectralCrystal(player: Player): void {
-  const rideable = player.getComponent(EntityComponentTypes.Rideable) as EntityRideableComponent | undefined;
-  const crystal = rideable?.getRiders().find(
-    (r) => r.typeId === 'minecraft:ender_crystal' && !r.matches({ families: ['ender_crystal_scale'] })
-  );
-  crystal?.triggerEvent('minecraft:crystal_explode');
+  findOverheadCrystal(player)?.triggerEvent('minecraft:crystal_explode');
 }
 
 export function registerItemComponents(registry: ItemComponentRegistry): void {
@@ -917,14 +935,11 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
             // Exact 2.8.8: fire explosive ender_crystal_projectile + shrink overhead crystal for recharge! (-15 durability)
             if (!checkAndStartCooldown(player, 'spectral_sword', 18)) return;
             shootCustomProjectile(player, 'entity:ender_crystal_projectile', 1.45);
-            try {
-              const rideable = player.getComponent(EntityComponentTypes.Rideable) as EntityRideableComponent | undefined;
-              for (const rider of rideable?.getRiders() ?? []) {
-                if (rider.typeId === 'minecraft:ender_crystal') {
-                  rider.triggerEvent('effect:ender_crystal_scale');
-                }
-              }
-            } catch {}
+            // `on_use` runs `event entity @e[type=ender_crystal,family=!ender_crystal_default,
+            // family=!ender_crystal_scale,c=1,r=4] minecraft:ender_crystal_scale`: the
+            // full-size crystal shrinks for 18 s and then pops back with the
+            // portal.travel + example_flipbook flourish.
+            findOverheadCrystal(player)?.triggerEvent('effect:ender_crystal_scale');
             dim.playSound('portal.travel', player.location, { volume: 1.0, pitch: 5.0 });
             consumeMainhandDurability(player, 15);
             break;

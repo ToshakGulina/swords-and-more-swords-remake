@@ -159,6 +159,39 @@ function cleanupHelperEntity(map: Map<string, Entity>, playerId: string, despawn
   } catch {}
 }
 
+/**
+ * The overhead Ender Crystal of the Spectral Sword.
+ *
+ * 2.8.8 never tracks it in a map: every target is an entity selector.
+ * `spectral_sword_skills` summons `ender_crystal ~ ~1.8 ~ minecraft:detect_player`
+ * on a 0.4 s timer unless the biome is the End; that group adds an
+ * `environment_sensor` which fires `ride_player` (`ride @s start_riding
+ * @p[family=spectral_sword,r=3] teleport_rider`) as soon as it is spawned;
+ * `mount_crystal` then swaps it to the `spectral_sword` family;
+ * `spectral_sword` on the item calls `event entity
+ * @e[type=ender_crystal,family=!ender_crystal_default,family=!ender_crystal_scale,c=1,r=4]
+ * minecraft:ender_crystal_scale` (18 s ageable back to full size) and the `weapon`
+ * 1 % branch calls `minecraft:crystal_explode` on the same selector.
+ *
+ * The remake looked the crystal up through the player's riders, and the crystal it
+ * spawned was never actually riding, so the explosions silently did nothing.
+ * Selector-by-family is the faithful lookup, so use it everywhere.
+ */
+function findOverheadCrystal(player: Player, maxDistance = 4): Entity | undefined {
+  try {
+    return player.dimension
+      .getEntities({
+        location: player.location,
+        maxDistance,
+        type: 'minecraft:ender_crystal',
+        excludeFamilies: ['ender_crystal_default', 'ender_crystal_scale'],
+      })
+      .find((e) => e.isValid);
+  } catch {
+    return undefined;
+  }
+}
+
 function clearTrackedLight(playerId: string): void {
   const prev = lastLightBlock.get(playerId);
   if (!prev) return;
@@ -1151,23 +1184,17 @@ export function startPassiveEngine(): void {
               if (dim.id === 'minecraft:the_end') {
                 cleanupHelperEntity(playerSpectralCrystal, player.id, 'effect:despawn');
               } else {
+                // 2.8.8 summons the crystal 1.8 blocks above the player, not 2:
+                // `summon ender_crystal ~ ~1.8 ~ minecraft:detect_player`.
                 let crystal = playerSpectralCrystal.get(player.id);
                 if (!crystal || !crystal.isValid) {
-                  const rideable = player.getComponent(EntityComponentTypes.Rideable) as
-                    | EntityRideableComponent
-                    | undefined;
-                  const existingRider = rideable
-                    ?.getRiders()
-                    .find((r) => r.typeId === 'minecraft:ender_crystal');
-                  if (existingRider) {
-                    crystal = existingRider;
-                  } else {
+                  crystal = findOverheadCrystal(player);
+                  if (!crystal) {
                     crystal = dim.spawnEntity(
                       'minecraft:ender_crystal',
-                      { x: player.location.x, y: player.location.y + 2.0, z: player.location.z },
+                      { x: player.location.x, y: player.location.y + 1.8, z: player.location.z },
                       { spawnEvent: 'effect:spectral_rider' }
                     );
-                    rideable?.addRider(crystal);
                   }
                   playerSpectralCrystal.set(player.id, crystal);
                 }
