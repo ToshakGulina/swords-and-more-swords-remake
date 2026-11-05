@@ -42,7 +42,14 @@ function cloneSparse(url, dir, phases) {
   } else {
     fs.mkdirSync(dir, {recursive: true});
     git('clone', '--depth', '1', '--filter=blob:none', '--sparse', url, dir);
-    if (phases) execFileSync('git', phases, {cwd: dir, stdio: 'inherit'});
+    if (phases) {
+      execFileSync('git', phases, {cwd: dir, stdio: 'inherit'});
+    } else {
+      // Repos without a cone-compatible layout (the Blockception schemas keep their
+      // top level in `/*` + `!/*/`) are left at 2 % of the tree by `--sparse`, which
+      // looks installed but is empty where it matters. Turn sparse off entirely.
+      execFileSync('git', ['sparse-checkout', 'disable'], {cwd: dir, stdio: 'inherit'});
+    }
   }
   const still = (REQUIRED[dir] ?? []).filter((rel) => !fs.existsSync(path.join(dir, rel)));
   if (still.length > 0) {
