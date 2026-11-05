@@ -28,7 +28,6 @@
       "minecraft:destructible_by_explosion": {
         "explosion_resistance": 10
       },
-      "minecraft:friction": 0.02,
       "minecraft:light_dampening": 0,
       "minecraft:light_emission": 0,
       "minecraft:loot": "loot_tables/empty.json",

@@ -11,18 +11,7 @@
     "components": {
       "minecraft:display_name": "tile.effect99:sapling3.name",
       "minecraft:collision_box": false,
-      "minecraft:selection_box": {
-        "origin": [
-          -6,
-          0,
-          -6
-        ],
-        "size": [
-          12,
-          12,
-          12
-        ]
-      },
+      "minecraft:selection_box": false,
       "minecraft:destructible_by_mining": {
         "seconds_to_destroy": 0.1
       },
@@ -32,11 +21,11 @@
       "minecraft:light_dampening": 0,
       "minecraft:light_emission": 0,
       "minecraft:loot": "loot_tables/empty.json",
-      "minecraft:geometry": "minecraft:geometry.cross",
+      "minecraft:geometry": "geometry.null",
       "minecraft:material_instances": {
         "*": {
-          "texture": "sapling_jungle",
-          "render_method": "alpha_test",
+          "texture": "null",
+          "render_method": "blend",
           "ambient_occlusion": 0,
           "face_dimming": false
         }

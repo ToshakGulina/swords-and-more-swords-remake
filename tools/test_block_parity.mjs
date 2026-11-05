@@ -46,6 +46,20 @@ for (const [name, seconds, resistance, dampening] of [
 assert.equal(comp('fake_ice', 'minecraft:light_dampening'), 0,
   '2.8.8 fake_ice has block_light_absorption 0');
 
+// lightblock / lightblock2 keep 2.8.8 `explosion_resistance: 999` (an explosion must
+// not pop the placeholders early) and 2.8.8 `render_method: blend`.
+for (const name of ['lightblock', 'lightblock2']) {
+  assert.equal(comp(name, 'minecraft:destructible_by_explosion').explosion_resistance, 999,
+    `${name} survives explosions like the 2.8.8 original`);
+  assert.equal(comp(name, 'minecraft:material_instances')['*'].render_method, 'blend',
+    `${name} renders with blend, as in 2.8.8`);
+}
+
+// 2.8.8 `effect99:fake_ice` does not change friction; the 0.02 the remake carried
+// made the ice cage slippery in a way the original never was.
+assert.equal(comp('fake_ice', 'minecraft:friction'), undefined,
+  'fake_ice keeps the default friction (no `minecraft:friction` in 2.8.8)');
+
 // spectral_block: unbreakable (destroy_time 9999), explosion_resistance 999.
 assert.deepEqual(comp('spectral_block', 'minecraft:destructible_by_mining'), { seconds_to_destroy: 9999 });
 assert.deepEqual(comp('spectral_block', 'minecraft:destructible_by_explosion'), { explosion_resistance: 999 });

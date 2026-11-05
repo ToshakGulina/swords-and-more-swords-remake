@@ -374,7 +374,8 @@ writeJson(path.join(BP, 'blocks/fake_ice.json'), {
       // crack and melt on its own) and `explosion_resistance: 10`.
       'minecraft:destructible_by_mining': { seconds_to_destroy: 9999.0 },
       'minecraft:destructible_by_explosion': { explosion_resistance: 10.0 },
-      'minecraft:friction': 0.02,
+      // 2.8.8 `fake_ice` sets no `minecraft:friction`; the 0.02 the remake carried
+      // made the ice cage slippery where the original was not.
       // 2.8.8 `minecraft:block_light_absorption: 0`.
       'minecraft:light_dampening': 0,
       'minecraft:light_emission': 0,
@@ -439,7 +440,9 @@ for (const [id, lightVal, tex] of [
         'minecraft:selection_box': false,
         'minecraft:replaceable': {},
         'minecraft:destructible_by_mining': false,
-        'minecraft:destructible_by_explosion': { explosion_resistance: 0 },
+        // 2.8.8 keeps `explosion_resistance: 999`: the 0.2 s placeholders must not
+        // be popped by a nearby blast before a glowing sword re-arms them.
+        'minecraft:destructible_by_explosion': { explosion_resistance: 999 },
         'minecraft:light_dampening': 0,
         'minecraft:light_emission': lightVal,
         'minecraft:loot': 'loot_tables/empty.json',
@@ -447,7 +450,8 @@ for (const [id, lightVal, tex] of [
         'minecraft:material_instances': {
           '*': {
             texture: tex,
-            render_method: 'alpha_test',
+            // 2.8.8 uses `blend` for both light blocks, not `alpha_test`.
+            render_method: 'blend',
             ambient_occlusion: 0.0,
             face_dimming: false,
           },
@@ -597,21 +601,21 @@ writeJson(path.join(BP, 'blocks/sapling3.json'), {
     },
     components: {
       'minecraft:display_name': 'tile.effect99:sapling3.name',
+      // 2.8.8 `effect99:sapling3` is an invisible marker: empty geometry, `"null"`
+      // texture, and both collision boxes at zero — the visible sapling is the
+      // vanilla block it plants itself into on the same tick.
       'minecraft:collision_box': false,
-      'minecraft:selection_box': {
-        origin: [-6, 0, -6],
-        size: [12, 12, 12],
-      },
+      'minecraft:selection_box': false,
       'minecraft:destructible_by_mining': { seconds_to_destroy: 0.1 },
       'minecraft:destructible_by_explosion': { explosion_resistance: 1.0 },
       'minecraft:light_dampening': 0,
       'minecraft:light_emission': 0,
       'minecraft:loot': 'loot_tables/empty.json',
-      'minecraft:geometry': 'minecraft:geometry.cross',
+      'minecraft:geometry': 'geometry.null',
       'minecraft:material_instances': {
         '*': {
-          texture: 'sapling_jungle',
-          render_method: 'alpha_test',
+          texture: 'null',
+          render_method: 'blend',
           ambient_occlusion: 0.0,
           face_dimming: false,
         },

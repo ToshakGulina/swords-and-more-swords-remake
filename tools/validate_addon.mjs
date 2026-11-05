@@ -14,7 +14,9 @@ const VANILLA_RP = path.join(process.env.SAMS_SAMPLES ?? '/tmp/refs/bedrock-samp
 const VANILLA_BP = path.join(process.env.SAMS_SAMPLES ?? '/tmp/refs/bedrock-samples', 'behavior_pack');
 const SCHEMAS = path.resolve(process.env.SAMS_SCHEMAS ?? '/tmp/refs/schemas');
 
-const BUILTIN_VANILLA_TERRAIN_TEXTURES = new Set(['sapling_jungle']);
+// `null` is the engine's own empty texture (2.8.8 `effect99:sapling3` uses it with
+// `geometry.null` to stay invisible), `sapling_jungle` is the vanilla jungle sapling.
+const BUILTIN_VANILLA_TERRAIN_TEXTURES = new Set(['sapling_jungle', 'null']);
 const BUILTIN_VANILLA_ENTITY_TEXTURES = new Set([
   'textures/entity/wolf/wolf_angry',
   'textures/entity/wolf/wolf_tame',

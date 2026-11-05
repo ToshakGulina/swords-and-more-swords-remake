@@ -1,4 +1,4 @@
-import { EntityDamageCause, GameMode, ItemComponentTypes, ItemStack, } from '@minecraft/server';
+import { EntityDamageCause, GameMode, ItemStack, } from '@minecraft/server';
 import { getMainhandItem, getOffhandItem, plantJungleSapling } from './utils.js';
 const ORIGIN_MAP = {
     stone: 'minecraft:stone',
@@ -157,24 +157,23 @@ export function handleOreBreak(event) {
             dimension.spawnItem(new ItemStack(id, 1), center);
         }
         else {
-            const ench = tool.getComponent(ItemComponentTypes.Enchantable);
-            const silkTouch = ench?.getEnchantment('silk_touch')?.level ?? 0;
-            if (silkTouch > 0) {
-                dimension.spawnItem(new ItemStack(id, 1), center);
-            }
-            else {
-                const r = Math.random() * 100;
-                let count = r >= 99 ? 2 + Math.floor(Math.random() * 3) : r >= 89 ? 1 + Math.floor(Math.random() * 2) : 1;
-                const fortune = ench?.getEnchantment('fortune')?.level ?? 0;
-                if (fortune > 0 && Math.random() < fortune * 0.25)
-                    count += 1 + Math.floor(Math.random() * fortune);
-                dimension.spawnItem(new ItemStack('effect:quartz_diamond', count), center);
-                for (let i = 0; i < 6; i++) {
-                    try {
-                        dimension.spawnEntity('minecraft:xp_orb', center);
-                    }
-                    catch { }
+            // Exact 2.8.8 `loot_tables/blocks/quartz_diamond_ore.json`: one roll, three
+            // weighted entries — weight 89 -> 1, weight 10 -> 1-2, weight 1 -> 2-4 gems.
+            // 2.8.8 ships no Silk Touch or Fortune handling for this ore, so neither the
+            // silk-touch drop nor the Fortune bonus the remake invented belongs here.
+            const roll = Math.random() * 100;
+            const count = roll >= 99
+                ? 2 + Math.floor(Math.random() * 3)
+                : roll >= 89
+                    ? 1 + Math.floor(Math.random() * 2)
+                    : 1;
+            dimension.spawnItem(new ItemStack('effect:quartz_diamond', count), center);
+            // Six XP orbs on every mined ore, as in the original event.
+            for (let i = 0; i < 6; i++) {
+                try {
+                    dimension.spawnEntity('minecraft:xp_orb', center);
                 }
+                catch { }
             }
         }
         // Cosmetic failures must not cancel the gameplay backlash.
@@ -182,13 +181,11 @@ export function handleOreBreak(event) {
             dimension.spawnParticle('minecraft:knockback_roar_particle', { x: center.x, y: center.y + 0.5, z: center.z });
         }
         catch { }
-        try {
-            dimension.playSound('damage.thorns', center, { volume: 1.0, pitch: id === 'effect99:quartz_diamond_block' ? 0.9 : 1.2 });
-        }
-        catch { }
+        // `effect @p[r=6] instant_damage 1 0 true` — one heart to the nearest player
+        // within 6 blocks; the particle above it is the only other cosmetic.
         const dist = Math.hypot(player.location.x - center.x, player.location.y + 0.9 - center.y, player.location.z - center.z);
         if (dist <= 6.0)
-            player.applyDamage(6, { cause: EntityDamageCause.magic });
+            player.applyDamage(2, { cause: EntityDamageCause.magic });
     }
     catch { }
 }
