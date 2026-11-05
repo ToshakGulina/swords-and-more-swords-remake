@@ -820,11 +820,12 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
             // `minecraft:timer`, i.e. ~40 webs over 2 seconds. The remake fired
             // only 12 webs over 2.4 s, so the web wall was far too thin.
             if (!checkAndStartCooldown(player, 'spider_sword', 28)) return;
+            // `entity:web` carries its own `shoot_sound` family, so the original
+            // plays no extra step sound — the remake added `mob.spider.step`.
             for (let i = 0; i < 40; i++) {
               system.runTimeout(() => {
                 if (!player.isValid) return;
                 shootCustomProjectile(player, 'entity:web', 1.5, undefined, 1.5, 0.08);
-                player.dimension.playSound('mob.spider.step', player.location, { volume: 0.8, pitch: 1.4 });
               }, i);
             }
             consumeMainhandDurability(player, 8);
