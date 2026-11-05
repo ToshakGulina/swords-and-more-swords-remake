@@ -352,7 +352,8 @@ const SWORD_PLAYER_GROUPS = {
         { cause: 'block_explosion', deals_damage: false },
         { cause: 'fire', deals_damage: false },
         { cause: 'fire_tick', deals_damage: false },
-        { cause: 'hot_floor', deals_damage: false },
+        { cause: 'lava', deals_damage: false },
+        { cause: 'magma', deals_damage: false },
         { cause: 'fall', deals_damage: false },
         { cause: 'wither', deals_damage: false },
       ],
@@ -439,7 +440,7 @@ const SWORD_PLAYER_GROUPS = {
         { cause: 'fire', deals_damage: false },
         { cause: 'fire_tick', deals_damage: false },
         { cause: 'lava', deals_damage: false },
-        { cause: 'hot_floor', deals_damage: false },
+        { cause: 'magma', deals_damage: false },
       ],
     },
   },
@@ -453,17 +454,22 @@ const SWORD_PLAYER_GROUPS = {
         { cause: 'fire', deals_damage: false },
         { cause: 'fire_tick', deals_damage: false },
         { cause: 'lava', deals_damage: false },
-        { cause: 'hot_floor', deals_damage: false },
+        { cause: 'magma', deals_damage: false },
       ],
     },
   },
 
   'effect:magma_sword': {
+    // 2.8.8 `magma_sword` only swallows the magma-block tick:
+    //   has_damage fire_tick  OR  is_block magma
+    // It grants no fire and no lava immunity -- the remake's extra `hot_floor`
+    // (a Java damage type that does not exist in Bedrock at all) turned the
+    // sword into a fire-resistance item.
     'minecraft:type_family': { family: ['player', 'magma_sword'] },
     'minecraft:damage_sensor': {
       triggers: [
-        { cause: 'hot_floor', deals_damage: false },
         { cause: 'fire_tick', deals_damage: false },
+        { cause: 'magma', deals_damage: false },
       ],
     },
   },

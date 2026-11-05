@@ -702,6 +702,18 @@ for (const f of walk(path.join(BP, 'entities'), '.json')) {
 // and a string deals_damage, which the engine ignores.
 {
   const DEALS_DAMAGE_STRINGS = new Set(['yes', 'no', 'no_but_side_effects_apply', 'no_but_entity_effects_apply']);
+  // Bedrock's own damage-cause list. A cause outside it (e.g. Java's `hot_floor`)
+  // is not rejected by the schema, the engine simply never matches the trigger,
+  // so a damage immunity silently stops working. Keep this next to the schema enum
+  // in Blockception `definitions/BCG`.
+  const DAMAGE_CAUSES = new Set([
+    'all', 'anvil', 'block_explosion', 'campfire', 'charging', 'contact', 'drowning',
+    'entity_attack', 'entity_explosion', 'fall', 'falling_block', 'fire', 'fire_tick',
+    'fireworks', 'fly_into_wall', 'freezing', 'lava', 'lightning', 'magic', 'magma',
+    'none', 'override', 'piston', 'projectile', 'ram_attack', 'self_destruct',
+    'sonic_boom', 'soul_campfire', 'stalactite', 'stalagmite', 'starve', 'suffocation',
+    'temperature', 'thorns', 'void', 'wither',
+  ]);
   const VICTIM_DEFINITIONS = [
     ...walk(path.join(BP, 'entities'), '.json').map((f) => [f, readJsonChecked(f, true)?.['minecraft:entity']]),
     ...walk(path.join(BP, 'blocks'), '.json').map((f) => [f, readJsonChecked(f, true)?.['minecraft:block']]),
@@ -725,6 +737,9 @@ for (const f of walk(path.join(BP, 'entities'), '.json')) {
           !DEALS_DAMAGE_STRINGS.has(trigger.deals_damage)
         ) {
           err(`${file}: deals_damage must be a boolean or one of ${[...DEALS_DAMAGE_STRINGS].join(', ')}, found ${JSON.stringify(trigger.deals_damage)}`);
+        }
+        if (trigger.cause !== undefined && !DAMAGE_CAUSES.has(trigger.cause)) {
+          err(`${file}: damage_sensor cause "${trigger.cause}" is not a Bedrock damage type`);
         }
         const onDamage = trigger.on_damage;
         const event = typeof onDamage === 'string' ? onDamage : onDamage?.event;
