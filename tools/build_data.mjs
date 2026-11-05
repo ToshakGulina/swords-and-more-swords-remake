@@ -1068,14 +1068,17 @@ for (const [rel, pool] of entityPoolAdditions) {
   writeJson(path.join(BP, 'loot_tables', rel), base);
 }
 
-// 7.3 Weaponsmith `effect:emerald_sword` trade, exactly as authored in 2.8.8.
+// 7.3 Weaponsmith trades, exactly as authored in 2.8.8.
 //
-// The other nine weaponsmith trades stay vanilla on purpose: 2.8.8 shipped a
-// wholesale copy of the v1.13 trades table with its own trader_exp / max_uses
-// values, but none of that touches the swords, so re-creating it would be a
-// regression to stale vanilla numbers for no gameplay gain.
+// The WHOLE table is the 2.8.8 one, not the modern vanilla one with a sword trade
+// bolted on: 2.8.8 shipped a copy of the v1.13 weaponsmith table, and the player
+// actually sees it. Compared to today's vanilla numbers it sells cheaper and wears
+// out sooner — 3 emeralds for an iron axe with 3 uses (vanilla 3/12), 2 emeralds
+// for two enchanted iron swords with 2 uses, 8 emeralds for an enchanted diamond
+// sword, no bell until the third tier and no diamond-sword tier at all. Keeping the
+// modern prices made the swordsmith quietly richer than the original.
 //
-// The sword trade itself does need the 2.8.8 numbers: 32 emerald blocks for an
+// The sword trade itself needs the 2.8.8 numbers: 32 emerald blocks for an
 // enchanted Emerald Sword, `trader_exp` 0, `max_uses` 2.
 //
 // It must live in the FIFTH tier, which is the case in 2.8.8 (0/10/60/160/310).
@@ -1084,12 +1087,15 @@ for (const [rel, pool] of entityPoolAdditions) {
 // The current vanilla table reaches 250 in its fifth tier, so the sword trade is
 // appended to that existing fifth tier instead of creating a new one.
 const econWeaponsmith = jsonc.parse(
-  fs.readFileSync(path.join(VANILLA_BP, 'trading/economy_trades/weapon_smith_trades.json'), 'utf8'),
+  fs.readFileSync(path.join(SRC_288_BP, 'trading/economy_trades/weapon_smith_trades.json'), 'utf8'),
 );
 const lastWeaponsmithTier = econWeaponsmith.tiers[econWeaponsmith.tiers.length - 1];
 if (!lastWeaponsmithTier) throw new Error('weapon_smith_trades.json has no tiers');
 lastWeaponsmithTier.groups = lastWeaponsmithTier.groups || [];
-lastWeaponsmithTier.groups.push({
+const swordTradeAlreadyPresent = econWeaponsmith.tiers.some((t) =>
+  t.groups?.some((g) => g.trades?.some((tr) => tr.gives?.some((i) => i.item === 'effect:emerald_sword')))
+);
+if (!swordTradeAlreadyPresent) lastWeaponsmithTier.groups.push({
   num_to_select: 1,
   trades: [
     {
@@ -1110,7 +1116,12 @@ lastWeaponsmithTier.groups.push({
     },
   ],
 });
-if (econWeaponsmith.tiers.length > 5) {
+// 2.8.8 wrote the weaponsmith trades as an array of tiers; the remake's validator
+// and tests read `tiers`. Keep the name the engine accepts.
+econWeaponsmith.tiers = Array.isArray(econWeaponsmith.tiers)
+  ? Object.fromEntries(econWeaponsmith.tiers.map((t, i) => [String(i), t]))
+  : econWeaponsmith.tiers;
+if (Object.keys(econWeaponsmith.tiers).length > 5) {
   throw new Error('a villager has five trade levels; the table must not grow past five tiers');
 }
 writeJson(path.join(BP, 'trading/economy_trades/weapon_smith_trades.json'), econWeaponsmith);

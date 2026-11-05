@@ -27,16 +27,44 @@ assert.ok(kingTable.pools.some((p) => p.entries.some((e) => e.name === 'minecraf
 
 // --- Weaponsmith trade ----------------------------------------------------------
 const smith = read('packs/Swords_B/trading/economy_trades/weapon_smith_trades.json');
-const swordTier = smith.tiers.find((t) =>
+// The engine reads `tiers` as an object keyed 0..4; 2.8.8 wrote it as an array.
+const tiers = Object.values(smith.tiers);
+const swordTier = tiers.find((t) =>
   t.groups.some((g) => g.trades.some((tr) => tr.gives.some((i) => i.item === 'effect:emerald_sword'))));
 assert.ok(swordTier, 'the Emerald Sword trade must exist');
 // A villager has five trade levels. A sixth tier is never reached, which made the
 // sword unbuyable until the trade was moved into the last real tier.
-assert.equal(smith.tiers.length, 5, 'the table must not have more than five tiers');
-assert.equal(smith.tiers[smith.tiers.length - 1], swordTier,
+assert.equal(tiers.length, 5, 'the table must not have more than five tiers');
+assert.equal(tiers[tiers.length - 1], swordTier,
   'the sword trade sits in the fifth and final tier');
-assert.equal(swordTier.total_exp_required, 250,
-  'the trade uses the vanilla fifth-tier exp gate, which a villager can actually reach');
+assert.equal(swordTier.total_exp_required, 310,
+  '2.8.8 fifth tier opens at 310 exp');
+
+// The rest of the weaponsmith table is 2.8.8's own copy of the v1.13 trades, not
+// today's vanilla one: cheaper prices and much lower `max_uses`. Sending the player
+// to the modern table made the swordsmith quietly richer than the original.
+const summary = (tier) => tier.groups.map((g) => g.trades.map((tr) =>
+  `${tr.wants.map((w) => `${w.item}x${w.quantity}`).join('+')}->${tr.gives.map((i) => `${i.item}x${i.quantity}`).join('+')}@${tr.max_uses}`));
+assert.deepEqual(summary(tiers[0]), [
+  ['minecraft:coal:0x15->minecraft:emeraldx1@6'],
+  ['minecraft:emeraldx3->minecraft:iron_axex1@3'],
+], '2.8.8 first tier prices and uses');
+assert.deepEqual(summary(tiers[1]), [
+  ['minecraft:iron_ingotx4->minecraft:emeraldx1@5'],
+  ['minecraft:emeraldx2->minecraft:iron_swordx2@2'],
+], '2.8.8 second tier');
+assert.deepEqual(summary(tiers[2]), [
+  ['minecraft:flintx24->minecraft:emeraldx1@5'],
+  ['minecraft:emeraldx36->minecraft:bellx1@2'],
+], '2.8.8 third tier');
+assert.deepEqual(summary(tiers[3]), [
+  ['minecraft:diamondx1->minecraft:emeraldx1@5'],
+  ['minecraft:emeraldx8->minecraft:diamond_swordx1@2'],
+], '2.8.8 fourth tier');
+assert.deepEqual(summary(tiers[4]), [
+  ['minecraft:emeraldx12->minecraft:diamond_axex1@2'],
+  ['minecraft:emerald_blockx32->effect:emerald_swordx1@2'],
+], '2.8.8 fifth tier');
 
 const swordTrade = swordTier.groups
   .flatMap((g) => g.trades)
