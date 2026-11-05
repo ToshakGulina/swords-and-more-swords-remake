@@ -153,33 +153,6 @@ function findOverheadCrystal(player, maxDistance = 4) {
         return undefined;
     }
 }
-// Restore the handful of light placeholders that 2.8.8 also cleaned up when the
-// holder went away: the `fill ... air` on unequip never runs if the player leaves
-// the world, respawns or walks through a portal, so the 0.2 s self-destruct of the
-// block is the only thing standing between the remake and a 7x1x7 sheet of glowing
-// blocks stranded in the old dimension. The block is inert (`destructible_by_mining`
-// false, no loot, replaceable) but it must not survive the owner.
-function sweepAbandonedLight(around, location) {
-    if (!around)
-        return;
-    try {
-        for (let dx = -1; dx <= 1; dx++) {
-            for (let dy = -1; dy <= 1; dy++) {
-                for (let dz = -1; dz <= 1; dz++) {
-                    const b = around.getBlock({
-                        x: Math.floor(location.x) + dx,
-                        y: Math.floor(location.y) + dy,
-                        z: Math.floor(location.z) + dz,
-                    });
-                    if (b && (b.typeId === BRIGHT_LIGHT_TYPE || b.typeId === DIM_LIGHT_TYPE)) {
-                        b.setType('minecraft:air');
-                    }
-                }
-            }
-        }
-    }
-    catch { }
-}
 function clearTrackedLight(playerId) {
     const prev = lastLightBlock.get(playerId);
     if (!prev)
@@ -284,11 +257,8 @@ export function startPassiveEngine() {
     recoverRandomTickSpeed();
     // Lifecycle cleanup on disconnect, respawn, world-rejoin, and portal dimension travel
     world.afterEvents.playerLeave.subscribe((ev) => {
-        // `cleanupAllHelpersForPlayer` clears the tracked footprint for us
-        // (`clearTrackedLight` works off the map, so no player handle is needed). Any
-        // block placed after the last pass is caught by its own `onTick` self-destruct:
-        // with the owner gone nobody within four blocks holds a light-emitting sword,
-        // so it turns back into air within ~4 game ticks.
+        // `cleanupAllHelpersForPlayer` starts with `clearTrackedLight`, which works off
+        // the saved `dim`/`locs` and therefore still runs once the player handle is gone.
         cleanupAllHelpersForPlayer(ev.playerId);
         lastEquipKey.delete(ev.playerId);
         lastMainhandId.delete(ev.playerId);
@@ -305,11 +275,6 @@ export function startPassiveEngine() {
     });
     world.afterEvents.playerDimensionChange.subscribe((ev) => {
         const pid = ev.player.id;
-        // Portals move the player before this event fires (`fromDimension` /
-        // `fromLocation` are the pre-teleport values), so the light volume the engine
-        // was tracking still lives in the dimension the player just left. Drop it from
-        // there, then let the regular interval re-light the new dimension.
-        sweepAbandonedLight(ev.fromDimension, ev.fromLocation);
         cleanupAllHelpersForPlayer(pid);
         lastEquipKey.delete(pid);
         lastMainhandId.delete(pid);
