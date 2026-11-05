@@ -1169,8 +1169,11 @@ for (const f of customEntityFiles.sort()) {
   if (f === 'ultra_instinct_projectile.json') {
     // Fix `ageable` (requires `is_baby` + valid `minecraft:end_scale` event) and `summon entity:ultra_instinct_explode ~ ~ ~`!
     ent.components['minecraft:is_baby'] = {};
+    // 2.8.8 has NO `remove_on_hit` here: the projectile must survive the hit so its
+    // `minecraft:explode` event can play out and drill the tunnel. Removing it on
+    // impact cut the drill short at the first block it touched.
     if (ent.components['minecraft:projectile']?.on_hit) {
-      ent.components['minecraft:projectile'].on_hit.remove_on_hit = {};
+      delete ent.components['minecraft:projectile'].on_hit.remove_on_hit;
     }
     ent.events['minecraft:end_scale'] = {};
     ent.events['minecraft:explode'] = {

@@ -944,10 +944,12 @@ export function registerItemComponents(registry) {
                         break;
                     }
                     case 'effect:ultra_instinct_sword': {
-                        // Exact 2.8.8: fire ultra_instinct_projectile (cooldown 61s, durability -48)
+                        // Exact 2.8.8: `on_use` shoots `entity:ultra_instinct_projectile` with
+                        // `launch_power: 1` (cooldown 61 s, durability -48). The remake launched
+                        // it at 1.9, so the drill arrived almost twice as fast.
                         if (!checkAndStartCooldown(player, 'ultra_instinct_sword', 61))
                             return;
-                        shootCustomProjectile(player, 'entity:ultra_instinct_projectile', 1.9, undefined, 2.0, 0);
+                        shootCustomProjectile(player, 'entity:ultra_instinct_projectile', 1.0, undefined, 2.0, 0);
                         dim.playSound('mob.wither.ambient', player.location, { volume: 2.0, pitch: 0.6 });
                         consumeMainhandDurability(player, 48);
                         break;

@@ -53,8 +53,7 @@
           "impact_damage": {
             "damage": 64,
             "knockback": true
-          },
-          "remove_on_hit": {}
+          }
         },
         "power": 2,
         "gravity": 0,
