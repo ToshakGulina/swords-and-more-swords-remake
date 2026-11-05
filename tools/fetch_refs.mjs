@@ -20,14 +20,34 @@ const samplesOnly = process.argv.includes('--samples-only');
 
 const git = (...args) => execFileSync('git', args, {stdio: 'inherit'});
 
+const REQUIRED = {
+  [path.join(REFS, 'bedrock-samples')]: ['behavior_pack/entities/zombie.json', 'resource_pack/textures/terrain_texture.json'],
+  [path.join(REFS, 'schemas')]: ['behavior/items/items.json', 'behavior/blocks/blocks.json'],
+};
+
 function cloneSparse(url, dir, phases) {
-  if (fs.existsSync(path.join(dir, '.git'))) {
-    console.log(`refs: ${dir} already present`);
-    return;
+  // A sparse clone is only useful when its checkout really contains the files the
+  // validators read. A half-applied sparse-checkout leaves a directory that looks
+  // installed but is 2% of the tree, and `validate` then reports six bogus schema
+  // errors. Verify, repair, and only then report success.
+  const present = fs.existsSync(path.join(dir, '.git'));
+  if (present) {
+    const missing = (REQUIRED[dir] ?? []).filter((rel) => !fs.existsSync(path.join(dir, rel)));
+    if (missing.length === 0) {
+      console.log(`refs: ${dir} already present`);
+      return;
+    }
+    console.log(`refs: ${dir} is incomplete (${missing.join(', ')}) — repairing`);
+    execFileSync('git', ['sparse-checkout', 'disable'], {cwd: dir, stdio: 'inherit'});
+  } else {
+    fs.mkdirSync(dir, {recursive: true});
+    git('clone', '--depth', '1', '--filter=blob:none', '--sparse', url, dir);
+    if (phases) execFileSync('git', phases, {cwd: dir, stdio: 'inherit'});
   }
-  fs.mkdirSync(dir, {recursive: true});
-  git('clone', '--depth', '1', '--filter=blob:none', '--sparse', url, dir);
-  if (phases) execFileSync('git', phases, {cwd: dir, stdio: 'inherit'});
+  const still = (REQUIRED[dir] ?? []).filter((rel) => !fs.existsSync(path.join(dir, rel)));
+  if (still.length > 0) {
+    throw new Error(`refs: ${dir} still missing ${still.join(', ')} after checkout`);
+  }
 }
 
 cloneSparse('https://github.com/Mojang/bedrock-samples.git',
