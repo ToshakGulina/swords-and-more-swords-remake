@@ -756,9 +756,14 @@ export function startPassiveEngine(): void {
           }
 
           case 'effect:ghost_sword': {
-            // Cannot harm any entity + invisible legs + slow_falling + sneak flight + lava/water float + cave wall X-ray!
+            // "Cannot harm any entity" is NOT `weakness`: 2.8.8 puts the holder on a
+            // `damage_sensor` with `deals_damage: false`, so a swing is a complete
+            // miss — no damage, no knockback and none of the weapon's own events.
+            // `weakness 255` did less than that (the hit still connected, the sword
+            // still lost durability, on-hit reactions still fired) and it also hid
+            // real weakness sources from the player. What is left here is the
+            // floating kit: slow falling, saturation, lava/water levitation.
             if (tick % 10 === 0) {
-              player.addEffect('weakness', 40, { amplifier: 255, showParticles: false });
               player.addEffect('slow_falling', 40, { amplifier: 0, showParticles: false });
               player.addEffect('saturation', 40, { amplifier: 1, showParticles: false });
             }
@@ -823,6 +828,27 @@ export function startPassiveEngine(): void {
                 freeze(-3, d);
                 freeze(d, 3);
                 freeze(d, -3);
+              }
+              // Exact 2.8.8 tail of `minecraft:ice_sword`:
+              //   execute @e[r=64,type=!player] ~ ~ ~ detect ~ ~ ~ effect99:fake_ice 0
+              //     tp @s ~ ~ ~ ~1
+              // Every non-player entity whose feet are inside the new ice is lifted
+              // one block, so mobs end up on top of the cage instead of being sealed
+              // in it. A lifted mob no longer matches the block, which is also what
+              // the `detect` did on the next pass.
+              for (const e of dim.getEntities({ location: player.location, maxDistance: 64 })) {
+                if (e.typeId === 'minecraft:player') continue;
+                if (isProtectedEntity(e, player)) continue;
+                const at = e.location;
+                const standing = dim.getBlock({
+                  x: Math.floor(at.x),
+                  y: Math.floor(at.y),
+                  z: Math.floor(at.z),
+                });
+                if (standing?.typeId !== 'effect99:fake_ice') continue;
+                try {
+                  e.teleport({ x: at.x, y: at.y + 1, z: at.z }, { dimension: dim });
+                } catch {}
               }
             }
             break;

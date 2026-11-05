@@ -297,6 +297,13 @@ const SWORD_PLAYER_GROUPS = {
     'minecraft:type_family': { family: ['ghost_sword'] },
     'minecraft:knockback_resistance': { value: 1.0 },
     'minecraft:movement': { value: 0.14 },
+    // 2.8.8 marks the holder `deals_damage: false`: a swing is a complete miss —
+    // no damage, no knockback, and the ghost's own `minecraft:weapon` event never
+    // runs. The remake leaned on `weakness 255` from the script instead, which
+    // still landed the hit (durability loss, on-hit sword reactions, Alpha Wolf's
+    // "hit by anything but silver" reset). `no` is the modern spelling of
+    // "nothing happens at all"; `no_but_entity_effects_apply` would still let the
+    // attacker's weapon events and enchantment effects through.
     'minecraft:damage_sensor': {
       triggers: [{ cause: 'all', deals_damage: 'no' }],
     },
