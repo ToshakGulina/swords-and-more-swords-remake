@@ -66,6 +66,35 @@
           "destroy_affected_by_griefing": true,
           "fuse_length": 0
         }
+      },
+      "gravity_enable": {
+        "minecraft:projectile": {
+          "anchor": "eye_height",
+          "gravity": 0.04,
+          "catch_fire": true,
+          "spread_fire": false,
+          "inertia": 1,
+          "liquid_inertia": 1,
+          "on_hit": {
+            "definition_event": {
+              "affect_projectile": true,
+              "event_trigger": {
+                "event": "minecraft:explode",
+                "target": "self"
+              }
+            }
+          },
+          "offset": [
+            0,
+            -0.1,
+            0
+          ],
+          "power": 1.6,
+          "reflect_on_hurt": true,
+          "uncertainty_base": 0,
+          "uncertainty_multiplier": 0,
+          "isolated_physics": false
+        }
       }
     },
     "events": {
@@ -75,6 +104,27 @@
             "minecraft:exploding"
           ]
         }
+      },
+      "minecraft:entity_spawned": {
+        "sequence": [
+          {
+            "filters": {
+              "test": "is_family",
+              "subject": "other",
+              "value": "player"
+            },
+            "add": {
+              "component_groups": [
+                "gravity_enable"
+              ]
+            },
+            "queue_command": {
+              "command": [
+                "playsound mob.ghast.fireball @a[r=12] ~ ~ ~"
+              ]
+            }
+          }
+        ]
       }
     }
   }

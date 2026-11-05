@@ -1,1 +1,1771 @@
-{"format_version": "1.26.30", "minecraft:entity": {"description": {"identifier": "minecraft:player", "is_summonable": false, "is_spawnable": false, "spawn_category": "creature"}, "components": {"minecraft:attack": {"damage": 1}, "minecraft:block_climber": {}, "minecraft:breathable": {"generates_bubbles": false, "inhale_time": 3.75, "suffocate_time": -1, "total_supply": 15}, "minecraft:can_climb": {}, "minecraft:collision_box": {"height": 1.8, "width": 0.6}, "minecraft:conditional_bandwidth_optimization": {}, "minecraft:environment_sensor": {"triggers": {"event": "minecraft:gain_raid_omen", "filters": {"all_of": [{"subject": "self", "test": "has_mob_effect", "value": "bad_omen"}, {"subject": "self", "test": "is_in_village", "value": true}]}}}, "minecraft:exhaustion_values": {"sprint": 0.1, "jump": 0.05, "attack": 0.1, "damage": 0.1, "heal": 6, "lunge": 4, "sprint_jump": 0.2, "mine": 0.005, "swim": 0.01, "walk": 0}, "minecraft:experience_reward": {"on_death": "Math.Min(query.player_level * 7, 100)"}, "minecraft:hurt_on_condition": {"damage_conditions": [{"cause": "lava", "damage_per_tick": 4, "filters": {"operator": "==", "test": "in_lava", "subject": "self", "value": true}}]}, "minecraft:insomnia": {"days_until_insomnia": 3}, "minecraft:is_hidden_when_invisible": {}, "minecraft:loot": {"table": "loot_tables/empty.json"}, "minecraft:movement": {"value": 0.1}, "minecraft:nameable": {"allow_name_tag_renaming": false, "always_show": true}, "minecraft:physics": {"push_towards_closest_space": true}, "minecraft:player.exhaustion": {"max": 20, "value": 0}, "minecraft:player.experience": {"max": 1, "value": 0}, "minecraft:player.level": {"max": 24791, "value": 0}, "minecraft:player.saturation": {"max": 20, "value": 5}, "minecraft:pushable_by_block": {}, "minecraft:apply_knockback_rules": {"presets": [{"filter": {"test": "enum_property", "subject": "other", "domain": "minecraft:sulfur_cube_archetype", "value": "bouncy"}, "horizontal_power": 0.165, "vertical_power": 0.105, "vertical_velocity_cap": 8, "slowdown_scale": 1, "scale_with_damage": true, "knockback_mode": "hit_direction", "extra_knockback_approach": "multiply_reduced"}, {"filter": {"test": "enum_property", "subject": "other", "domain": "minecraft:sulfur_cube_archetype", "value": "regular"}, "horizontal_power": 0.165, "vertical_power": 0.105, "vertical_velocity_cap": 8, "slowdown_scale": 1, "scale_with_damage": true, "knockback_mode": "hit_direction", "extra_knockback_approach": "multiply_reduced"}, {"filter": {"test": "enum_property", "subject": "other", "domain": "minecraft:sulfur_cube_archetype", "value": "slow_bouncy"}, "horizontal_power": 0.165, "vertical_power": 0.24, "vertical_velocity_cap": 8, "slowdown_scale": 1, "scale_with_damage": true, "knockback_mode": "hit_direction", "extra_knockback_approach": "multiply_reduced"}, {"filter": {"test": "enum_property", "subject": "other", "domain": "minecraft:sulfur_cube_archetype", "value": "slow_flat"}, "horizontal_power": 0.165, "vertical_power": 0.105, "vertical_velocity_cap": 8, "slowdown_scale": 1, "scale_with_damage": true, "knockback_mode": "hit_direction", "extra_knockback_approach": "multiply_reduced"}, {"filter": {"test": "enum_property", "subject": "other", "domain": "minecraft:sulfur_cube_archetype", "value": "fast_flat"}, "horizontal_power": 0.365, "vertical_power": 0.09, "vertical_velocity_cap": 8, "slowdown_scale": 1, "scale_with_damage": true, "knockback_mode": "hit_direction", "extra_knockback_approach": "multiply_reduced"}, {"filter": {"test": "enum_property", "subject": "other", "domain": "minecraft:sulfur_cube_archetype", "value": "light"}, "horizontal_power": 0.165, "vertical_power": 0.18, "vertical_velocity_cap": 8, "slowdown_scale": 1, "scale_with_damage": true, "knockback_mode": "hit_direction", "extra_knockback_approach": "multiply_reduced"}, {"filter": {"test": "enum_property", "subject": "other", "domain": "minecraft:sulfur_cube_archetype", "value": "fast_sliding"}, "horizontal_power": 0.265, "vertical_power": 0.09, "vertical_velocity_cap": 8, "slowdown_scale": 1, "scale_with_damage": true, "knockback_mode": "hit_direction", "extra_knockback_approach": "multiply_reduced"}, {"filter": {"test": "enum_property", "subject": "other", "domain": "minecraft:sulfur_cube_archetype", "value": "slow_sliding"}, "horizontal_power": 0.165, "vertical_power": 0.09, "vertical_velocity_cap": 8, "slowdown_scale": 1, "scale_with_damage": true, "knockback_mode": "hit_direction", "extra_knockback_approach": "multiply_reduced"}, {"filter": {"test": "enum_property", "subject": "other", "domain": "minecraft:sulfur_cube_archetype", "value": "sticky"}, "horizontal_power": 0.165, "vertical_power": 0.09, "vertical_velocity_cap": 8, "slowdown_scale": 1, "scale_with_damage": true, "knockback_mode": "hit_direction", "extra_knockback_approach": "multiply_reduced"}, {"filter": {"test": "enum_property", "subject": "other", "domain": "minecraft:sulfur_cube_archetype", "value": "high_resistance"}, "horizontal_power": 0.165, "vertical_power": 0.09, "vertical_velocity_cap": 8, "slowdown_scale": 1, "scale_with_damage": true, "knockback_mode": "hit_direction", "extra_knockback_approach": "multiply_reduced"}, {"filter": {"test": "enum_property", "subject": "other", "domain": "minecraft:sulfur_cube_archetype", "value": "explosive"}, "horizontal_power": 0.165, "vertical_power": 0.09, "vertical_velocity_cap": 8, "slowdown_scale": 1, "scale_with_damage": true, "knockback_mode": "hit_direction", "extra_knockback_approach": "multiply_reduced"}, {"filter": {"test": "enum_property", "subject": "other", "domain": "minecraft:sulfur_cube_archetype", "value": "hot"}, "horizontal_power": 0.165, "vertical_power": 0.105, "vertical_velocity_cap": 8, "slowdown_scale": 1, "scale_with_damage": true, "knockback_mode": "hit_direction", "extra_knockback_approach": "multiply_reduced"}]}, "minecraft:rideable": {"family_types": ["parrot_tame"], "pull_in_entities": true, "seat_count": 2, "seats": [{"lock_rider_rotation": 0, "min_rider_count": 0, "max_rider_count": 0, "position": [0.4, -0.2, -0.1]}, {"lock_rider_rotation": 0, "min_rider_count": 1, "max_rider_count": 2, "position": [-0.4, -0.2, -0.1]}]}, "minecraft:type_family": {"family": ["player"]}}, "component_groups": {"minecraft:add_raid_omen": {"minecraft:spell_effects": {"add_effects": [{"display_on_screen_animation": true, "duration": 30, "effect": "raid_omen"}], "remove_effects": "bad_omen"}, "minecraft:timer": {"looping": false, "time": [0, 0], "time_down_event": {"event": "minecraft:clear_add_raid_omen", "target": "self"}}}, "minecraft:clear_raid_omen_spell_effect": {"minecraft:spell_effects": {}}, "minecraft:raid_trigger": {"minecraft:raid_trigger": {"triggered_event": {"event": "minecraft:remove_raid_trigger", "target": "self"}}}, "effect:default_stats": {"minecraft:collision_box": {"width": 0.6, "height": 1.8}, "minecraft:scale": {"value": 1}, "minecraft:breathable": {"generates_bubbles": false, "inhale_time": 3.75, "suffocate_time": -1, "total_supply": 15, "breathes_air": true, "breathes_water": false}, "minecraft:type_family": {"family": ["player"]}, "minecraft:health": {"value": 20, "max": 20}, "minecraft:attack": {"damage": 1}, "minecraft:movement": {"value": 0.1}, "minecraft:underwater_movement": {"value": 0.02}, "minecraft:knockback_resistance": {"value": 0}, "minecraft:damage_sensor": {"triggers": []}, "minecraft:hurt_on_condition": {"damage_conditions": [{"cause": "lava", "damage_per_tick": 4, "filters": {"test": "in_lava", "subject": "self", "operator": "==", "value": true}}]}, "minecraft:rideable": {"family_types": ["parrot_tame"], "pull_in_entities": true, "seat_count": 2, "seats": [{"lock_rider_rotation": 0, "min_rider_count": 0, "max_rider_count": 0, "position": [0.4, -0.2, -0.1]}, {"lock_rider_rotation": 0, "min_rider_count": 1, "max_rider_count": 2, "position": [-0.4, -0.2, -0.1]}]}}, "effect:sea_sword": {"minecraft:collision_box": {"width": 0.6, "height": 0.9}, "minecraft:breathable": {"generates_bubbles": false, "inhale_time": 3.75, "suffocate_time": -1, "total_supply": 2, "breathes_air": false, "breathes_water": true, "breathes_lava": false}, "minecraft:movement": {"value": 0.06}, "minecraft:underwater_movement": {"value": 0.07}, "minecraft:type_family": {"family": ["player", "sea_sword"]}}, "effect:ghost_sword": {"minecraft:scale": {"value": 1.05}, "minecraft:collision_box": {"width": 0, "height": 0}, "minecraft:breathable": {"total_supply": 15, "suffocate_time": 0, "inhale_time": 3.75, "generates_bubbles": false, "breathes_water": true, "breathes_air": true, "breathes_lava": true}, "minecraft:type_family": {"family": ["ghost_sword"]}, "minecraft:knockback_resistance": {"value": 1}, "minecraft:movement": {"value": 0.14}, "minecraft:damage_sensor": {"triggers": [{"cause": "all", "deals_damage": "no"}]}}, "effect:wolf_transformation": {"minecraft:type_family": {"family": ["monster", "wolf", "wolf_sword"]}, "minecraft:attack": {"damage": 15}, "minecraft:movement": {"value": 0.18}}, "effect:ultra_instinct_sword": {"minecraft:type_family": {"family": ["player", "ultra_instinct_sword"]}, "minecraft:movement": {"value": 0.22}, "minecraft:knockback_resistance": {"value": 1}, "minecraft:damage_sensor": {"triggers": [{"on_damage": {"filters": {"all_of": [{"test": "has_damage", "operator": "!=", "value": "lava"}, {"test": "has_damage", "operator": "!=", "value": "drowning"}, {"test": "has_damage", "operator": "!=", "value": "void"}, {"test": "has_damage", "operator": "!=", "value": "thorns"}, {"test": "has_damage", "operator": "!=", "value": "suicide"}, {"test": "has_damage", "operator": "!=", "value": "starve"}, {"test": "has_damage", "operator": "!=", "value": "fire"}, {"test": "has_damage", "operator": "!=", "value": "fire_tick"}, {"test": "has_damage", "operator": "!=", "value": "fall"}, {"test": "has_damage", "operator": "!=", "value": "block_explosion"}, {"test": "has_damage", "operator": "!=", "value": "entity_explosion"}]}, "event": "effect:ui_dodge"}, "deals_damage": "no"}, {"cause": "entity_explosion", "deals_damage": "no"}, {"cause": "block_explosion", "deals_damage": "no"}, {"cause": "fire", "deals_damage": "no"}, {"cause": "fire_tick", "deals_damage": "no"}, {"cause": "lava", "deals_damage": "no"}, {"cause": "magma", "deals_damage": "no"}, {"cause": "fall", "deals_damage": "no"}, {"cause": "wither", "deals_damage": "no"}]}}, "effect:ender_sword": {"minecraft:type_family": {"family": ["player", "ender_sword"]}, "minecraft:hurt_on_condition": {"damage_conditions": [{"cause": "lava", "damage_per_tick": 4, "filters": {"test": "in_lava", "subject": "self", "operator": "==", "value": true}}, {"cause": "drowning", "damage_per_tick": 1, "filters": {"test": "in_water_or_rain", "subject": "self", "operator": "==", "value": true}}]}, "minecraft:damage_sensor": {"triggers": [{"cause": "projectile", "deals_damage": "no", "on_damage": {"event": "effect:ender_dodge"}}, {"cause": "entity_attack", "deals_damage": "yes", "on_damage": {"event": "effect:ender_melee_dodge"}}, {"on_damage": {"filters": {"test": "in_water_or_rain", "subject": "self", "value": true}, "event": "effect:ender_dodge"}, "deals_damage": "yes"}]}}, "effect:nether_star_sword": {"minecraft:type_family": {"family": ["player", "nether_star_sword"]}, "minecraft:damage_sensor": {"triggers": [{"on_damage": {"filters": {"test": "is_family", "subject": "other", "value": "nether_star_projectile"}}, "deals_damage": "no"}]}}, "effect:obsidian_sword": {"minecraft:type_family": {"family": ["player", "obsidian_sword"]}, "minecraft:knockback_resistance": {"value": 1}, "minecraft:damage_sensor": {"triggers": [{"cause": "entity_explosion", "deals_damage": "no"}, {"cause": "block_explosion", "deals_damage": "no"}]}}, "effect:blaze_sword": {"minecraft:type_family": {"family": ["player", "blaze_sword"]}, "minecraft:hurt_on_condition": {"damage_conditions": [{"cause": "drowning", "damage_per_tick": 1, "filters": {"test": "in_water_or_rain", "subject": "self", "operator": "==", "value": true}}]}, "minecraft:damage_sensor": {"triggers": [{"cause": "fire", "deals_damage": "no"}, {"cause": "fire_tick", "deals_damage": "no"}, {"cause": "lava", "deals_damage": "no"}, {"cause": "magma", "deals_damage": "no"}]}}, "effect:fire_sword": {"minecraft:type_family": {"family": ["player", "fire_sword"]}, "minecraft:damage_sensor": {"triggers": [{"cause": "fire", "deals_damage": "no"}, {"cause": "fire_tick", "deals_damage": "no"}, {"cause": "lava", "deals_damage": "no"}, {"cause": "magma", "deals_damage": "no"}]}}, "effect:magma_sword": {"minecraft:type_family": {"family": ["player", "magma_sword"]}, "minecraft:damage_sensor": {"triggers": [{"cause": "fire_tick", "deals_damage": "no"}, {"cause": "magma", "deals_damage": "no"}]}}, "effect:lightning_sword": {"minecraft:type_family": {"family": ["player", "lightning_sword"]}, "minecraft:damage_sensor": {"triggers": [{"cause": "lightning", "deals_damage": "no"}]}}, "effect:wither_sword": {"minecraft:type_family": {"family": ["player", "wither_sword"]}, "minecraft:damage_sensor": {"triggers": [{"cause": "wither", "deals_damage": "no"}]}, "minecraft:rideable": {"seat_count": 1, "family_types": ["entity_name"], "pull_in_entities": false, "seats": [{"position": [0, 0.4, 0], "lock_rider_rotation": 0}]}}, "effect:spectral_sword": {"minecraft:type_family": {"family": ["player", "spectral_sword"]}, "minecraft:rideable": {"seat_count": 1, "family_types": ["spectral_sword", "ender_crystal"], "pull_in_entities": false, "seats": [{"position": [0, 0.4, 0], "lock_rider_rotation": 0}]}}, "effect:jungle_sword": {"minecraft:type_family": {"family": ["player", "jungle_sword"]}, "minecraft:health": {"value": 8, "max": 8}}, "effect:tnt_sword": {}, "effect:shulker_sword": {"minecraft:scale": {"value": 1}, "minecraft:type_family": {"family": ["player", "shulker_sword"]}, "minecraft:damage_sensor": {"triggers": [{"on_damage": {"filters": {"test": "is_riding", "subject": "self", "value": true}}, "deals_damage": "no"}]}}, "effect:shulker_hiding": {"minecraft:scale": {"value": 0.7}, "minecraft:type_family": {"family": ["player", "shulker_sword"]}, "minecraft:damage_sensor": {"triggers": [{"cause": "all", "deals_damage": "no"}]}}, "effect:slime_sword": {"minecraft:type_family": {"family": ["player", "slime_sword"]}, "minecraft:damage_sensor": {"triggers": [{"cause": "fall", "deals_damage": "no"}, {"on_damage": {"filters": {"test": "is_family", "subject": "other", "value": "tamed_slime"}}, "deals_damage": "no"}]}}, "effect:time_sword": {"minecraft:movement": {"value": 1}, "minecraft:type_family": {"family": ["player", "time_sword"]}}, "effect:spider_sword": {"minecraft:type_family": {"family": ["player", "spider_sword"]}, "minecraft:damage_sensor": {"triggers": [{"cause": "fall", "deals_damage": "no"}]}}}, "events": {"minecraft:clear_add_raid_omen": {"add": {"component_groups": ["minecraft:clear_raid_omen_spell_effect"]}, "remove": {"component_groups": ["minecraft:add_raid_omen"]}}, "minecraft:remove_raid_trigger": {"remove": {"component_groups": ["minecraft:raid_trigger"]}}, "minecraft:gain_raid_omen": {"add": {"component_groups": ["minecraft:add_raid_omen"]}}, "minecraft:trigger_raid": {"add": {"component_groups": ["minecraft:raid_trigger"]}}, "effect:reset_player": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats"]}}, "effect:equip_sea_sword": {"remove": {"component_groups": ["effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:sea_sword"]}}, "effect:equip_ghost_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:ghost_sword"]}}, "effect:equip_wolf_transformation": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:wolf_transformation"]}}, "effect:equip_ultra_instinct_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:ultra_instinct_sword"]}}, "effect:equip_ender_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:ender_sword"]}}, "effect:equip_nether_star_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:nether_star_sword"]}}, "effect:equip_obsidian_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:obsidian_sword"]}}, "effect:equip_blaze_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:blaze_sword"]}}, "effect:equip_fire_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:fire_sword"]}}, "effect:equip_magma_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:magma_sword"]}}, "effect:equip_lightning_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:lightning_sword"]}}, "effect:equip_wither_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:wither_sword"]}}, "effect:equip_spectral_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:spectral_sword"]}}, "effect:equip_jungle_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:jungle_sword"]}}, "effect:equip_tnt_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:tnt_sword"]}}, "effect:equip_shulker_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:shulker_sword"]}}, "effect:equip_shulker_hiding": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:slime_sword", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:shulker_hiding"]}}, "effect:equip_slime_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:time_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:slime_sword"]}}, "effect:equip_time_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:spider_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:time_sword"]}}, "effect:equip_spider_sword": {"remove": {"component_groups": ["effect:sea_sword", "effect:ghost_sword", "effect:wolf_transformation", "effect:ultra_instinct_sword", "effect:ender_sword", "effect:nether_star_sword", "effect:obsidian_sword", "effect:blaze_sword", "effect:fire_sword", "effect:magma_sword", "effect:lightning_sword", "effect:wither_sword", "effect:spectral_sword", "effect:jungle_sword", "effect:tnt_sword", "effect:shulker_sword", "effect:shulker_hiding", "effect:slime_sword", "effect:time_sword"]}, "add": {"component_groups": ["effect:default_stats", "effect:spider_sword"]}}, "effect:ui_dodge": {"queue_command": {"command": ["scriptevent effect:dodge ultra_instinct"]}}, "effect:wolf_transform": {"queue_command": {"command": ["scriptevent effect:dodge wolf_transform"]}}, "effect:wolf_untransform": {"queue_command": {"command": ["scriptevent effect:dodge wolf_untransform"]}}, "effect:wolf_bark": {"queue_command": {"command": ["playsound mob.wolf.bark @a[r=16] ~ ~ ~ 1 0.55"]}}, "effect:ender_dodge": {"queue_command": {"command": ["scriptevent effect:dodge ender_always"]}}, "effect:ender_melee_dodge": {"sequence": [{"queue_command": {"command": ["playsound mob.endermen.hit @a[r=8] ~ ~ ~"]}}, {"randomize": [{"weight": 50}, {"weight": 50, "queue_command": {"command": ["scriptevent effect:dodge ender_melee"]}}]}]}}}}
+{
+  "format_version": "1.26.30",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "minecraft:player",
+      "is_summonable": false,
+      "is_spawnable": false,
+      "spawn_category": "creature"
+    },
+    "components": {
+      "minecraft:attack": {
+        "damage": 1
+      },
+      "minecraft:block_climber": {},
+      "minecraft:breathable": {
+        "generates_bubbles": false,
+        "inhale_time": 3.75,
+        "suffocate_time": -1,
+        "total_supply": 15
+      },
+      "minecraft:can_climb": {},
+      "minecraft:collision_box": {
+        "height": 1.8,
+        "width": 0.6
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:environment_sensor": {
+        "triggers": {
+          "event": "minecraft:gain_raid_omen",
+          "filters": {
+            "all_of": [
+              {
+                "subject": "self",
+                "test": "has_mob_effect",
+                "value": "bad_omen"
+              },
+              {
+                "subject": "self",
+                "test": "is_in_village",
+                "value": true
+              }
+            ]
+          }
+        }
+      },
+      "minecraft:exhaustion_values": {
+        "sprint": 0.1,
+        "jump": 0.05,
+        "attack": 0.1,
+        "damage": 0.1,
+        "heal": 6,
+        "lunge": 4,
+        "sprint_jump": 0.2,
+        "mine": 0.005,
+        "swim": 0.01,
+        "walk": 0
+      },
+      "minecraft:experience_reward": {
+        "on_death": "Math.Min(query.player_level * 7, 100)"
+      },
+      "minecraft:hurt_on_condition": {
+        "damage_conditions": [
+          {
+            "cause": "lava",
+            "damage_per_tick": 4,
+            "filters": {
+              "operator": "==",
+              "test": "in_lava",
+              "subject": "self",
+              "value": true
+            }
+          }
+        ]
+      },
+      "minecraft:insomnia": {
+        "days_until_insomnia": 3
+      },
+      "minecraft:is_hidden_when_invisible": {},
+      "minecraft:loot": {
+        "table": "loot_tables/empty.json"
+      },
+      "minecraft:movement": {
+        "value": 0.1
+      },
+      "minecraft:nameable": {
+        "allow_name_tag_renaming": false,
+        "always_show": true
+      },
+      "minecraft:physics": {
+        "push_towards_closest_space": true
+      },
+      "minecraft:player.exhaustion": {
+        "max": 20,
+        "value": 0
+      },
+      "minecraft:player.experience": {
+        "max": 1,
+        "value": 0
+      },
+      "minecraft:player.level": {
+        "max": 24791,
+        "value": 0
+      },
+      "minecraft:player.saturation": {
+        "max": 20,
+        "value": 5
+      },
+      "minecraft:pushable_by_block": {},
+      "minecraft:apply_knockback_rules": {
+        "presets": [
+          {
+            "filter": {
+              "test": "enum_property",
+              "subject": "other",
+              "domain": "minecraft:sulfur_cube_archetype",
+              "value": "bouncy"
+            },
+            "horizontal_power": 0.165,
+            "vertical_power": 0.105,
+            "vertical_velocity_cap": 8,
+            "slowdown_scale": 1,
+            "scale_with_damage": true,
+            "knockback_mode": "hit_direction",
+            "extra_knockback_approach": "multiply_reduced"
+          },
+          {
+            "filter": {
+              "test": "enum_property",
+              "subject": "other",
+              "domain": "minecraft:sulfur_cube_archetype",
+              "value": "regular"
+            },
+            "horizontal_power": 0.165,
+            "vertical_power": 0.105,
+            "vertical_velocity_cap": 8,
+            "slowdown_scale": 1,
+            "scale_with_damage": true,
+            "knockback_mode": "hit_direction",
+            "extra_knockback_approach": "multiply_reduced"
+          },
+          {
+            "filter": {
+              "test": "enum_property",
+              "subject": "other",
+              "domain": "minecraft:sulfur_cube_archetype",
+              "value": "slow_bouncy"
+            },
+            "horizontal_power": 0.165,
+            "vertical_power": 0.24,
+            "vertical_velocity_cap": 8,
+            "slowdown_scale": 1,
+            "scale_with_damage": true,
+            "knockback_mode": "hit_direction",
+            "extra_knockback_approach": "multiply_reduced"
+          },
+          {
+            "filter": {
+              "test": "enum_property",
+              "subject": "other",
+              "domain": "minecraft:sulfur_cube_archetype",
+              "value": "slow_flat"
+            },
+            "horizontal_power": 0.165,
+            "vertical_power": 0.105,
+            "vertical_velocity_cap": 8,
+            "slowdown_scale": 1,
+            "scale_with_damage": true,
+            "knockback_mode": "hit_direction",
+            "extra_knockback_approach": "multiply_reduced"
+          },
+          {
+            "filter": {
+              "test": "enum_property",
+              "subject": "other",
+              "domain": "minecraft:sulfur_cube_archetype",
+              "value": "fast_flat"
+            },
+            "horizontal_power": 0.365,
+            "vertical_power": 0.09,
+            "vertical_velocity_cap": 8,
+            "slowdown_scale": 1,
+            "scale_with_damage": true,
+            "knockback_mode": "hit_direction",
+            "extra_knockback_approach": "multiply_reduced"
+          },
+          {
+            "filter": {
+              "test": "enum_property",
+              "subject": "other",
+              "domain": "minecraft:sulfur_cube_archetype",
+              "value": "light"
+            },
+            "horizontal_power": 0.165,
+            "vertical_power": 0.18,
+            "vertical_velocity_cap": 8,
+            "slowdown_scale": 1,
+            "scale_with_damage": true,
+            "knockback_mode": "hit_direction",
+            "extra_knockback_approach": "multiply_reduced"
+          },
+          {
+            "filter": {
+              "test": "enum_property",
+              "subject": "other",
+              "domain": "minecraft:sulfur_cube_archetype",
+              "value": "fast_sliding"
+            },
+            "horizontal_power": 0.265,
+            "vertical_power": 0.09,
+            "vertical_velocity_cap": 8,
+            "slowdown_scale": 1,
+            "scale_with_damage": true,
+            "knockback_mode": "hit_direction",
+            "extra_knockback_approach": "multiply_reduced"
+          },
+          {
+            "filter": {
+              "test": "enum_property",
+              "subject": "other",
+              "domain": "minecraft:sulfur_cube_archetype",
+              "value": "slow_sliding"
+            },
+            "horizontal_power": 0.165,
+            "vertical_power": 0.09,
+            "vertical_velocity_cap": 8,
+            "slowdown_scale": 1,
+            "scale_with_damage": true,
+            "knockback_mode": "hit_direction",
+            "extra_knockback_approach": "multiply_reduced"
+          },
+          {
+            "filter": {
+              "test": "enum_property",
+              "subject": "other",
+              "domain": "minecraft:sulfur_cube_archetype",
+              "value": "sticky"
+            },
+            "horizontal_power": 0.165,
+            "vertical_power": 0.09,
+            "vertical_velocity_cap": 8,
+            "slowdown_scale": 1,
+            "scale_with_damage": true,
+            "knockback_mode": "hit_direction",
+            "extra_knockback_approach": "multiply_reduced"
+          },
+          {
+            "filter": {
+              "test": "enum_property",
+              "subject": "other",
+              "domain": "minecraft:sulfur_cube_archetype",
+              "value": "high_resistance"
+            },
+            "horizontal_power": 0.165,
+            "vertical_power": 0.09,
+            "vertical_velocity_cap": 8,
+            "slowdown_scale": 1,
+            "scale_with_damage": true,
+            "knockback_mode": "hit_direction",
+            "extra_knockback_approach": "multiply_reduced"
+          },
+          {
+            "filter": {
+              "test": "enum_property",
+              "subject": "other",
+              "domain": "minecraft:sulfur_cube_archetype",
+              "value": "explosive"
+            },
+            "horizontal_power": 0.165,
+            "vertical_power": 0.09,
+            "vertical_velocity_cap": 8,
+            "slowdown_scale": 1,
+            "scale_with_damage": true,
+            "knockback_mode": "hit_direction",
+            "extra_knockback_approach": "multiply_reduced"
+          },
+          {
+            "filter": {
+              "test": "enum_property",
+              "subject": "other",
+              "domain": "minecraft:sulfur_cube_archetype",
+              "value": "hot"
+            },
+            "horizontal_power": 0.165,
+            "vertical_power": 0.105,
+            "vertical_velocity_cap": 8,
+            "slowdown_scale": 1,
+            "scale_with_damage": true,
+            "knockback_mode": "hit_direction",
+            "extra_knockback_approach": "multiply_reduced"
+          }
+        ]
+      },
+      "minecraft:rideable": {
+        "family_types": [
+          "parrot_tame"
+        ],
+        "pull_in_entities": true,
+        "seat_count": 2,
+        "seats": [
+          {
+            "lock_rider_rotation": 0,
+            "min_rider_count": 0,
+            "max_rider_count": 0,
+            "position": [
+              0.4,
+              -0.2,
+              -0.1
+            ]
+          },
+          {
+            "lock_rider_rotation": 0,
+            "min_rider_count": 1,
+            "max_rider_count": 2,
+            "position": [
+              -0.4,
+              -0.2,
+              -0.1
+            ]
+          }
+        ]
+      },
+      "minecraft:type_family": {
+        "family": [
+          "player"
+        ]
+      }
+    },
+    "component_groups": {
+      "minecraft:add_raid_omen": {
+        "minecraft:spell_effects": {
+          "add_effects": [
+            {
+              "display_on_screen_animation": true,
+              "duration": 30,
+              "effect": "raid_omen"
+            }
+          ],
+          "remove_effects": "bad_omen"
+        },
+        "minecraft:timer": {
+          "looping": false,
+          "time": [
+            0,
+            0
+          ],
+          "time_down_event": {
+            "event": "minecraft:clear_add_raid_omen",
+            "target": "self"
+          }
+        }
+      },
+      "minecraft:clear_raid_omen_spell_effect": {
+        "minecraft:spell_effects": {}
+      },
+      "minecraft:raid_trigger": {
+        "minecraft:raid_trigger": {
+          "triggered_event": {
+            "event": "minecraft:remove_raid_trigger",
+            "target": "self"
+          }
+        }
+      },
+      "effect:default_stats": {
+        "minecraft:collision_box": {
+          "width": 0.6,
+          "height": 1.8
+        },
+        "minecraft:scale": {
+          "value": 1
+        },
+        "minecraft:breathable": {
+          "generates_bubbles": false,
+          "inhale_time": 3.75,
+          "suffocate_time": -1,
+          "total_supply": 15,
+          "breathes_air": true,
+          "breathes_water": false
+        },
+        "minecraft:type_family": {
+          "family": [
+            "player"
+          ]
+        },
+        "minecraft:health": {
+          "value": 20,
+          "max": 20
+        },
+        "minecraft:attack": {
+          "damage": 1
+        },
+        "minecraft:movement": {
+          "value": 0.1
+        },
+        "minecraft:underwater_movement": {
+          "value": 0.02
+        },
+        "minecraft:knockback_resistance": {
+          "value": 0
+        },
+        "minecraft:damage_sensor": {
+          "triggers": []
+        },
+        "minecraft:hurt_on_condition": {
+          "damage_conditions": [
+            {
+              "cause": "lava",
+              "damage_per_tick": 4,
+              "filters": {
+                "test": "in_lava",
+                "subject": "self",
+                "operator": "==",
+                "value": true
+              }
+            }
+          ]
+        },
+        "minecraft:rideable": {
+          "family_types": [
+            "parrot_tame"
+          ],
+          "pull_in_entities": true,
+          "seat_count": 2,
+          "seats": [
+            {
+              "lock_rider_rotation": 0,
+              "min_rider_count": 0,
+              "max_rider_count": 0,
+              "position": [
+                0.4,
+                -0.2,
+                -0.1
+              ]
+            },
+            {
+              "lock_rider_rotation": 0,
+              "min_rider_count": 1,
+              "max_rider_count": 2,
+              "position": [
+                -0.4,
+                -0.2,
+                -0.1
+              ]
+            }
+          ]
+        }
+      },
+      "effect:sea_sword": {
+        "minecraft:collision_box": {
+          "width": 0.6,
+          "height": 0.9
+        },
+        "minecraft:breathable": {
+          "generates_bubbles": false,
+          "inhale_time": 3.75,
+          "suffocate_time": -1,
+          "total_supply": 2,
+          "breathes_air": false,
+          "breathes_water": true,
+          "breathes_lava": false
+        },
+        "minecraft:movement": {
+          "value": 0.06
+        },
+        "minecraft:underwater_movement": {
+          "value": 0.07
+        },
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "sea_sword"
+          ]
+        }
+      },
+      "effect:ghost_sword": {
+        "minecraft:scale": {
+          "value": 1.05
+        },
+        "minecraft:collision_box": {
+          "width": 0,
+          "height": 0
+        },
+        "minecraft:breathable": {
+          "total_supply": 15,
+          "suffocate_time": 0,
+          "inhale_time": 3.75,
+          "generates_bubbles": false,
+          "breathes_water": true,
+          "breathes_air": true,
+          "breathes_lava": true
+        },
+        "minecraft:type_family": {
+          "family": [
+            "ghost_sword"
+          ]
+        },
+        "minecraft:knockback_resistance": {
+          "value": 1
+        },
+        "minecraft:movement": {
+          "value": 0.14
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "all",
+              "deals_damage": "no"
+            }
+          ]
+        }
+      },
+      "effect:wolf_transformation": {
+        "minecraft:type_family": {
+          "family": [
+            "monster",
+            "wolf",
+            "wolf_sword"
+          ]
+        },
+        "minecraft:attack": {
+          "damage": 15
+        },
+        "minecraft:movement": {
+          "value": 0.18
+        }
+      },
+      "effect:ultra_instinct_sword": {
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "ultra_instinct_sword"
+          ]
+        },
+        "minecraft:movement": {
+          "value": 0.22
+        },
+        "minecraft:knockback_resistance": {
+          "value": 1
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "on_damage": {
+                "filters": {
+                  "all_of": [
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "lava"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "drowning"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "void"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "thorns"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "suicide"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "starve"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "fire"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "fire_tick"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "fall"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "block_explosion"
+                    },
+                    {
+                      "test": "has_damage",
+                      "operator": "!=",
+                      "value": "entity_explosion"
+                    }
+                  ]
+                },
+                "event": "effect:ui_dodge"
+              },
+              "deals_damage": "no"
+            },
+            {
+              "cause": "entity_explosion",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "block_explosion",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "fire",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "fire_tick",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "lava",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "magma",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "fall",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "wither",
+              "deals_damage": "no"
+            }
+          ]
+        }
+      },
+      "effect:ender_sword": {
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "ender_sword"
+          ]
+        },
+        "minecraft:hurt_on_condition": {
+          "damage_conditions": [
+            {
+              "cause": "lava",
+              "damage_per_tick": 4,
+              "filters": {
+                "test": "in_lava",
+                "subject": "self",
+                "operator": "==",
+                "value": true
+              }
+            },
+            {
+              "cause": "drowning",
+              "damage_per_tick": 1,
+              "filters": {
+                "test": "in_water_or_rain",
+                "subject": "self",
+                "operator": "==",
+                "value": true
+              }
+            }
+          ]
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "projectile",
+              "deals_damage": "no",
+              "on_damage": {
+                "event": "effect:ender_dodge"
+              }
+            },
+            {
+              "cause": "entity_attack",
+              "deals_damage": "yes",
+              "on_damage": {
+                "event": "effect:ender_melee_dodge"
+              }
+            },
+            {
+              "on_damage": {
+                "filters": {
+                  "test": "in_water_or_rain",
+                  "subject": "self",
+                  "value": true
+                },
+                "event": "effect:ender_dodge"
+              },
+              "deals_damage": "yes"
+            }
+          ]
+        }
+      },
+      "effect:nether_star_sword": {
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "nether_star_sword"
+          ]
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "on_damage": {
+                "filters": {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "nether_star_projectile"
+                }
+              },
+              "deals_damage": "no"
+            }
+          ]
+        }
+      },
+      "effect:obsidian_sword": {
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "obsidian_sword"
+          ]
+        },
+        "minecraft:knockback_resistance": {
+          "value": 1
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "entity_explosion",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "block_explosion",
+              "deals_damage": "no"
+            }
+          ]
+        }
+      },
+      "effect:blaze_sword": {
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "blaze_sword"
+          ]
+        },
+        "minecraft:hurt_on_condition": {
+          "damage_conditions": [
+            {
+              "cause": "drowning",
+              "damage_per_tick": 1,
+              "filters": {
+                "test": "in_water_or_rain",
+                "subject": "self",
+                "operator": "==",
+                "value": true
+              }
+            }
+          ]
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "fire",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "fire_tick",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "lava",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "magma",
+              "deals_damage": "no"
+            }
+          ]
+        }
+      },
+      "effect:fire_sword": {
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "fire_sword"
+          ]
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "fire",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "fire_tick",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "lava",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "magma",
+              "deals_damage": "no"
+            }
+          ]
+        }
+      },
+      "effect:magma_sword": {
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "magma_sword"
+          ]
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "fire_tick",
+              "deals_damage": "no"
+            },
+            {
+              "cause": "magma",
+              "deals_damage": "no"
+            }
+          ]
+        }
+      },
+      "effect:lightning_sword": {
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "lightning_sword"
+          ]
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "lightning",
+              "deals_damage": "no"
+            }
+          ]
+        }
+      },
+      "effect:wither_sword": {
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "wither_sword"
+          ]
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "wither",
+              "deals_damage": "no"
+            }
+          ]
+        },
+        "minecraft:rideable": {
+          "seat_count": 1,
+          "family_types": [
+            "entity_name"
+          ],
+          "pull_in_entities": false,
+          "seats": [
+            {
+              "position": [
+                0,
+                0.4,
+                0
+              ],
+              "lock_rider_rotation": 0
+            }
+          ]
+        }
+      },
+      "effect:spectral_sword": {
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "spectral_sword"
+          ]
+        },
+        "minecraft:rideable": {
+          "seat_count": 1,
+          "family_types": [
+            "spectral_sword",
+            "ender_crystal"
+          ],
+          "pull_in_entities": false,
+          "seats": [
+            {
+              "position": [
+                0,
+                0.4,
+                0
+              ],
+              "lock_rider_rotation": 0
+            }
+          ]
+        }
+      },
+      "effect:jungle_sword": {
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "jungle_sword"
+          ]
+        },
+        "minecraft:health": {
+          "value": 8,
+          "max": 8
+        }
+      },
+      "effect:tnt_sword": {},
+      "effect:shulker_sword": {
+        "minecraft:scale": {
+          "value": 1
+        },
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "shulker_sword"
+          ]
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "on_damage": {
+                "filters": {
+                  "test": "is_riding",
+                  "subject": "self",
+                  "value": true
+                }
+              },
+              "deals_damage": "no"
+            }
+          ]
+        }
+      },
+      "effect:shulker_hiding": {
+        "minecraft:scale": {
+          "value": 0.7
+        },
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "shulker_sword"
+          ]
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "all",
+              "deals_damage": "no"
+            }
+          ]
+        }
+      },
+      "effect:slime_sword": {
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "slime_sword"
+          ]
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "fall",
+              "deals_damage": "no"
+            },
+            {
+              "on_damage": {
+                "filters": {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "tamed_slime"
+                }
+              },
+              "deals_damage": "no"
+            }
+          ]
+        }
+      },
+      "effect:time_sword": {
+        "minecraft:movement": {
+          "value": 1
+        },
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "time_sword"
+          ]
+        }
+      },
+      "effect:spider_sword": {
+        "minecraft:type_family": {
+          "family": [
+            "player",
+            "spider_sword"
+          ]
+        },
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "fall",
+              "deals_damage": "no"
+            }
+          ]
+        }
+      }
+    },
+    "events": {
+      "minecraft:clear_add_raid_omen": {
+        "add": {
+          "component_groups": [
+            "minecraft:clear_raid_omen_spell_effect"
+          ]
+        },
+        "remove": {
+          "component_groups": [
+            "minecraft:add_raid_omen"
+          ]
+        }
+      },
+      "minecraft:remove_raid_trigger": {
+        "remove": {
+          "component_groups": [
+            "minecraft:raid_trigger"
+          ]
+        }
+      },
+      "minecraft:gain_raid_omen": {
+        "add": {
+          "component_groups": [
+            "minecraft:add_raid_omen"
+          ]
+        }
+      },
+      "minecraft:trigger_raid": {
+        "add": {
+          "component_groups": [
+            "minecraft:raid_trigger"
+          ]
+        }
+      },
+      "effect:reset_player": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats"
+          ]
+        }
+      },
+      "effect:equip_sea_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:sea_sword"
+          ]
+        }
+      },
+      "effect:equip_ghost_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:ghost_sword"
+          ]
+        }
+      },
+      "effect:equip_wolf_transformation": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:wolf_transformation"
+          ]
+        }
+      },
+      "effect:equip_ultra_instinct_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:ultra_instinct_sword"
+          ]
+        }
+      },
+      "effect:equip_ender_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:ender_sword"
+          ]
+        }
+      },
+      "effect:equip_nether_star_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:nether_star_sword"
+          ]
+        }
+      },
+      "effect:equip_obsidian_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:obsidian_sword"
+          ]
+        }
+      },
+      "effect:equip_blaze_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:blaze_sword"
+          ]
+        }
+      },
+      "effect:equip_fire_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:fire_sword"
+          ]
+        }
+      },
+      "effect:equip_magma_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:magma_sword"
+          ]
+        }
+      },
+      "effect:equip_lightning_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:lightning_sword"
+          ]
+        }
+      },
+      "effect:equip_wither_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:wither_sword"
+          ]
+        }
+      },
+      "effect:equip_spectral_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:spectral_sword"
+          ]
+        }
+      },
+      "effect:equip_jungle_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:jungle_sword"
+          ]
+        }
+      },
+      "effect:equip_tnt_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:tnt_sword"
+          ]
+        }
+      },
+      "effect:equip_shulker_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:shulker_sword"
+          ]
+        }
+      },
+      "effect:equip_shulker_hiding": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:slime_sword",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:shulker_hiding"
+          ]
+        }
+      },
+      "effect:equip_slime_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:time_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:slime_sword"
+          ]
+        }
+      },
+      "effect:equip_time_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:spider_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:time_sword"
+          ]
+        }
+      },
+      "effect:equip_spider_sword": {
+        "remove": {
+          "component_groups": [
+            "effect:sea_sword",
+            "effect:ghost_sword",
+            "effect:wolf_transformation",
+            "effect:ultra_instinct_sword",
+            "effect:ender_sword",
+            "effect:nether_star_sword",
+            "effect:obsidian_sword",
+            "effect:blaze_sword",
+            "effect:fire_sword",
+            "effect:magma_sword",
+            "effect:lightning_sword",
+            "effect:wither_sword",
+            "effect:spectral_sword",
+            "effect:jungle_sword",
+            "effect:tnt_sword",
+            "effect:shulker_sword",
+            "effect:shulker_hiding",
+            "effect:slime_sword",
+            "effect:time_sword"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "effect:default_stats",
+            "effect:spider_sword"
+          ]
+        }
+      },
+      "effect:ui_dodge": {
+        "queue_command": {
+          "command": [
+            "scriptevent effect:dodge ultra_instinct"
+          ]
+        }
+      },
+      "effect:wolf_transform": {
+        "queue_command": {
+          "command": [
+            "scriptevent effect:dodge wolf_transform"
+          ]
+        }
+      },
+      "effect:wolf_untransform": {
+        "queue_command": {
+          "command": [
+            "scriptevent effect:dodge wolf_untransform"
+          ]
+        }
+      },
+      "effect:wolf_bark": {
+        "queue_command": {
+          "command": [
+            "playsound mob.wolf.bark @a[r=16] ~ ~ ~ 1 0.55"
+          ]
+        }
+      },
+      "effect:ender_dodge": {
+        "queue_command": {
+          "command": [
+            "scriptevent effect:dodge ender_always"
+          ]
+        }
+      },
+      "effect:ender_melee_dodge": {
+        "sequence": [
+          {
+            "queue_command": {
+              "command": [
+                "playsound mob.endermen.hit @a[r=8] ~ ~ ~"
+              ]
+            }
+          },
+          {
+            "randomize": [
+              {
+                "weight": 50
+              },
+              {
+                "weight": 50,
+                "queue_command": {
+                  "command": [
+                    "scriptevent effect:dodge ender_melee"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

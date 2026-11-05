@@ -996,6 +996,49 @@ for (const projFile of ['arrow.json', 'small_fireball.json']) {
   ent.events['effect:despawn'] = {
     add: { component_groups: ['effect:instant_despawn'] },
   };
+  if (projFile === 'small_fireball.json') {
+    // 2.8.8 `small_fireball` reacts to WHO shot it in `minecraft:entity_spawned`,
+    // and the remake had dropped the whole event along with its groups:
+    //   * `other` is a player     -> `gravity_enable` (gravity 0.02) + the ghast
+    //     fireball sound for everyone within 12 blocks;
+    //   * `other` is a blaze      -> `shot_by_the_blaze` family;
+    //   * `other` is the Fire Sword's own skill (`fire_sword_skill`) -> gravity
+    //     plus the same sound at radius 18.
+    // Without it every rebased fireball flew flat and silent.
+    ent.component_groups['gravity_enable'] = {
+      'minecraft:projectile': {
+        ...JSON.parse(JSON.stringify(baseProj)),
+        power: 1.3,
+        gravity: 0.02,
+        anchor: 2,
+        offset: [0, 0.5, 0],
+        semi_random_diff_damage: true,
+        uncertainty_base: 10.0,
+        reflect_on_hurt: true,
+      },
+    };
+    ent.component_groups['shot_by_the_blaze'] = {
+      'minecraft:type_family': { family: ['small_fireball', 'shot_by_the_blaze'] },
+    };
+    ent.events['minecraft:entity_spawned'] = {
+      sequence: [
+        {
+          filters: { test: 'is_family', subject: 'other', value: 'player' },
+          add: { component_groups: ['gravity_enable'] },
+          queue_command: { command: ['playsound mob.ghast.fireball @a[r=12] ~ ~ ~'] },
+        },
+        {
+          filters: { test: 'is_family', subject: 'other', value: 'blaze' },
+          add: { component_groups: ['shot_by_the_blaze'] },
+        },
+        {
+          filters: { test: 'is_family', subject: 'other', value: 'fire_sword_skill' },
+          add: { component_groups: ['gravity_enable'] },
+          queue_command: { command: ['playsound mob.ghast.fireball @a[r=18] ~ ~ ~'] },
+        },
+      ],
+    };
+  }
   writeJson(path.join(BP, 'entities', projFile), data);
 }
 
@@ -1027,6 +1070,30 @@ for (const projFile of ['fireball.json', 'wither_skull.json', 'wither_skull_dang
     if (spec.collisionBox !== undefined) {
       ent.components['minecraft:collision_box'] = { width: spec.collisionBox, height: spec.collisionBox };
     }
+  }
+  if (projFile === 'fireball.json') {
+    // 2.8.8 `fireball` also re-arms itself when a PLAYER shot it: the
+    // `minecraft:entity_spawned` sequence adds `gravity_enable` (gravity 0.04, not
+    // the flat 0 of the base projectile) and plays `mob.ghast.fireball` for
+    // everyone within 12 blocks. The remake kept only the base group, so the
+    // ghast fireball was silent and flew perfectly straight.
+    ent.component_groups = ent.component_groups || {};
+    ent.component_groups['gravity_enable'] = {
+      'minecraft:projectile': {
+        ...JSON.parse(JSON.stringify(base)),
+        gravity: 0.04,
+      },
+    };
+    ent.events = ent.events || {};
+    ent.events['minecraft:entity_spawned'] = {
+      sequence: [
+        {
+          filters: { test: 'is_family', subject: 'other', value: 'player' },
+          add: { component_groups: ['gravity_enable'] },
+          queue_command: { command: ['playsound mob.ghast.fireball @a[r=12] ~ ~ ~'] },
+        },
+      ],
+    };
   }
   // 2.8.8 has no `effect:player_shot` group: an item event's `shoot` always launches
   // the projectile with the entity's own `power`, so the extra group only made the
