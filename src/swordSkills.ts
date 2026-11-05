@@ -628,14 +628,15 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
             // the clock forward 10 ticks every 5 s for everything, and the holder
             // gets no Speed effect of their own — only the movement component.
             if (!checkAndStartCooldown(player, 'clock_sword', 30)) return;
-            // The skill group lives for 5 s while `minecraft:clock_sword` keeps
-            // firing: `time add 10` and `effect @e[type=!player] speed 1 10` on
-            // every pass. 5 s = 100 ticks of +10 ticks is exactly the "one hour"
-            // the in-game help text promises, which confirms this reading.
+            // `clock_sword_skill` is a 5 s LOOPING timer whose `time_down_event`
+            // fires `minecraft:clock_sword` every 5 s — so the world only gets
+            // `time add 10` and `effect @e[type=!player] speed 1 10` ONCE per 5 s,
+            // while `gamerule randomtickspeed 100` runs for that same 5 s window
+            // and is set back to 1 by `stop_clock_sword_event`. The remake ran the
+            // 100-tick loop with a +10 tick push each tick, i.e. a full day of time
+            // in five seconds, roughly 70x the original.
             boostClockSword();
-            let elapsed = 0;
-            const clockTick = system.runInterval(() => {
-              elapsed++;
+            const clockBurst = () => {
               try {
                 world.setTimeOfDay((world.getTimeOfDay() + 10) % 24000);
                 for (const e of dim.getEntities()) {
@@ -645,8 +646,12 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
                   } catch {}
                 }
               } catch {}
-              if (elapsed >= 100) system.clearRun(clockTick);
-            }, 1);
+            };
+            clockBurst();
+            // The loop's first pass fires on activation, the second one 5 s later.
+            system.runTimeout(() => {
+              if (player.isValid) clockBurst();
+            }, 100);
             dim.playSound('random.orb', player.location, { volume: 1.0, pitch: 0.6 });
             consumeMainhandDurability(player, 10);
             break;

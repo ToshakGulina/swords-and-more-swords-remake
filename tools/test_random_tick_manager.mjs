@@ -31,11 +31,11 @@ function environment(initial) {
 }
 for (const initial of [0, 1, 7, 350]) {
   const e = environment(initial); const m = e.load(); m.recoverRandomTickSpeed();
-  m.boostClockSword(); assert.equal(e.world.gameRules.randomTickSpeed, 30);
-  e.advance(50); m.boostClockSword(); e.advance(50); assert.equal(e.world.gameRules.randomTickSpeed, 30);
+  m.boostClockSword(); assert.equal(e.world.gameRules.randomTickSpeed, 100);
+  e.advance(50); m.boostClockSword(); e.advance(50); assert.equal(e.world.gameRules.randomTickSpeed, 100);
   e.advance(50); assert.equal(e.world.gameRules.randomTickSpeed, initial);
   m.boostClockSword(); m.setTimeSwordActive(true); assert.equal(e.world.gameRules.randomTickSpeed, 300);
-  e.advance(50); m.setTimeSwordActive(false); assert.equal(e.world.gameRules.randomTickSpeed, 30);
+  e.advance(50); m.setTimeSwordActive(false); assert.equal(e.world.gameRules.randomTickSpeed, 100);
   e.advance(50); assert.equal(e.world.gameRules.randomTickSpeed, initial);
   m.setTimeSwordActive(true); e.world.gameRules.randomTickSpeed = 17; m.setTimeSwordActive(false);
   assert.equal(e.world.gameRules.randomTickSpeed, 17, 'external change must survive release');

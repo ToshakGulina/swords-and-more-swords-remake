@@ -26,7 +26,9 @@ export function recoverRandomTickSpeed() {
 function reconcile() {
     try {
         const current = world.gameRules.randomTickSpeed;
-        const target = timeActive ? 300 : clockUntil > system.currentTick ? 30 : undefined;
+        // Clock Sword runs `gamerule randomtickspeed 100`, Time Sword `300`; the remake
+        // used 30 for the clock, i.e. a third of the original tick boost.
+        const target = timeActive ? 300 : clockUntil > system.currentTick ? 100 : undefined;
         if (base !== undefined && applied !== undefined && current !== applied) {
             // Another command/add-on changed the rule while our effect was active.
             base = current;
