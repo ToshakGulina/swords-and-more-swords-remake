@@ -67,12 +67,16 @@ assert.deepEqual(starTimer.time, [0.1, 0.1], '2.8.8 star tracer lives 0.1 s');
 assert.equal(starTimer.looping, true);
 assert.equal(starTimer.time_down_event.event, 'minecraft:despawn');
 
-// --- Player-launched variants stay boosted ---------------------------------------
-for (const name of ['fireball', 'wither_skull', 'wither_skull_dangerous']) {
-  const shot = ent(name).component_groups['effect:player_shot']?.['minecraft:projectile'];
-  assert.ok(shot, `${name} keeps its player_shot group`);
-  assert.equal(shot.power, 1.8, `${name} player shot keeps the 1.8 boost`);
-  assert.equal(shot.gravity, 0.02);
+// --- No invented speed boost ------------------------------------------------------
+// 2.8.8 launches every one of these with the projectile entity's own `power`; there
+// is no `player_shot` component group anywhere in the original packs.
+for (const name of ['fireball', 'wither_skull', 'wither_skull_dangerous', 'shulker_bullet', 'snowball']) {
+  const groups = ent(name).component_groups ?? {};
+  assert.ok(!('effect:player_shot' in groups), `${name} must not carry an invented player_shot group`);
 }
+assert.equal(proj('arrow').inertia, 1, '2.8.8 arrows keep their speed (inertia 1, not 0.05)');
+assert.equal(proj('arrow').on_hit.impact_damage.knockback, true);
+assert.equal(proj('small_fireball').on_hit.impact_damage.knockback, false,
+  '2.8.8 small fireball does not knock back');
 
 console.log('Projectiles: arrow 1-4, fireball catches fire, skulls flat, bullet Levitation II, 0.1 s timers');

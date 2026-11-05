@@ -29,8 +29,8 @@
       "minecraft:projectile": {
         "anchor": "middle",
         "gravity": 0,
-        "inertia": 0.05,
-        "liquid_inertia": 0.05,
+        "inertia": 1,
+        "liquid_inertia": 1,
         "on_hit": {
           "catch_fire": {
             "fire_affected_by_griefing": true
@@ -40,7 +40,7 @@
             "apply_knockback_to_blocking_targets": true,
             "catch_fire": true,
             "damage": 5,
-            "knockback": true
+            "knockback": false
           }
         },
         "offset": [
@@ -77,8 +77,8 @@
         "minecraft:projectile": {
           "anchor": "middle",
           "gravity": 0,
-          "inertia": 0.05,
-          "liquid_inertia": 0.05,
+          "inertia": 1,
+          "liquid_inertia": 1,
           "on_hit": {
             "catch_fire": {
               "fire_affected_by_griefing": true
@@ -88,7 +88,7 @@
               "apply_knockback_to_blocking_targets": true,
               "catch_fire": true,
               "damage": 5,
-              "knockback": true
+              "knockback": false
             }
           },
           "offset": [

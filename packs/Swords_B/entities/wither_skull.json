@@ -77,11 +77,15 @@
           "fuse_length": 0
         }
       },
-      "effect:player_shot": {
+      "wither_sword": {
+        "minecraft:collision_box": {
+          "width": 0,
+          "height": 0
+        },
         "minecraft:projectile": {
           "anchor": "eye_height",
-          "gravity": 0.02,
-          "power": 1.8,
+          "gravity": 0.05,
+          "power": 1.2,
           "hit_sound": "bow.hit",
           "inertia": 1,
           "liquid_inertia": 1,
@@ -126,10 +130,10 @@
           ]
         }
       },
-      "effect:player_shot": {
+      "effect:wither_sword": {
         "add": {
           "component_groups": [
-            "effect:player_shot"
+            "wither_sword"
           ]
         }
       }

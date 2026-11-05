@@ -66,35 +66,6 @@
           "destroy_affected_by_griefing": true,
           "fuse_length": 0
         }
-      },
-      "effect:player_shot": {
-        "minecraft:projectile": {
-          "anchor": "eye_height",
-          "gravity": 0.02,
-          "catch_fire": true,
-          "spread_fire": false,
-          "inertia": 1,
-          "liquid_inertia": 1,
-          "on_hit": {
-            "definition_event": {
-              "affect_projectile": true,
-              "event_trigger": {
-                "event": "minecraft:explode",
-                "target": "self"
-              }
-            }
-          },
-          "offset": [
-            0,
-            -0.1,
-            0
-          ],
-          "power": 1.8,
-          "reflect_on_hurt": true,
-          "uncertainty_base": 0,
-          "uncertainty_multiplier": 0,
-          "isolated_physics": false
-        }
       }
     },
     "events": {
@@ -102,13 +73,6 @@
         "add": {
           "component_groups": [
             "minecraft:exploding"
-          ]
-        }
-      },
-      "effect:player_shot": {
-        "add": {
-          "component_groups": [
-            "effect:player_shot"
           ]
         }
       }

@@ -89,7 +89,8 @@
                 "min": 4,
                 "max": 4
               },
-              "knockback": true
+              "knockback": true,
+              "should_bounce": true
             },
             "mob_effect": {
               "effects": [
@@ -113,8 +114,7 @@
             -0.1,
             0
           ],
-          "power": 1.8,
-          "should_bounce": "if_no_damage_dealt",
+          "power": 1.6,
           "uncertainty_base": 16,
           "uncertainty_multiplier": 4,
           "isolated_physics": false

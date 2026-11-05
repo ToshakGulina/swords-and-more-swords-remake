@@ -936,14 +936,15 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
 
 // C.8 Projectiles (`arrow`, `small_fireball`, `fireball`, `shulker_bullet`, `snowball`, `wither_skull`, `wither_skull_dangerous`)
 // All custom-spawned projectiles MUST have `is_summonable: true` so `dimension.spawnEntity(...)` succeeds in 1.26.60!
-// 2.8.8 projectile damage. The vanilla 1.26 arrow/small-fireball carry
-// `damage: {min: 0, max: 0}` and derive the real hit from the shooting bow, which
-// does not exist for a scripted `spawnEntity`. Without restoring the numbers, a
-// Bone Sword arrow and a Blaze Sword small fireball hit for nothing. Values are
-// the ones 2.8.8 shipped in its own copies of these two entities.
+// 2.8.8 keeps its own copies of the arrow and the small fireball, and every number
+// matters: the vanilla 1.26 pair derives its hit from the bow that fired it (a
+// scripted `spawnEntity` has none, so damage is 0), flies with `inertia: 0.05`
+// (the 2.8.8 originals use 1, i.e. they keep their speed) and carries a different
+// knockback. `damage`, `inertia`, `knockback` and the `power`/`anchor`/`offset`
+// triple below are lifted verbatim from those originals.
 const PROJECTILE_DAMAGE = {
-  'arrow.json': { damage: [1, 4], power: 1.6 },
-  'small_fireball.json': { damage: 5, anchor: 'middle', offset: [0, 0.5, 0] },
+  'arrow.json': { damage: [1, 4], power: 1.6, knockback: true, inertia: 1 },
+  'small_fireball.json': { damage: 5, power: 1.3, knockback: false, inertia: 1, anchor: 'middle', offset: [0, 0.5, 0] },
 };
 
 for (const projFile of ['arrow.json', 'small_fireball.json']) {
@@ -951,8 +952,6 @@ for (const projFile of ['arrow.json', 'small_fireball.json']) {
   const ent = data['minecraft:entity'];
   ent.description.is_summonable = true;
   const baseProj = JSON.parse(JSON.stringify(ent.components['minecraft:projectile']));
-  baseProj.inertia = 0.05;
-  baseProj.liquid_inertia = 0.05;
   const dmg = PROJECTILE_DAMAGE[projFile];
   if (dmg) {
     if (!baseProj.on_hit) baseProj.on_hit = {};
@@ -960,7 +959,10 @@ for (const projFile of ['arrow.json', 'small_fireball.json']) {
     baseProj.on_hit.impact_damage.damage = Array.isArray(dmg.damage)
       ? { min: dmg.damage[0], max: dmg.damage[1] }
       : dmg.damage;
-    if (dmg.power !== undefined) baseProj.power = dmg.power;
+    baseProj.on_hit.impact_damage.knockback = dmg.knockback;
+    baseProj.power = dmg.power;
+    baseProj.inertia = dmg.inertia;
+    baseProj.liquid_inertia = dmg.inertia;
     if (dmg.anchor !== undefined) baseProj.anchor = dmg.anchor;
     if (dmg.offset !== undefined) baseProj.offset = dmg.offset;
   }
@@ -1011,18 +1013,31 @@ for (const projFile of ['fireball.json', 'wither_skull.json', 'wither_skull_dang
       ent.components['minecraft:collision_box'] = { width: spec.collisionBox, height: spec.collisionBox };
     }
   }
+  // 2.8.8 has no `effect:player_shot` group: an item event's `shoot` always launches
+  // the projectile with the entity's own `power`, so the extra group only made the
+  // remake's skulls and fireball fly faster than the original.
   ent.components['minecraft:projectile'] = JSON.parse(JSON.stringify(base));
-  const playerProj = JSON.parse(JSON.stringify(base));
-  playerProj.gravity = 0.02;
-  playerProj.power = 1.8;
-  ent.component_groups = ent.component_groups || {};
-  ent.component_groups['effect:player_shot'] = {
-    'minecraft:projectile': playerProj,
+  // 2.8.8 swaps in a `wither_sword` group when the shooter holds the Wither Sword:
+  // the skull shrinks to a 0x0 collision box and gets its own gravity (0.05 for the
+  // grey skull, 0.005 for the blue one). The scripted shot has no `other` entity for
+  // the original `has_equipment` filter to inspect, so the group is applied by an
+  // explicit event instead and the script asks for it while the sword is in hand.
+  const WITHER_SWORD_GROUPS = {
+    'wither_skull.json': { gravity: 0.05, box: 0 },
+    'wither_skull_dangerous.json': { gravity: 0.005, box: 0 },
   };
-  ent.events = ent.events || {};
-  ent.events['effect:player_shot'] = {
-    add: { component_groups: ['effect:player_shot'] },
-  };
+  const ws = WITHER_SWORD_GROUPS[projFile];
+  if (ws) {
+    const grouped = JSON.parse(JSON.stringify(base));
+    grouped.gravity = ws.gravity;
+    ent.component_groups = ent.component_groups || {};
+    ent.component_groups.wither_sword = {
+      'minecraft:collision_box': { width: ws.box, height: ws.box },
+      'minecraft:projectile': grouped,
+    };
+    ent.events = ent.events || {};
+    ent.events['effect:wither_sword'] = { add: { component_groups: ['wither_sword'] } };
+  }
   writeJson(path.join(BP, 'entities', projFile), data);
 }
 
@@ -1033,11 +1048,15 @@ for (const projFile of ['fireball.json', 'wither_skull.json', 'wither_skull_dang
   const swordProj = JSON.parse(JSON.stringify(ent.components['minecraft:projectile']));
   swordProj.homing = false;
   swordProj.gravity = 0.01;
-  swordProj.power = 1.8;
+  swordProj.power = 1.6; // 2.8.8 `shulker_sword` group keeps the bullet's own 1.6
   swordProj.destroy_on_hurt = false;
   // 2.8.8 Shulker Sword bullet: `levitation` at amplifier 1 (= Levitation II) for
   // 200 ticks on every difficulty. The vanilla bullet the remake starts from uses
   // amplifier 0, which is one level too weak.
+  // 2.8.8 puts the bounce inside `impact_damage` (`should_bounce: true`); the modern
+  // per-projectile enum (`if_no_damage_dealt`) is a different, weaker behaviour.
+  delete swordProj.should_bounce;
+  if (swordProj.on_hit?.impact_damage) swordProj.on_hit.impact_damage.should_bounce = true;
   const effect = swordProj.on_hit?.mob_effect;
   if (effect?.effects?.[0]) {
     effect.effects[0].amplifier = 1;
@@ -1058,13 +1077,29 @@ for (const projFile of ['fireball.json', 'wither_skull.json', 'wither_skull_dang
 {
   const data = readVanillaBP('snowball.json');
   const ent = data['minecraft:entity'];
+  // 2.8.8 `entities/snowball.json` -> group `ice_sword`: the shot keeps the snowball
+  // `filter: blaze / damage 3` hit, gains a `snow_layer` placement on impact and
+  // fires NO damage of its own beyond that. The remake shipped a hand-made
+  // `damage 2` hit for every target, which the original never had.
   const iceProj = JSON.parse(JSON.stringify(ent.components['minecraft:projectile']));
-  iceProj.on_hit = iceProj.on_hit || {};
-  iceProj.on_hit.impact_damage = { damage: { min: 2, max: 2 }, knockback: true };
-  iceProj.on_hit.definition_event = {
-    affect_projectile: true,
-    event_trigger: { event: 'effect:place_snow', target: 'self' },
+  iceProj.on_hit = {
+    definition_event: {
+      affect_projectile: true,
+      event_trigger: { event: 'effect:place_snow', target: 'self' },
+    },
+    impact_damage: { filter: 'blaze', damage: 3, knockback: true },
+    remove_on_hit: {},
+    particle_on_hit: {
+      particle_type: 'snowballpoof',
+      num_particles: 6,
+      on_entity_hit: true,
+      on_other_hit: true,
+    },
   };
+  iceProj.power = 1.5;
+  iceProj.gravity = 0.03;
+  iceProj.angle_offset = 0;
+  delete iceProj.offset;
   ent.component_groups = ent.component_groups || {};
   ent.component_groups['effect:ice_sword_snowball'] = {
     'minecraft:projectile': iceProj,

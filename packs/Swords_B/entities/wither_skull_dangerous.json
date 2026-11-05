@@ -80,10 +80,14 @@
           "max_resistance": 4
         }
       },
-      "effect:player_shot": {
+      "wither_sword": {
+        "minecraft:collision_box": {
+          "width": 0,
+          "height": 0
+        },
         "minecraft:projectile": {
           "anchor": "eye_height",
-          "gravity": 0.02,
+          "gravity": 0.005,
           "is_dangerous": true,
           "hit_sound": "bow.hit",
           "reflect_on_hurt": true,
@@ -114,7 +118,7 @@
             -0.1,
             0
           ],
-          "power": 1.8,
+          "power": 0.6,
           "shoot_sound": "bow",
           "shoot_target": false,
           "uncertainty_base": 7.5,
@@ -131,10 +135,10 @@
           ]
         }
       },
-      "effect:player_shot": {
+      "effect:wither_sword": {
         "add": {
           "component_groups": [
-            "effect:player_shot"
+            "wither_sword"
           ]
         }
       }

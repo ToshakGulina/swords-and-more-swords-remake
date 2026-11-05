@@ -304,11 +304,11 @@ export function registerItemComponents(registry) {
                             const r = Math.random() * 100;
                             if (r < 14) {
                                 attackingEntity.addEffect('fire_resistance', 30, { amplifier: 0, showParticles: false });
-                                shootCustomProjectile(attackingEntity, 'minecraft:small_fireball', 1.35);
+                                shootCustomProjectile(attackingEntity, 'minecraft:small_fireball', 1.3);
                             }
                             else if (r < 15) {
                                 attackingEntity.addEffect('fire_resistance', 30, { amplifier: 0, showParticles: false });
-                                shootCustomProjectile(attackingEntity, 'minecraft:fireball', 1.35, 'effect:player_shot');
+                                shootCustomProjectile(attackingEntity, 'minecraft:fireball', 1.6);
                             }
                         }
                         applyProjectileBranchDurability(id, attackingEntity);
@@ -351,7 +351,7 @@ export function registerItemComponents(registry) {
                     case 'effect:cursed_pumpkin_sword': {
                         // Exact 2.8.8: 80% chance to launch entity:pumpkin_projectile on hit!
                         if (Math.random() < 0.8 && attackingEntity instanceof Player) {
-                            shootCustomProjectile(attackingEntity, 'entity:pumpkin_projectile', 0.95);
+                            shootCustomProjectile(attackingEntity, 'entity:pumpkin_projectile', 0.3);
                         }
                         applyProjectileBranchDurability(id, attackingEntity);
                         if (Math.random() < 0.15) {
@@ -411,7 +411,7 @@ export function registerItemComponents(registry) {
                         // Preserve exact 8.5 damage (8 base + 0.5 frost bonus) + 30% snowball throw!
                         hitEntity.applyDamage(0.5, { cause: EntityDamageCause.freezing, damagingEntity: attackingEntity });
                         if (Math.random() < 0.3 && attackingEntity instanceof Player) {
-                            shootCustomProjectile(attackingEntity, 'minecraft:snowball', 1.4, 'effect:ice_sword_snowball');
+                            shootCustomProjectile(attackingEntity, 'minecraft:snowball', 1.5, 'effect:ice_sword_snowball');
                             dim.playSound('random.bow', attackingEntity.location, { volume: 1.0, pitch: 0.4 });
                         }
                         applyProjectileBranchDurability(id, attackingEntity);
@@ -449,7 +449,7 @@ export function registerItemComponents(registry) {
                     case 'effect:spider_sword': {
                         // Exact 2.8.8: 5% chance to shoot entity:web on attack
                         if (Math.random() < 0.05 && attackingEntity instanceof Player) {
-                            shootCustomProjectile(attackingEntity, 'entity:web', 1.25);
+                            shootCustomProjectile(attackingEntity, 'entity:web', 1.5);
                         }
                         applyProjectileBranchDurability(id, attackingEntity);
                         break;
@@ -473,7 +473,7 @@ export function registerItemComponents(registry) {
                     case 'effect:shulker_sword': {
                         // Exact 2.8.8: 10% chance to shoot shulker_bullet
                         if (Math.random() < 0.1 && attackingEntity instanceof Player) {
-                            shootCustomProjectile(attackingEntity, 'minecraft:shulker_bullet', 1.1, 'effect:shulker_sword');
+                            shootCustomProjectile(attackingEntity, 'minecraft:shulker_bullet', 1.6, 'effect:shulker_sword');
                             dim.playSound('random.bow', attackingEntity.location, { volume: 1.0, pitch: 0.4 });
                         }
                         applyProjectileBranchDurability(id, attackingEntity);
@@ -519,7 +519,7 @@ export function registerItemComponents(registry) {
                         // projectile's own `on_hit` when the projectile lands, never on the
                         // swing, and never as a ring of 41 bolts.
                         if (Math.random() < 0.85 && attackingEntity instanceof Player) {
-                            shootCustomProjectile(attackingEntity, 'entity:lightning_projectile', 1.5);
+                            shootCustomProjectile(attackingEntity, 'entity:lightning_projectile', 2.0);
                         }
                         break;
                     }
@@ -527,7 +527,7 @@ export function registerItemComponents(registry) {
                         hitEntity.addEffect('wither', 140, { amplifier: 1, showParticles: true });
                         // Exact 2.8.8: 10% chance to shoot wither_skull on hit!
                         if (Math.random() < 0.1 && attackingEntity instanceof Player) {
-                            shootCustomProjectile(attackingEntity, 'minecraft:wither_skull', 1.4, 'effect:player_shot');
+                            shootCustomProjectile(attackingEntity, 'minecraft:wither_skull', 1.2, 'effect:wither_sword');
                             dim.playSound('mob.wither.shoot', attackingEntity.location, { volume: 1.0, pitch: 1.0 });
                         }
                         applyProjectileBranchDurability(id, attackingEntity);
@@ -777,7 +777,7 @@ export function registerItemComponents(registry) {
                             system.runTimeout(() => {
                                 if (!player.isValid)
                                     return;
-                                shootCustomProjectile(player, 'entity:web', 1.35, undefined, 1.5, 0.08);
+                                shootCustomProjectile(player, 'entity:web', 1.5, undefined, 1.5, 0.08);
                                 player.dimension.playSound('mob.spider.step', player.location, { volume: 0.8, pitch: 1.4 });
                             }, i);
                         }
@@ -902,7 +902,7 @@ export function registerItemComponents(registry) {
                         // Exact 2.8.8: fire explosive ender_crystal_projectile + shrink overhead crystal for recharge! (-15 durability)
                         if (!checkAndStartCooldown(player, 'spectral_sword', 18))
                             return;
-                        shootCustomProjectile(player, 'entity:ender_crystal_projectile', 1.45);
+                        shootCustomProjectile(player, 'entity:ender_crystal_projectile', 5.0);
                         // `on_use` runs `event entity @e[type=ender_crystal,family=!ender_crystal_default,
                         // family=!ender_crystal_scale,c=1,r=4] minecraft:ender_crystal_scale`: the
                         // full-size crystal shrinks for 18 s and then pops back with the
@@ -944,7 +944,7 @@ export function registerItemComponents(registry) {
                         // Exact 2.8.8: launch a dangerous blue wither skull! (-3 durability)
                         if (!checkAndStartCooldown(player, 'wither_sword', 3))
                             return;
-                        shootCustomProjectile(player, 'minecraft:wither_skull_dangerous', 1.5, 'effect:player_shot', 1.8, 0);
+                        shootCustomProjectile(player, 'minecraft:wither_skull_dangerous', 0.6, 'effect:wither_sword', 1.8, 0);
                         dim.playSound('mob.wither.shoot', player.location, { volume: 1.0, pitch: 0.7 });
                         consumeMainhandDurability(player, 3);
                         break;
@@ -955,7 +955,7 @@ export function registerItemComponents(registry) {
                         // it at 1.9, so the drill arrived almost twice as fast.
                         if (!checkAndStartCooldown(player, 'ultra_instinct_sword', 61))
                             return;
-                        shootCustomProjectile(player, 'entity:ultra_instinct_projectile', 1.0, undefined, 2.0, 0);
+                        shootCustomProjectile(player, 'entity:ultra_instinct_projectile', 2.0, undefined, 2.0, 0);
                         dim.playSound('mob.wither.ambient', player.location, { volume: 2.0, pitch: 0.6 });
                         consumeMainhandDurability(player, 48);
                         break;
@@ -1008,11 +1008,11 @@ export function registerAirSwingEvents() {
                         const r = Math.random() * 100;
                         if (r < 14) {
                             player.addEffect('fire_resistance', 30, { amplifier: 0, showParticles: false });
-                            shootCustomProjectile(player, 'minecraft:small_fireball', 1.35);
+                            shootCustomProjectile(player, 'minecraft:small_fireball', 1.3);
                         }
                         else if (r < 15) {
                             player.addEffect('fire_resistance', 30, { amplifier: 0, showParticles: false });
-                            shootCustomProjectile(player, 'minecraft:fireball', 1.35, 'effect:player_shot');
+                            shootCustomProjectile(player, 'minecraft:fireball', 1.6);
                         }
                         break;
                     }
@@ -1047,7 +1047,7 @@ export function registerAirSwingEvents() {
                     case 'effect:lightning_sword': {
                         fired = true;
                         if (Math.random() < 0.85) {
-                            shootCustomProjectile(player, 'entity:lightning_projectile', 1.8);
+                            shootCustomProjectile(player, 'entity:lightning_projectile', 2.0);
                             // 2.8.8 keeps an `electric_spark_particle` environment_sensor on the
                             // projectile, but its `queue_command` runs at the world origin, so the
                             // trail never appeared there either. Draw it from script instead.
@@ -1084,14 +1084,14 @@ export function registerAirSwingEvents() {
                     case 'effect:cursed_pumpkin_sword': {
                         fired = true;
                         if (Math.random() < 0.8) {
-                            shootCustomProjectile(player, 'entity:pumpkin_projectile', 0.95);
+                            shootCustomProjectile(player, 'entity:pumpkin_projectile', 0.3);
                         }
                         break;
                     }
                     case 'effect:shulker_sword': {
                         fired = true;
                         if (Math.random() < 0.1) {
-                            shootCustomProjectile(player, 'minecraft:shulker_bullet', 1.1, 'effect:shulker_sword');
+                            shootCustomProjectile(player, 'minecraft:shulker_bullet', 1.6, 'effect:shulker_sword');
                             dim.playSound('random.bow', player.location, { volume: 1.0, pitch: 0.4 });
                         }
                         break;
@@ -1099,7 +1099,7 @@ export function registerAirSwingEvents() {
                     case 'effect:spider_sword': {
                         fired = true;
                         if (Math.random() < 0.05) {
-                            shootCustomProjectile(player, 'entity:web', 1.25);
+                            shootCustomProjectile(player, 'entity:web', 1.5);
                         }
                         break;
                     }
@@ -1113,7 +1113,7 @@ export function registerAirSwingEvents() {
                     case 'effect:wither_sword': {
                         fired = true;
                         if (Math.random() < 0.1) {
-                            shootCustomProjectile(player, 'minecraft:wither_skull', 1.4, 'effect:player_shot');
+                            shootCustomProjectile(player, 'minecraft:wither_skull', 1.2, 'effect:wither_sword');
                             dim.playSound('mob.wither.shoot', player.location, { volume: 1.0, pitch: 1.0 });
                         }
                         break;
@@ -1121,7 +1121,7 @@ export function registerAirSwingEvents() {
                     case 'effect:ice_sword': {
                         fired = true;
                         if (Math.random() < 0.3) {
-                            shootCustomProjectile(player, 'minecraft:snowball', 1.4, 'effect:ice_sword_snowball');
+                            shootCustomProjectile(player, 'minecraft:snowball', 1.5, 'effect:ice_sword_snowball');
                             dim.playSound('random.bow', player.location, { volume: 1, pitch: 0.4 });
                         }
                         break;

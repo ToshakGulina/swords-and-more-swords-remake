@@ -80,32 +80,25 @@
         "minecraft:projectile": {
           "anchor": "eye_height",
           "angle_offset": 0,
-          "offset": [
-            0,
-            -0.1,
-            0
-          ],
           "on_hit": {
-            "impact_damage": {
-              "damage": {
-                "min": 2,
-                "max": 2
-              },
-              "knockback": true
-            },
-            "particle_on_hit": {
-              "num_particles": 6,
-              "on_other_hit": true,
-              "on_entity_hit": true,
-              "particle_type": "snowballpoof"
-            },
-            "remove_on_hit": {},
             "definition_event": {
               "affect_projectile": true,
               "event_trigger": {
                 "event": "effect:place_snow",
                 "target": "self"
               }
+            },
+            "impact_damage": {
+              "filter": "blaze",
+              "damage": 3,
+              "knockback": true
+            },
+            "remove_on_hit": {},
+            "particle_on_hit": {
+              "particle_type": "snowballpoof",
+              "num_particles": 6,
+              "on_entity_hit": true,
+              "on_other_hit": true
             }
           },
           "gravity": 0.03,

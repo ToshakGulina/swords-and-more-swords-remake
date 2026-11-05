@@ -70,8 +70,8 @@
         "uncertainty_base": 16,
         "uncertainty_multiplier": 4,
         "isolated_physics": false,
-        "inertia": 0.05,
-        "liquid_inertia": 0.05
+        "inertia": 1,
+        "liquid_inertia": 1
       },
       "minecraft:pushable_by_block": {}
     },
@@ -255,8 +255,8 @@
           "uncertainty_base": 16,
           "uncertainty_multiplier": 4,
           "isolated_physics": false,
-          "inertia": 0.05,
-          "liquid_inertia": 0.05
+          "inertia": 1,
+          "liquid_inertia": 1
         }
       },
       "effect:instant_despawn": {
