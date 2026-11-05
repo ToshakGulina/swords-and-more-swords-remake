@@ -886,7 +886,9 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
             try {
               player.playAnimation('animation.player.explode');
             } catch {}
-            player.addEffect('slowness', 32, { amplifier: 10, showParticles: false });
+            // 2.8.8 does NOT give slowness here: `start_player_explode_event` pins
+            // the player with `minecraft:movement: 0` for the 1.5 s fuse. Slowness 10
+            // was an invented stand-in and also blocked camera movement.
             dim.playSound('random.fuse', player.location, { volume: 1.2, pitch: 1.0 });
 
             // 2.8.8 `start_player_explode_event` holds the player still with
