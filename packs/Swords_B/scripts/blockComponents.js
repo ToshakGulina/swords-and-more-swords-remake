@@ -34,7 +34,9 @@ export function lightVolumeForSword(mainId, offId) {
         offId === 'effect:fire_sword';
     if (!lit)
         return undefined;
-    return { yOffset: TOP_LAYER_SWORDS.has(mainId) ? 2 : 1, topOnly: TOP_LAYER_SWORDS.has(mainId) };
+    // `fill ~1 ~1 ~1 ~-1 ~-1 ~-1` is centred on the feet, so the cube spans
+    // feet-1 .. feet+1; the top-only swords use `~ ~2 ~`, one block above feet.
+    return { yOffset: TOP_LAYER_SWORDS.has(mainId) ? 1 : 0, topOnly: TOP_LAYER_SWORDS.has(mainId) };
 }
 // 2.8.8 `block_light_emission` was a 0-1 fraction: 1 for `lightblock` (Glowstone,
 // Fire, Ultra Instinct), 0.5 for `lightblock2` (every other lit sword). The modern
@@ -53,9 +55,12 @@ export function registerBlockComponents(registry) {
                     block.setPermutation(block.permutation.withState('effect99:crack_stage', (stage + 1)));
                 }
                 else {
-                    const fromWater = Boolean(block.permutation.getState('effect99:from_water'));
+                    // 2.8.8 `destroy_block` is a bare `setblock ~ ~ ~ air 0 destroy` — the
+                    // cage always leaves air, even when it was frozen out of water. The
+                    // `effect99:from_water` flag is only kept for Frost-Walker bookkeeping;
+                    // restoring water here would be a remake-only behaviour.
                     dimension.playSound('random.glass', block.location, { volume: 0.7, pitch: 1.1 });
-                    block.setType(fromWater && dimension.id !== 'minecraft:nether' ? 'minecraft:water' : 'minecraft:air');
+                    block.setType('minecraft:air');
                 }
             }
             catch { }
@@ -104,7 +109,13 @@ export function registerBlockComponents(registry) {
             plantJungleSapling(event.dimension, event.block.location);
         },
     });
-    // 4. Stateful Spectral Block (Spectral Sword & Ghost Sword wall X-ray restoration)
+    // 4. Stateful Spectral Block (Spectral Sword wall X-ray restoration)
+    //
+    // 2.8.8 pairs this with `spectral_sword_function_1`, which runs when the sword
+    // leaves the hand and puts stone/netherrack/end stone back. Only the Spectral
+    // Sword ever creates these blocks — the Ghost Sword has no X-ray in the
+    // original (`ghost_movement` is just `movement: 0.14`), so it must not keep
+    // the wall transparent either.
     registry.registerCustomComponent('effect99:spectral_block', {
         onTick(event) {
             const { block, dimension } = event;
@@ -113,7 +124,7 @@ export function registerBlockComponents(registry) {
                 let activeSpectral = false;
                 for (const p of players) {
                     const held = getMainhandItem(p)?.typeId;
-                    if (held === 'effect:spectral_sword' || held === 'effect:ghost_sword') {
+                    if (held === 'effect:spectral_sword') {
                         activeSpectral = true;
                         break;
                     }

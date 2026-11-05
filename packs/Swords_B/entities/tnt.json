@@ -62,12 +62,27 @@
           "destroy_affected_by_griefing": true
         },
         "minecraft:timer": {
-          "time": 7.9,
+          "time": 7.99,
           "looping": false,
           "time_down_event": {
             "event": "effect:giant_tnt_fx",
             "target": "self"
           }
+        },
+        "minecraft:environment_sensor": {
+          "triggers": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "value": "tnt"
+                  }
+                ]
+              },
+              "event": "effect:giant_tnt_particle"
+            }
+          ]
         }
       }
     },
@@ -86,10 +101,17 @@
           ]
         }
       },
+      "effect:giant_tnt_particle": {
+        "queue_command": {
+          "command": [
+            "particle minecraft:example_linearcurve ~ ~ ~"
+          ]
+        }
+      },
       "effect:giant_tnt_fx": {
         "queue_command": {
           "command": [
-            "camerashake add @a[r=32] 0.25 0.8 positional",
+            "camerashake add @a[r=32] 0.2 0.8 positional",
             "playsound random.explode @a[r=32] ~ ~ ~ 2.0 0.4"
           ]
         }

@@ -5,7 +5,7 @@
       "identifier": "entity:fake_fireball",
       "runtime_identifier": "minecraft:snowball",
       "is_spawnable": false,
-      "is_summonable": false,
+      "is_summonable": true,
       "is_experimental": false
     },
     "components": {

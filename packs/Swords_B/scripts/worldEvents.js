@@ -60,8 +60,26 @@ export function registerWorldEvents() {
                 }
                 catch { }
             }
+            else if (ev.message === 'wolf_transform') {
+                // `complete_wolf_transformation`: `minecraft:attack: 15`, the wolf/monster
+                // type families, an immunity-free bark on every non-void hit and a 3-6 s
+                // growl loop. The engine plays the bark and the growls; the extra damage is
+                // applied here because `minecraft:attack` cannot be raised on a player.
+                if (getMainhandItem(ev.sourceEntity)?.typeId === 'effect:wolf_sword') {
+                    ev.sourceEntity.addTag('effect_wolf_form');
+                }
+            }
+            else if (ev.message === 'wolf_untransform') {
+                ev.sourceEntity.removeTag('effect_wolf_form');
+            }
             else if (ev.message === 'ender_always' || ev.message === 'ender_melee') {
-                safeRandomTeleport(player, 2.0, 16.0);
+                // 2.8.8 `spreadplayers ~ ~ 0 16 @s` with `playsound mob.endermen.portal
+                // @a[r=17]`: anywhere from 0 to 16 blocks, and the cry always plays.
+                safeRandomTeleport(player, 0, 16.0);
+                try {
+                    player.dimension.playSound('mob.endermen.portal', player.location, { volume: 1.0, pitch: 1.0 });
+                }
+                catch { }
             }
         }
         else if (ev.id === 'effect:creeper_sword_drop' && ev.sourceEntity) {
@@ -137,6 +155,17 @@ export function registerWorldEvents() {
         const { hurtEntity, damageSource } = ev;
         const attacker = damageSource.damagingEntity;
         try {
+            // `complete_wolf_transformation` damage sensor: any non-void hit on the
+            // transformed holder plays `mob.wolf.bark` (the damage itself is normal).
+            if (hurtEntity instanceof Player &&
+                hurtEntity.hasTag('effect_wolf_form') &&
+                damageSource.cause !== EntityDamageCause.void &&
+                getMainhandItem(hurtEntity)?.typeId === 'effect:wolf_sword') {
+                try {
+                    hurtEntity.dimension.playSound('mob.wolf.bark', hurtEntity.location, { volume: 1.0, pitch: 0.55 });
+                }
+                catch { }
+            }
             // Cactus Sword natural Thorns recoil when wielder is struck
             // Reflected thorns damage must not trigger another reflection: two cactus
             // wielders (or another thorns source) could otherwise bounce damage forever.

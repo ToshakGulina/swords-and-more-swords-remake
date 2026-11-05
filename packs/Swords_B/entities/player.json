@@ -926,28 +926,7 @@
           "max": 8
         }
       },
-      "effect:tnt_sword": {
-        "minecraft:type_family": {
-          "family": [
-            "player",
-            "tnt_sword"
-          ]
-        },
-        "minecraft:damage_sensor": {
-          "triggers": [
-            {
-              "on_damage": {
-                "filters": {
-                  "test": "is_family",
-                  "subject": "other",
-                  "value": "effect99_entities"
-                }
-              },
-              "deals_damage": "no"
-            }
-          ]
-        }
-      },
+      "effect:tnt_sword": {},
       "effect:shulker_sword": {
         "minecraft:scale": {
           "value": 1
@@ -1735,6 +1714,27 @@
         "queue_command": {
           "command": [
             "scriptevent effect:dodge ultra_instinct"
+          ]
+        }
+      },
+      "effect:wolf_transform": {
+        "queue_command": {
+          "command": [
+            "scriptevent effect:dodge wolf_transform"
+          ]
+        }
+      },
+      "effect:wolf_untransform": {
+        "queue_command": {
+          "command": [
+            "scriptevent effect:dodge wolf_untransform"
+          ]
+        }
+      },
+      "effect:wolf_bark": {
+        "queue_command": {
+          "command": [
+            "playsound mob.wolf.bark @a[r=16] ~ ~ ~ 1 0.55"
           ]
         }
       },

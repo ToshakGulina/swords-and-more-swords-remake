@@ -379,7 +379,8 @@ writeJson(path.join(BP, 'blocks/fake_ice.json'), {
       'minecraft:light_dampening': 0,
       'minecraft:light_emission': 0,
       'minecraft:loot': 'loot_tables/empty.json',
-      'minecraft:map_color': '#9fd8ff',
+      // Exact 2.8.8 `minecraft:map_color: "#000000"`.
+      'minecraft:map_color': '#000000',
       'minecraft:geometry': 'geometry.fake_ice',
       'minecraft:material_instances': {
         '*': {

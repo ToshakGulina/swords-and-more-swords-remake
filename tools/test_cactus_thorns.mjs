@@ -7,7 +7,17 @@ const code = fs.readFileSync('packs/Swords_B/scripts/worldEvents.js', 'utf8')
 const callbacks = {};
 const signals = new Proxy({}, { get: (_t, k) => ({ subscribe(fn) { callbacks[k] = fn; } }) });
 class Player {
-  constructor(id) { this.id = id; this.isValid = true; this.hits = []; }
+  constructor(id) {
+    this.id = id;
+    this.isValid = true;
+    this.hits = [];
+    this.dimension = { playSound() {} };
+  }
+  // The hurt callback also asks Ender/Wolf Sword holders for their tags and
+  // health while the Cactus branch runs; a plain player answers "no".
+  hasTag() { return false; }
+  getComponent() { return undefined; }
+  runCommand() {}
   applyDamage(amount, source) {
     this.hits.push([amount, source.cause]);
     assert.ok(this.hits.length < 4, 'thorns reflection must not recurse');

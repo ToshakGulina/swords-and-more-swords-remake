@@ -72,7 +72,19 @@ const shulkerToggleCooldown = new Map<string, number>();
 const airborneSlimeIds = new Set<string>();
 const nextLapisTick = new Map<string, number>();
 const nextBeeFlowerTick = new Map<string, number>();
+// 2.8.8 drives the Ender and Wither Sword ambience from a random-interval
+// timer (`time [6, 18]` and `time [4, 18]`), so each player needs a due tick.
+const nextEnderSoundTick = new Map<string, number>();
+const nextWitherSoundTick = new Map<string, number>();
 const werewolfCursedPlayers = new Set<string>();
+// Wolf Sword animation-controller state: whether the Full Moon transformation
+// is active, whether the 0.20/0.80 startup line was already shown tonight, and
+// the next `wolf_sword_sounds` growl (`time [3, 6]`).
+const werewolfTransformed = new Set<string>();
+const werewolfStartupShown = new Map<string, boolean>();
+const nextWolfGrowlTick = new Map<string, number>();
+// `minecraft:sea_sword`'s equip branch (`is_family != sea_sword`) fires once.
+const seaSwordEquipped = new Set<string>();
 
 // Exact 2.8.8 `bee_sword_flower`: eight equal-weight `setblock ~ ~ ~ red_flower <0..7>`,
 // i.e. poppy, blue orchid, allium, azure bluet, red, orange, white and pink tulips.
@@ -268,7 +280,13 @@ export function startPassiveEngine(): void {
     shulkerToggleCooldown.delete(ev.playerId);
     nextLapisTick.delete(ev.playerId);
     nextBeeFlowerTick.delete(ev.playerId);
+    nextEnderSoundTick.delete(ev.playerId);
+    nextWitherSoundTick.delete(ev.playerId);
     werewolfCursedPlayers.delete(ev.playerId);
+    seaSwordEquipped.delete(ev.playerId);
+    werewolfTransformed.delete(ev.playerId);
+    werewolfStartupShown.delete(ev.playerId);
+    nextWolfGrowlTick.delete(ev.playerId);
   });
 
   world.afterEvents.playerDimensionChange.subscribe((ev) => {
@@ -522,6 +540,22 @@ export function startPassiveEngine(): void {
         }
 
         // Clear Ghost Sword effects when unequipping
+        // `controller.animation.end_wolf_sword` ends the transformation as soon
+        // as the Wolf Sword leaves the main hand, so the growl timer and the
+        // transformed flag must be dropped here too.
+        if (prevMainId === 'effect:wolf_sword' && mainId !== 'effect:wolf_sword') {
+          werewolfTransformed.delete(player.id);
+          werewolfStartupShown.delete(player.id);
+          nextWolfGrowlTick.delete(player.id);
+          try {
+            player.removeTag('effect_wolf_form');
+          } catch {}
+        }
+
+        if (prevMainId === 'effect:sea_sword' && mainId !== 'effect:sea_sword') {
+          seaSwordEquipped.delete(player.id);
+        }
+
         if (prevMainId === 'effect:ghost_sword' && mainId !== 'effect:ghost_sword') {
           try {
             player.removeEffect('weakness');
@@ -618,11 +652,26 @@ export function startPassiveEngine(): void {
           }
 
           case 'effect:sea_sword': {
+            // `is_family != sea_sword` fires once per equip, so the splash and
+            // the bounce particle must not repeat every 0.5 s.
+            const justEquippedSea = !seaSwordEquipped.has(player.id);
+            if (justEquippedSea) seaSwordEquipped.add(player.id);
             // Exact 2.8.8 `minecraft:sea_sword`: a 0.5 s timer drives the whole
             // group. In water: conduction 1 s renewed every timer tick. Out of
             // water: `camerashake` + `conduit_power 0` and the fish flop sound.
             // Suffocation and the 0.06/0.07 mermaid speeds come from the
             // component group itself, not from damage applied here.
+            // The `is_family != sea_sword` branch runs once on equip and gives
+            // `particle minecraft:example_bounce` + `playsound random.splash`;
+            // the in-water branch adds `mermaid_movement_in_water`
+            // (`underwater_movement: 0.07`) and `effect @s conduit_power 1 0`;
+            // the out-of-water branch adds `mermaid_movement_out_water`
+            // (`movement: 0.06`), `camerashake add @s 0.01 1 positional`, clears
+            // `conduit_power` and plays the fish flop cry. The two speeds are
+            // mutually exclusive in the original; Bedrock has no runtime
+            // `movement` setter, so both stay on the component group and the
+            // engine picks the right one (`underwater_movement` only while
+            // swimming, `movement` only on land).
             if (player.isInWater) {
               if (tick % 10 === 0) {
                 player.addEffect('conduit_power', 20, { amplifier: 0, showParticles: false });
@@ -635,6 +684,12 @@ export function startPassiveEngine(): void {
                 player.removeEffect('conduit_power');
               } catch {}
               dim.playSound('mob.fish.flop', player.location, { volume: 1.0, pitch: 0.6 });
+              // The flop only carries the sound in 2.8.8; the splash and the
+              // bounce particle belong to equipping the sword.
+              if (justEquippedSea) {
+                dim.spawnParticle('minecraft:example_bounce', player.location);
+                dim.playSound('random.splash', player.location, { volume: 0.5, pitch: 1.0 });
+              }
             }
             break;
           }
@@ -657,31 +712,10 @@ export function startPassiveEngine(): void {
             } else {
               player.removeEffect('levitation');
             }
-            // Getting very close to walls lets player see nearby caves!
-            if (tick % 6 === 0) {
-              const px = Math.floor(player.location.x);
-              const py = Math.floor(player.location.y + 1);
-              const pz = Math.floor(player.location.z);
-              for (let dx = -2; dx <= 2; dx++) {
-                for (let dy = -1; dy <= 1; dy++) {
-                  for (let dz = -2; dz <= 2; dz++) {
-                    if (dx * dx + dy * dy + dz * dz > 5) continue;
-                    const b = dim.getBlock({ x: px + dx, y: py + dy, z: pz + dz });
-                    if (!b) continue;
-                    let originKey: string | undefined;
-                    if (b.typeId === 'minecraft:stone') originKey = 'stone';
-                    else if (b.typeId === 'minecraft:deepslate') originKey = 'deepslate';
-                    else if (b.typeId === 'minecraft:netherrack') originKey = 'netherrack';
-                    else if (b.typeId === 'minecraft:end_stone') originKey = 'end_stone';
-                    if (originKey) {
-                      b.setPermutation(
-                        BlockPermutation.resolve('effect99:spectral_block', { 'effect99:origin': originKey })
-                      );
-                    }
-                  }
-                }
-              }
-            }
+            // 2.8.8 `ghost_movement` is only `minecraft:movement: 0.14` — the
+            // Ghost Sword has no wall X-ray at all. The remake had moved the
+            // Spectral Sword's `spectral_sword_function` here, which turned stone
+            // into see-through spectral blocks while holding the ghost blade.
             break;
           }
 
@@ -734,28 +768,38 @@ export function startPassiveEngine(): void {
           }
 
           case 'effect:magma_sword': {
-            // Magma blocks won't hurt you (player.json), lava under feet turns into magma blocks + underwater bubble FX!
+            // Exact 2.8.8 `minecraft:magma_sword`: five `fill ... magma 0 replace
+            // lava` cells — the block under the player plus the four horizontal
+            // neighbours at `~1 ~-1 ~`, `~ ~-1 ~1`, `~-1 ~-1 ~`, `~ ~-1 ~-1` —
+            // then `execute @s ~ ~1 ~ particle minecraft:guardian_attack_particle
+            // ^-0.4 ^ ^0.2` in front of the chest. The bubble sound is a 1/100
+            // roll (`weight 99` empty) while standing in water.
             if (tick % 4 === 0) {
               const px = Math.floor(player.location.x);
               const py = Math.floor(player.location.y) - 1;
               const pz = Math.floor(player.location.z);
-              for (let dx = -2; dx <= 2; dx++) {
-                for (let dz = -2; dz <= 2; dz++) {
-                  if (dx * dx + dz * dz > 5) continue;
-                  const b = dim.getBlock({ x: px + dx, y: py, z: pz + dz });
-                  if (b && (b.typeId === 'minecraft:lava' || b.typeId === 'minecraft:flowing_lava')) {
-                    b.setType('minecraft:magma');
-                  }
+              for (const [dx, dz] of [
+                [0, 0],
+                [1, 0],
+                [0, 1],
+                [-1, 0],
+                [0, -1],
+              ] as const) {
+                const b = dim.getBlock({ x: px + dx, y: py, z: pz + dz });
+                if (b && (b.typeId === 'minecraft:lava' || b.typeId === 'minecraft:flowing_lava')) {
+                  b.setType('minecraft:magma');
                 }
               }
-            }
-            if (tick % 16 === 0) {
+              // `^ ^ ^` is local to the player, so `^-0.4 ^ ^0.2` sits 0.2 blocks
+              // forward and 0.4 to the left of the chest.
+              const view = player.getViewDirection();
+              const right = { x: -view.z, z: view.x };
               dim.spawnParticle('minecraft:guardian_attack_particle', {
-                x: player.location.x,
-                y: player.location.y + 0.9,
-                z: player.location.z,
+                x: player.location.x + view.x * 0.2 + right.x * -0.4,
+                y: player.location.y + 1.9,
+                z: player.location.z + view.z * 0.2 + right.z * -0.4,
               });
-              if (player.isInWater && Math.random() < 0.25) {
+              if (player.isInWater && Math.random() < 0.01) {
                 dim.playSound('bubble.up', player.location, { volume: 1.0, pitch: 0.9 });
               }
             }
@@ -765,14 +809,23 @@ export function startPassiveEngine(): void {
           case 'effect:blaze_sword': {
             // Small fireballs cannot approach within radius 7 + flame particles (water & rain damage handled natively in player.json!)
             if (tick % 20 === 0) {
-              dim.spawnParticle('minecraft:mobflame_single', {
-                x: player.location.x + (Math.random() - 0.5) * 0.6,
-                y: player.location.y + 0.2,
-                z: player.location.z + (Math.random() - 0.5) * 0.6,
-              });
-              if (Math.random() < 0.25) {
-                dim.playSound('mob.blaze.breathe', player.location, { volume: 0.5, pitch: 1.0 });
+              // Exact 2.8.8 `blaze_sword_effects`: five particles on a fixed
+              // cross (centre plus four 0.3-away points, all at y+0.2) and one
+              // `mob.blaze.breathe` at volume 0.5 — the sound is unconditional.
+              for (const [ox, oz] of [
+                [0, 0],
+                [0.3, 0],
+                [0, 0.3],
+                [-0.3, 0],
+                [0, -0.3],
+              ] as const) {
+                dim.spawnParticle('minecraft:mobflame_single', {
+                  x: player.location.x + ox,
+                  y: player.location.y + 0.2,
+                  z: player.location.z + oz,
+                });
               }
+              dim.playSound('mob.blaze.breathe', player.location, { volume: 0.5, pitch: 1.0 });
             }
             if (tick % 2 === 0) {
               const fireballs = dim.getEntities({
@@ -961,7 +1014,9 @@ export function startPassiveEngine(): void {
           case 'effect:emerald_sword': {
             // Exact 2.8.8: `is_in_village` gates the whole thing; inside a village
             // the holder gets Village Hero and every villager within 64 blocks
-            // gets Resistance I for one second, re-applied every tick.
+            // gets resistance for one second, re-applied every tick. The
+            // original command is `effect @e[family=villager,r=64] resistance 1
+            // 1 true` — amplifier 1, i.e. Resistance II, not Resistance I.
             if (!isInVillage(player)) break;
             try {
               player.addEffect('village_hero', 20, { amplifier: 0, showParticles: false });
@@ -972,7 +1027,7 @@ export function startPassiveEngine(): void {
               families: ['villager'],
             })) {
               try {
-                v.addEffect('resistance', 20, { amplifier: 0, showParticles: false });
+                v.addEffect('resistance', 20, { amplifier: 1, showParticles: false });
               } catch {}
             }
             break;
@@ -1075,10 +1130,15 @@ export function startPassiveEngine(): void {
                 z: player.location.z,
               });
             }
-            if (tick % 160 === 0 && Math.random() < 0.45) {
+            // Exact 2.8.8 `minecraft:ender_sword` timer: `time [6, 18]`, looping,
+            // randomInterval, and `ender_sword_sound` picks one of three cries
+            // every time — there is no extra chance roll on top.
+            let enderDue = nextEnderSoundTick.get(player.id) ?? 0;
+            if (tick >= enderDue) {
+              nextEnderSoundTick.set(player.id, tick + 120 + Math.floor(Math.random() * 241));
               const snds = ['mob.endermen.idle', 'mob.endermen.stare', 'mob.endermen.scream'];
               dim.playSound(snds[Math.floor(Math.random() * snds.length)], player.location, {
-                volume: 0.7,
+                volume: 1.0,
                 pitch: 1.0,
               });
             }
@@ -1114,27 +1174,29 @@ export function startPassiveEngine(): void {
               }
             }
 
-            // Makes ONLY the main block of the current dimension transparent!
-            if (tick % 6 === 0) {
-              const px = Math.floor(player.location.x);
-              const py = Math.floor(player.location.y + 1);
-              const pz = Math.floor(player.location.z);
-              for (let dx = -4; dx <= 4; dx++) {
-                for (let dy = -4; dy <= 4; dy++) {
-                  for (let dz = -4; dz <= 4; dz++) {
-                    if (dx * dx + dy * dy + dz * dz > 18) continue;
-                    const b = dim.getBlock({ x: px + dx, y: py + dy, z: pz + dz });
-                    if (!b) continue;
-                    let originKey: string | undefined;
-                    if (dim.id === 'minecraft:overworld') {
-                      if (b.typeId === 'minecraft:stone') originKey = 'stone';
-                      else if (b.typeId === 'minecraft:deepslate') originKey = 'deepslate';
-                    } else if (dim.id === 'minecraft:nether') {
-                      if (b.typeId === 'minecraft:netherrack') originKey = 'netherrack';
-                    } else if (dim.id === 'minecraft:the_end') {
-                      if (b.typeId === 'minecraft:end_stone') originKey = 'end_stone';
-                    }
-                    if (originKey) {
+            // Exact 2.8.8 `spectral_sword_function`: `fill ~6 ~6 ~6 ~-6 ~-6 ~-6
+            // effect99:spectral_block 0 replace <base>` and then seven frame fills
+            // that put plain `<base>` back into the outer slabs, so exactly the
+            // 12x12x12 cube around the player becomes see-through. `<base>` is
+            // stone in the Overworld, netherrack in the Nether and end stone in
+            // the End — deepslate is never mentioned, so it stays solid.
+            const isOverworld = dim.id === 'minecraft:overworld';
+            const baseBlock = isOverworld
+              ? 'minecraft:stone'
+              : dim.id === 'minecraft:nether'
+                ? 'minecraft:netherrack'
+                : 'minecraft:end_stone';
+            const originKey = isOverworld ? 'stone' : dim.id === 'minecraft:nether' ? 'netherrack' : 'end_stone';
+            if (isOverworld || dim.id === 'minecraft:nether' || dim.id === 'minecraft:the_end') {
+              if (tick % 6 === 0) {
+                const px = Math.floor(player.location.x);
+                const py = Math.floor(player.location.y + 1);
+                const pz = Math.floor(player.location.z);
+                for (let dx = -5; dx <= 6; dx++) {
+                  for (let dy = -6; dy <= 5; dy++) {
+                    for (let dz = -5; dz <= 6; dz++) {
+                      const b = dim.getBlock({ x: px + dx, y: py + dy, z: pz + dz });
+                      if (b?.typeId !== baseBlock) continue;
                       b.setPermutation(
                         BlockPermutation.resolve('effect99:spectral_block', { 'effect99:origin': originKey })
                       );
@@ -1171,9 +1233,13 @@ export function startPassiveEngine(): void {
               // Decorative wither effect (player.json makes wielder 100% immune to wither damage!)
               player.addEffect('wither', 60, { amplifier: 0, showParticles: false });
 
-              if (tick % 160 === 0 && Math.random() < 0.45) {
-                dim.playSound(Math.random() < 0.5 ? 'mob.wither.hurt' : 'mob.wither.death', player.location, {
-                  volume: 0.6,
+              // Exact 2.8.8 `wither_sword_effects`: `time [4, 18]` loop, a 50/50
+              // split between `mob.wither.death` and `mob.wither.hurt`.
+              let witherDue = nextWitherSoundTick.get(player.id) ?? 0;
+              if (tick >= witherDue) {
+                nextWitherSoundTick.set(player.id, tick + 80 + Math.floor(Math.random() * 281));
+                dim.playSound(Math.random() < 0.5 ? 'mob.wither.death' : 'mob.wither.hurt', player.location, {
+                  volume: 1.0,
                   pitch: 1.0,
                 });
               }
@@ -1211,22 +1277,55 @@ export function startPassiveEngine(): void {
           }
 
           case 'effect:wolf_sword': {
-            if (
-              world.getMoonPhase() === MoonPhase.FullMoon &&
-              timeOfDay >= 12000 &&
-              timeOfDay < 13000 &&
-              tick % 60 === 0
-            ) {
-              // Sunset dizziness before Full Moon night (exact 2.8.8 tellraw1.mcfunction)!
-              player.addEffect('nausea', 100, { amplifier: 0, showParticles: false });
-              player.onScreenDisplay.setActionBar('§fFor some reason you feel nauseous...');
-            } else if (fullMoon && tick % 20 === 0) {
-              werewolfCursedPlayers.delete(player.id);
-              player.addEffect('speed', 60, { amplifier: 2, showParticles: false });
-              player.addEffect('jump_boost', 60, { amplifier: 2, showParticles: false });
-              if (Math.random() < 0.15) {
-                dim.playSound('mob.wolf.growl', player.location, { volume: 1.0, pitch: 0.9 });
+            // 2.8.8 drives the Wolf Sword from three animation controllers:
+            //  * `controller.animation.start_wolf_sword` — on a Full Moon
+            //    (`q.moon_phase == 0`) at `q.time_of_day <= 0.20 || >= 0.80` the
+            //    sword runs `wolf_sword_start_events`, which only stops the
+            //    sword's own howl and shows the `tellraw1` nausea line.
+            //  * `controller.animation.wolf_sword` — between 0.77 and 0.78 it
+            //    starts `wolf_transformation`: the `complete_wolf_transformation`
+            //    group gives `minecraft:attack: 15`, the `wolf`/`monster` type
+            //    families, a 3-6 s `wolf_sword_sounds` growl loop and a
+            //    `wolf_damage_sound` bark on every non-void hit.
+            //  * `controller.animation.end_wolf_sword` — unequipping or the
+            //    0.20 tick ends it.
+            // The remake had replaced all of that with Speed II + Jump Boost II.
+            const moonPhase = world.getMoonPhase();
+            if (moonPhase === MoonPhase.FullMoon) {
+              // `q.time_of_day` is a 0..1 fraction of the day, not ticks.
+              const dayFraction = timeOfDay / 24000;
+              if (dayFraction >= 0.77 && dayFraction <= 0.78 && !werewolfTransformed.has(player.id)) {
+                werewolfTransformed.add(player.id);
+                werewolfCursedPlayers.delete(player.id);
+                try {
+                  player.triggerEvent('effect:wolf_transform');
+                } catch {}
+                dim.playSound('random.fizz', player.location, { volume: 1.0, pitch: 1.0 });
+                dim.playSound('wolf_sword.howl', player.location, { volume: 1.0, pitch: 1.0 });
+                for (const dy of [0, 0.5, 0.8]) {
+                  dim.spawnParticle('minecraft:egg_destroy_emitter', {
+                    x: player.location.x,
+                    y: player.location.y + dy,
+                    z: player.location.z,
+                  });
+                }
               }
+              if (werewolfTransformed.has(player.id)) {
+                // `complete_wolf_transformation` timer: `time [3, 6]`, looping.
+                const due = nextWolfGrowlTick.get(player.id) ?? 0;
+                if (tick >= due) {
+                  nextWolfGrowlTick.set(player.id, tick + 60 + Math.floor(Math.random() * 61));
+                  dim.playSound('mob.wolf.growl', player.location, { volume: 1.0, pitch: 0.9 });
+                }
+              }
+              if ((dayFraction <= 0.20 || dayFraction >= 0.80) && werewolfStartupShown.get(player.id) !== true) {
+                werewolfStartupShown.set(player.id, true);
+                player.onScreenDisplay.setActionBar('§fFor some reason you feel nauseous...');
+              }
+            } else {
+              werewolfTransformed.delete(player.id);
+              werewolfStartupShown.delete(player.id);
+              nextWolfGrowlTick.delete(player.id);
             }
             break;
           }
@@ -1253,13 +1352,32 @@ export function startPassiveEngine(): void {
                   player.removeEffect(debuff);
                 } catch {}
               }
-              dim.spawnParticle('minecraft:balloon_gas_particle', {
-                x: player.location.x + (Math.random() - 0.5) * 0.6,
-                y: player.location.y + Math.random() * 2.0,
-                z: player.location.z + (Math.random() - 0.5) * 0.6,
-              });
-              if (tick % 24 === 0) {
-                dim.playSound('mob.wither.spawn', player.location, { volume: 0.35, pitch: 0.3 });
+              // `ultra_instinct_sword_effects` is 15 fixed offsets, each with its
+              // own `mob.wither.spawn` (volume 1, pitch 0.3) — not one random
+              // particle and an occasional sound.
+              for (const [ox, oy, oz] of [
+                [0.3, 1, 0],
+                [0, 2, 0.3],
+                [-0.3, 0, 0],
+                [0, 0.3, -0.3],
+                [0.3, 1.5, 0.3],
+                [-0.3, 0.8, -0.3],
+                [-0.3, 2, 0.3],
+                [0.2, 1, 0.3],
+                [0.3, 0.9, 0.1],
+                [0.2, 2.3, -0.2],
+                [-0.3, 1.2, 0],
+                [0.3, 0.3, 0.3],
+                [0.3, 0.6, 0.1],
+                [-0.3, 0.2, 0.3],
+                [0.1, 0.7, -0.3],
+              ] as const) {
+                dim.spawnParticle('minecraft:balloon_gas_particle', {
+                  x: player.location.x + ox,
+                  y: player.location.y + oy,
+                  z: player.location.z + oz,
+                });
+                dim.playSound('mob.wither.spawn', player.location, { volume: 1.0, pitch: 0.3 });
               }
             }
             break;
@@ -1272,11 +1390,14 @@ export function startPassiveEngine(): void {
             //   effect — their walk speed comes from the component group.
             anyTimeSword = true;
             world.setTimeOfDay((world.getTimeOfDay() + 30) % 24000);
+            // `effect @e[type=!player] speed 1 15 true` targets exactly that
+            // selector: 1 s at amplifier 15, no `r=` limit, so every non-player
+            // entity in the dimension is hit, not only those within 32 blocks.
+            // `@e` also picks up items and XP orbs, which accept the effect as a
+            // no-op — the selector here mirrors the original.
             if (tick % 10 === 0) {
-              for (const e of dim.getEntities({ location: player.location, maxDistance: 32 })) {
-                if (e.typeId === 'minecraft:player' || e.typeId === 'minecraft:item' || e.typeId === 'minecraft:xp_orb') {
-                  continue;
-                }
+              for (const e of dim.getEntities()) {
+                if (e.typeId === 'minecraft:player') continue;
                 try {
                   // `effect ... speed 1 15 true` = 1 s, amplifier 15.
                   e.addEffect('speed', 20, { amplifier: 15, showParticles: false });

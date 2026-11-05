@@ -74,12 +74,14 @@
               "component_groups": [
                 "grass_sword"
               ]
-            },
+            }
+          },
+          {
             "queue_command": {
               "command": [
                 "playsound dig.grass @a[r=12]",
                 "effect @e[type=!entity:grass,r=1] slowness 2 15 true",
-                "tag @e[family=!grass_witch,family=!grass_sword,family=!shulker_sword,family=!ghost_sword,type=!entity:grass,type=!item,type=!xp_orb,type=!arrow,r=2,tag=!grass] add grass"
+                "tag @e[family=!grass_witch,family=!grass_sword,family=!shulker_sword,family=!ghost_sword,type=!entity:grass,type=!item,type=!xp_orb,type=!arrow,r=1,tag=!grass] add grass"
               ]
             }
           }

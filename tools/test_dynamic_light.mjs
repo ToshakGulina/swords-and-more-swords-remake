@@ -16,8 +16,8 @@ assert.ok(src.includes('const levels = volume.topOnly ? [0] : [-1, 0, 1];'),
 assert.ok(src.includes('for (let dx = -1; dx <= 1; dx++)') &&
   src.includes('for (let dz = -1; dz <= 1; dz++)'),
   'each layer is 3x3, matching ~1..~-1 in both horizontal axes');
-assert.ok(blocks.includes("yOffset: TOP_LAYER_SWORDS.has(mainId) ? 2 : 1"),
-  'cube swords centre on the feet (y+1), top-only swords sit at y+2');
+assert.ok(blocks.includes("yOffset: TOP_LAYER_SWORDS.has(mainId) ? 1 : 0"),
+  'cube swords centre on the feet, top-only swords sit one block above them');
 assert.deepEqual([...blocks.match(/TOP_LAYER_SWORDS = new Set\(\[([^\]]+)\]/)[1]
   .matchAll(/'([^']+)'/g)].map((m) => m[1]).sort(),
 ['effect:ultra_instinct_sword', 'effect:wither_sword'],

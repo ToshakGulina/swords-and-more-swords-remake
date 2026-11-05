@@ -270,6 +270,10 @@ const SWORD_PLAYER_GROUPS = {
       breathes_water: true,
       breathes_lava: false,
     },
+    // `mermaid_movement_out_water` (`movement 0.06`) and
+    // `mermaid_movement_in_water` (`underwater_movement 0.07`) from 2.8.8. They
+    // are mutually exclusive there, but Bedrock applies each one only in its own
+    // medium, so hosting both here reproduces the same split.
     'minecraft:movement': { value: 0.06 },
     'minecraft:underwater_movement': { value: 0.07 },
     'minecraft:type_family': { family: ['player', 'sea_sword'] },
@@ -494,19 +498,11 @@ const SWORD_PLAYER_GROUPS = {
     'minecraft:health': { value: 8, max: 8 },
   },
 
-  'effect:tnt_sword': {
-    'minecraft:type_family': { family: ['player', 'tnt_sword'] },
-    'minecraft:damage_sensor': {
-      triggers: [
-        {
-          on_damage: {
-            filters: { test: 'is_family', subject: 'other', value: 'effect99_entities' },
-          },
-          deals_damage: false,
-        },
-      ],
-    },
-  },
+  // `tnt_sword` has NO component group in 2.8.8: the SuperTNT sword is a plain
+  // item whose only passive is the `on_use` blast. The remake had invented a
+  // family plus immunity to every `effect99_entities` hit. It is kept as an empty
+  // group only so the shared equip/unequip plumbing still has a key to switch to.
+  'effect:tnt_sword': {},
 
   'effect:shulker_sword': {
     'minecraft:scale': { value: 1.0 },
@@ -604,6 +600,19 @@ pEnt.events['effect:ui_dodge'] = {
     ],
   },
 };
+// `controller.animation.wolf_sword` / `end_wolf_sword` in 2.8.8 add and remove the
+// `complete_wolf_transformation` group; the visible part of that group is a 15
+// damage attack, a bark on any non-void hit and a 3-6 s growl loop.
+pEnt.events['effect:wolf_transform'] = {
+  queue_command: { command: ['scriptevent effect:dodge wolf_transform'] },
+};
+pEnt.events['effect:wolf_untransform'] = {
+  queue_command: { command: ['scriptevent effect:dodge wolf_untransform'] },
+};
+pEnt.events['effect:wolf_bark'] = {
+  queue_command: { command: ['playsound mob.wolf.bark @a[r=16] ~ ~ ~ 1 0.55'] },
+};
+
 pEnt.events['effect:ender_dodge'] = {
   queue_command: {
     command: [
@@ -890,19 +899,34 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
       causes_fire: true,
       destroy_affected_by_griefing: true,
     },
+    // 2.8.8 fires the shake at `time [7.99, 7.99]`, a hair before the 8 s fuse.
     'minecraft:timer': {
-      time: 7.9,
+      time: 7.99,
       looping: false,
       time_down_event: { event: 'effect:giant_tnt_fx', target: 'self' },
+    },
+    // 2.8.8 also keeps a `particle` sensor on the group: while the TNT is a
+    // `tnt` family member it emits `minecraft:example_linearcurve` every tick.
+    'minecraft:environment_sensor': {
+      triggers: [
+        {
+          filters: { all_of: [{ test: 'is_family', value: 'tnt' }] },
+          event: 'effect:giant_tnt_particle',
+        },
+      ],
     },
   };
   ent.events['giant_tnt'] = {
     add: { component_groups: ['giant_tnt'] },
   };
+  ent.events['effect:giant_tnt_particle'] = {
+    queue_command: { command: ['particle minecraft:example_linearcurve ~ ~ ~'] },
+  };
+  // 2.8.8 `camerashake` strength is 0.2, not the 0.25 the remake had invented.
   ent.events['effect:giant_tnt_fx'] = {
     queue_command: {
       command: [
-        'camerashake add @a[r=32] 0.25 0.8 positional',
+        'camerashake add @a[r=32] 0.2 0.8 positional',
         'playsound random.explode @a[r=32] ~ ~ ~ 2.0 0.4',
       ],
     },
@@ -1272,6 +1296,17 @@ for (const f of customEntityFiles.sort()) {
   if (f === 'ghost.json') {
     ent.description.is_spawnable = true;
   }
+  if (f === 'fake_fireball.json') {
+    // The Blaze Sword volley needs four of these. 2.8.8 shipped the entity with
+    // `is_summonable: false` and still spawned it, because the old engine did not
+    // enforce that flag for `spawn_entity`; in 1.26.60 `dimension.spawnEntity()`
+    // returns undefined instead. The remake already turns the flag on for
+    // `fireball`, `small_fireball`, `shulker_bullet` and both wither skulls for
+    // exactly this reason — the flag is about summonability, not behaviour, so the
+    // projectile itself (power 1.3, damage 5, sets fire, `set_sound` ghast cry)
+    // stays bit-for-bit the 2.8.8 definition.
+    ent.description.is_summonable = true;
+  }
   if (f === 'slime_king.json') {
     ent.description.is_spawnable = true;
     // Deliberate fix, not a parity item: `loot_tables/entities/slime_king.json` ships in 2.8.8
@@ -1287,6 +1322,27 @@ for (const f of customEntityFiles.sort()) {
           'damage @e[r=1.5,type=!item,type=!xp_orb,family=!slime_king] 2 magic',
         ],
       },
+    };
+  }
+  if (f === 'grass.json') {
+    // 2.8.8 `minecraft:entity_spawned` for `entity:grass` does three things:
+    // `dig.grass`, `effect @e[type=!entity:grass,r=1] slowness 2 15 true` and a
+    // `grass` tag on every non-grass entity in one block, which is what stops
+    // the same mob from being buried again every half second. The remake kept
+    // the tag but dropped the slowness, and widened the tag radius to 2.
+    ent.events['minecraft:entity_spawned'] = {
+      sequence: [
+        { add: { component_groups: ['grass_sword'] } },
+        {
+          queue_command: {
+            command: [
+              'playsound dig.grass @a[r=12]',
+              'effect @e[type=!entity:grass,r=1] slowness 2 15 true',
+              'tag @e[family=!grass_witch,family=!grass_sword,family=!shulker_sword,family=!ghost_sword,type=!entity:grass,type=!item,type=!xp_orb,type=!arrow,r=1,tag=!grass] add grass',
+            ],
+          },
+        },
+      ],
     };
   }
   if (f === 'grows_crop.json') {
@@ -1335,7 +1391,16 @@ for (const f of customEntityFiles.sort()) {
   writeJson(path.join(BP, 'entities', f), raw);
 }
 
-// D.29 Dedicated `entity:minicreeper` projectile entity for `creeper_sword` (20% on-hit mini creeper!)
+// D.29 Dedicated `entity:minicreeper` projectile for `creeper_sword` (20% on hit)
+//
+// 2.8.8 does not have a `minicreeper` entity at all: the 5%/20% creeper_sword
+// roll adds the `minecraft:minicreeper` + `minecraft:minicreeper_projectile`
+// component groups to the *vanilla creeper* that was just shot, so the creeper
+// itself flies as a projectile (power 1, gravity 0.02, 1 damage, removed on
+// impact) and turns into a 0.3-scale exploding mini creeper only after it lands
+// (`minecraft:stop_projectile` strips the projectile group and the 10 s timer
+// starts). The remake instead spawned a walking mob with pathfinding, health and
+// a 10 s fuse, which both moved and exploded differently.
 writeJson(path.join(BP, 'entities/minicreeper.json'), {
   format_version: '1.16.0',
   'minecraft:entity': {
@@ -1345,12 +1410,59 @@ writeJson(path.join(BP, 'entities/minicreeper.json'), {
       is_summonable: true,
       is_experimental: false,
     },
-    // Values copied from the `minecraft:minicreeper` group 2.8.8 kept on the
-    // creeper entity: scale 0.3, a 10 s loop timer and a blast of power 1 after a
-    // 1.5 s fuse. The remake had invented sharper numbers (0.35 scale, 6-8 s
-    // fuse timer, power 1.5) and let the mini creeper take damage from everything
-    // except falls and players — 2.8.8 makes it immune to all damage.
     component_groups: {
+      // `minecraft:minicreeper_projectile` — the flying half.
+      projectile: {
+        'minecraft:projectile': {
+          on_hit: {
+            definition_event: {
+              affect_projectile: true,
+              event_trigger: { event: 'minecraft:stop_projectile', target: 'self' },
+            },
+            impact_damage: { damage: 1, knockback: true },
+          },
+          power: 1,
+          gravity: 0.02,
+          inertia: 1,
+          liquid_inertia: 1,
+        },
+      },
+      // `minecraft:minicreeper` — the landed mini creeper.
+      minicreeper: {
+        'minecraft:timer': {
+          time: [10.0, 10.0],
+          looping: true,
+          randomInterval: false,
+          time_down_event: { event: 'start_minicreeper_exploding', target: 'self' },
+        },
+        'minecraft:scale': { value: 0.3 },
+        'minecraft:behavior.nearest_attackable_target': {
+          priority: 1,
+          entity_types: [
+            { filters: { test: 'is_family', subject: 'other', value: 'monster' }, max_dist: 16 },
+          ],
+          must_see: true,
+          must_see_forget_duration: 0,
+        },
+        'minecraft:type_family': { family: ['creeper', 'player', 'mob', 'effect99_entities'] },
+        'minecraft:target_nearby_sensor': {
+          inside_range: 2.5,
+          must_see: true,
+          on_inside_range: { event: 'start_minicreeper_exploding', target: 'self' },
+        },
+        'minecraft:damage_sensor': {
+          triggers: {
+            on_damage: {
+              filters: {
+                any_of: [{ test: 'has_damage', subject: 'self', operator: '!=', value: 'void' }],
+              },
+              event: 'start_minicreeper_exploding',
+            },
+            deals_damage: true,
+          },
+        },
+      },
+      // `minecraft:minicreeper_exploding` — power 1, 1.5 s fuse, immune to all damage.
       exploding: {
         'minecraft:damage_sensor': { triggers: { cause: 'all', deals_damage: false } },
         'minecraft:explode': {
@@ -1367,7 +1479,6 @@ writeJson(path.join(BP, 'entities/minicreeper.json'), {
     },
     components: {
       'minecraft:type_family': { family: ['creeper', 'player', 'mob', 'effect99_entities'] },
-      'minecraft:scale': { value: 0.3 },
       'minecraft:collision_box': { width: 0.3, height: 0.6 },
       'minecraft:health': { value: 10, max: 10 },
       'minecraft:movement': { value: 0.32 },
@@ -1377,39 +1488,27 @@ writeJson(path.join(BP, 'entities/minicreeper.json'), {
       'minecraft:can_climb': {},
       'minecraft:physics': {},
       'minecraft:pushable': { is_pushable: true, is_pushable_by_piston: true },
-      'minecraft:behavior.melee_attack': { priority: 2, speed_multiplier: 1.25, track_target: true },
-      'minecraft:behavior.nearest_attackable_target': {
-        priority: 1,
-        within_radius: 16,
-        must_see: true,
-        entity_types: [
-          { filters: { test: 'is_family', subject: 'other', value: 'monster' }, max_dist: 16 },
-        ],
-      },
-      'minecraft:target_nearby_sensor': {
-        inside_range: 2.5,
-        must_see: true,
-        on_inside_range: { event: 'start_exploding', target: 'self' },
-      },
-      'minecraft:timer': {
-        time: [10.0, 10.0],
-        looping: true,
-        randomInterval: false,
-        time_down_event: { event: 'start_exploding', target: 'self' },
-      },
-      'minecraft:damage_sensor': {
-        triggers: {
-          on_damage: {
-            filters: { any_of: [{ test: 'has_damage', subject: 'self', operator: '!=', value: 'void' }] },
-            event: 'start_exploding',
-          },
-          deals_damage: false,
-        },
-      },
     },
     events: {
-      start_exploding: { add: { component_groups: ['exploding'] } },
-      despawn: { add: { component_groups: ['despawn'] } },
+      // `minecraft:entity_spawned` in 2.8.8 adds both groups whenever the creeper
+      // is shot while the shooter holds the Creeper Sword. Here the projectile is
+      // spawned with `spawnEvent: 'effect:minicreeper_projectile'`.
+      'effect:minicreeper_projectile': {
+        add: { component_groups: ['projectile', 'minicreeper'] },
+      },
+      'minecraft:stop_projectile': {
+        remove: { component_groups: ['projectile'] },
+        add: { component_groups: ['minicreeper'] },
+      },
+      start_minicreeper_exploding: {
+        add: { component_groups: ['exploding'] },
+      },
+      'minecraft:entity_spawned': {
+        add: { component_groups: ['projectile', 'minicreeper'] },
+      },
+      'effect:instant_despawn': {
+        add: { component_groups: ['despawn'] },
+      },
     },
   },
 });

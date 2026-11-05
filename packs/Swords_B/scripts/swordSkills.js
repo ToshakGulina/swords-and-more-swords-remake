@@ -25,21 +25,13 @@ function absorbSpongeWater(player) {
     const py = Math.floor(player.location.y);
     const pz = Math.floor(player.location.z);
     let removed = 0;
-    let water = 0;
     try {
-        for (let dx = -2; dx <= 2; dx++) {
-            for (let dy = -2; dy <= 2; dy++) {
-                for (let dz = -2; dz <= 2; dz++) {
-                    const b = dim.getBlock({ x: px + dx, y: py + dy, z: pz + dz });
-                    if (b && (b.typeId === 'minecraft:water' || b.typeId === 'minecraft:flowing_water')) {
-                        water++;
-                    }
-                }
-            }
-        }
-        if (water === 0)
-            return 0;
-        if (player.isInWater || isInRain(dim, player.location)) {
+        // 2.8.8 runs the three fills as two separate steps: the `replace water` fill
+        // is guarded by `in_water_or_rain`, while the `replace sponge` and
+        // `replace seagrass` sweeps run unconditionally — so a dry holder still
+        // clears the sponge the previous soak left behind.
+        const soaking = player.isInWater || isInRain(dim, player.location);
+        if (soaking) {
             for (let dx = -2; dx <= 2; dx++) {
                 for (let dy = -2; dy <= 2; dy++) {
                     for (let dz = -2; dz <= 2; dz++) {
@@ -155,6 +147,37 @@ const LIGHTNING_RING_OFFSETS = [
     [-38, 0, 38],
     [38, 0, -38],
 ];
+/**
+ * 2.8.8 `weapon` events wear the sword out TWICE on a normal hit: the sequence always
+ * starts with `damage: durability 1`, and the losing branch of the `randomize` block
+ * is another `damage: durability 1` (the winning branch fires a projectile instead).
+ * The engine's own durability damage covers the first point; this covers the second.
+ *
+ * Chance table straight from the 2.8.8 item files:
+ *   bee 30% / bone 20% / creeper 20% / blaze 14%+1% / ice 30% / pumpkin 20% /
+ *   shulker 10% / spider 5% / tnt 90% / wither 10%.
+ */
+const PROJECTILE_BRANCH_CHANCE = {
+    'effect:bee_sword': 0.3,
+    'effect:blaze_sword': 0.15,
+    'effect:bone_sword': 0.2,
+    'effect:creeper_sword': 0.2,
+    'effect:ice_sword': 0.3,
+    'effect:pumpkin_sword': 0.2,
+    'effect:shulker_sword': 0.1,
+    'effect:spider_sword': 0.05,
+    'effect:tnt_sword': 0.9,
+    'effect:wither_sword': 0.1,
+};
+/** The 70/80/85/90/95% branch of those same events. */
+function applyProjectileBranchDurability(itemId, attacker) {
+    const chance = PROJECTILE_BRANCH_CHANCE[itemId];
+    if (chance === undefined || !(attacker instanceof Player))
+        return;
+    if (Math.random() < chance)
+        return;
+    consumeMainhandDurability(attacker, 1);
+}
 function explodeSpectralCrystal(player) {
     const rideable = player.getComponent(EntityComponentTypes.Rideable);
     const crystal = rideable?.getRiders().find((r) => r.typeId === 'minecraft:ender_crystal' && !r.matches({ families: ['ender_crystal_scale'] }));
@@ -251,6 +274,7 @@ export function registerItemComponents(registry) {
                         if (Math.random() < 0.3 && attackingEntity instanceof Player) {
                             shootCustomProjectile(attackingEntity, 'entity:bee_sword', 1.0);
                         }
+                        applyProjectileBranchDurability(id, attackingEntity);
                         hitEntity.addEffect('poison', 80, { amplifier: 0, showParticles: true });
                         break;
                     }
@@ -268,6 +292,7 @@ export function registerItemComponents(registry) {
                                 shootCustomProjectile(attackingEntity, 'minecraft:fireball', 1.35, 'effect:player_shot');
                             }
                         }
+                        applyProjectileBranchDurability(id, attackingEntity);
                         break;
                     }
                     case 'effect:bone_sword': {
@@ -276,6 +301,7 @@ export function registerItemComponents(registry) {
                             shootCustomProjectile(attackingEntity, 'minecraft:arrow', 1.6);
                             dim.playSound('random.bow', attackingEntity.location, { volume: 0.9, pitch: 1.0 });
                         }
+                        applyProjectileBranchDurability(id, attackingEntity);
                         break;
                     }
                     case 'effect:silver_sword': {
@@ -308,6 +334,7 @@ export function registerItemComponents(registry) {
                         if (Math.random() < 0.8 && attackingEntity instanceof Player) {
                             shootCustomProjectile(attackingEntity, 'entity:pumpkin_projectile', 0.95);
                         }
+                        applyProjectileBranchDurability(id, attackingEntity);
                         if (Math.random() < 0.15) {
                             const eq = hitEntity.getComponent(EntityComponentTypes.Equippable);
                             if (eq && !eq.getEquipment('Head')) {
@@ -317,9 +344,14 @@ export function registerItemComponents(registry) {
                         break;
                     }
                     case 'effect:wither_skeleton_sword': {
+                        // Exact 2.8.8 `weapon`: wither II for 6 s on the struck entity plus a
+                        // `shoot entity:wither_effect` at launch_power 1. The projectile's own
+                        // `mob_effect` is wither I, and Bedrock does not raise an existing
+                        // wither II when a weaker one lands, so the two stack exactly as the
+                        // original did.
                         hitEntity.addEffect('wither', 120, { amplifier: 1, showParticles: true });
                         if (attackingEntity instanceof Player) {
-                            shootCustomProjectile(attackingEntity, 'entity:wither_effect', 1.1);
+                            shootCustomProjectile(attackingEntity, 'entity:wither_effect', 2.0);
                         }
                         break;
                     }
@@ -363,6 +395,7 @@ export function registerItemComponents(registry) {
                             shootCustomProjectile(attackingEntity, 'minecraft:snowball', 1.4, 'effect:ice_sword_snowball');
                             dim.playSound('random.bow', attackingEntity.location, { volume: 1.0, pitch: 0.4 });
                         }
+                        applyProjectileBranchDurability(id, attackingEntity);
                         break;
                     }
                     case 'effect:quartz_sword': {
@@ -399,6 +432,7 @@ export function registerItemComponents(registry) {
                         if (Math.random() < 0.05 && attackingEntity instanceof Player) {
                             shootCustomProjectile(attackingEntity, 'entity:web', 1.25);
                         }
+                        applyProjectileBranchDurability(id, attackingEntity);
                         break;
                     }
                     case 'effect:tnt_sword': {
@@ -406,6 +440,7 @@ export function registerItemComponents(registry) {
                         if (Math.random() < 0.9 && attackingEntity instanceof Player) {
                             shootCustomProjectile(attackingEntity, 'entity:tnt', 1.2);
                         }
+                        applyProjectileBranchDurability(id, attackingEntity);
                         break;
                     }
                     case 'effect:wolf_sword': {
@@ -422,14 +457,17 @@ export function registerItemComponents(registry) {
                             shootCustomProjectile(attackingEntity, 'minecraft:shulker_bullet', 1.1, 'effect:shulker_sword');
                             dim.playSound('random.bow', attackingEntity.location, { volume: 1.0, pitch: 0.4 });
                         }
+                        applyProjectileBranchDurability(id, attackingEntity);
                         break;
                     }
                     case 'effect:creeper_sword': {
                         // Exact 2.8.8: 20% chance to launch small creeper on hit!
                         if (Math.random() < 0.2 && attackingEntity instanceof Player) {
-                            shootCustomProjectile(attackingEntity, 'entity:minicreeper', 1.15);
-                            dim.playSound('random.fuse', attackingEntity.location, { volume: 0.9, pitch: 1.4 });
+                            // 2.8.8 turns the creeper into a projectile with `power: 1` and no
+                            // extra sound; the blast audio comes from the mini creeper itself.
+                            shootCustomProjectile(attackingEntity, 'entity:minicreeper', 1.0, 'effect:minicreeper_projectile');
                         }
+                        applyProjectileBranchDurability(id, attackingEntity);
                         break;
                     }
                     case 'effect:fire_sword': {
@@ -469,6 +507,7 @@ export function registerItemComponents(registry) {
                             shootCustomProjectile(attackingEntity, 'minecraft:wither_skull', 1.4, 'effect:player_shot');
                             dim.playSound('mob.wither.shoot', attackingEntity.location, { volume: 1.0, pitch: 1.0 });
                         }
+                        applyProjectileBranchDurability(id, attackingEntity);
                         break;
                     }
                 }
@@ -514,20 +553,41 @@ export function registerItemComponents(registry) {
             try {
                 switch (id) {
                     case 'effect:clock_sword': {
-                        // Exact 2.8.8: advance 1 hour (1000 ticks) & speed up world 10x for 5 seconds! (-10 durability)
+                        // Exact 2.8.8 `clock_sword` `on_use` only adds `clock_sword_skill`:
+                        // `minecraft:clock_sword` then runs `gamerule randomtickspeed 100`,
+                        // `effect @e[type=!player] speed 1 10 true`, `time add 10` and puts
+                        // every player on `clock_sword_movement` (movement 1). The same event
+                        // repeats every time the 5 s `clock_sword_skill` timer expires, and
+                        // `stop_clock_sword_event` puts the gamerule back to 1 and strips the
+                        // Speed effect. So the sword is NOT a one-shot "advance one hour":
+                        // right-clicking starts a 5 s window of 10x random ticks that pushes
+                        // the clock forward 10 ticks every 5 s for everything, and the holder
+                        // gets no Speed effect of their own — only the movement component.
                         if (!checkAndStartCooldown(player, 'clock_sword', 30))
                             return;
-                        world.setTimeOfDay((world.getTimeOfDay() + 1000) % 24000);
-                        player.addEffect('speed', 100, { amplifier: 3, showParticles: false });
-                        for (const e of dim.getEntities({ location: player.location, maxDistance: 24 })) {
-                            if (e.typeId !== 'minecraft:item' && e.typeId !== 'minecraft:xp_orb') {
-                                try {
-                                    e.addEffect('speed', 100, { amplifier: 2, showParticles: false });
-                                }
-                                catch { }
-                            }
-                        }
+                        // The skill group lives for 5 s while `minecraft:clock_sword` keeps
+                        // firing: `time add 10` and `effect @e[type=!player] speed 1 10` on
+                        // every pass. 5 s = 100 ticks of +10 ticks is exactly the "one hour"
+                        // the in-game help text promises, which confirms this reading.
                         boostClockSword();
+                        let elapsed = 0;
+                        const clockTick = system.runInterval(() => {
+                            elapsed++;
+                            try {
+                                world.setTimeOfDay((world.getTimeOfDay() + 10) % 24000);
+                                for (const e of dim.getEntities()) {
+                                    if (e.typeId === 'minecraft:player')
+                                        continue;
+                                    try {
+                                        e.addEffect('speed', 20, { amplifier: 10, showParticles: false });
+                                    }
+                                    catch { }
+                                }
+                            }
+                            catch { }
+                            if (elapsed >= 100)
+                                system.clearRun(clockTick);
+                        }, 1);
                         dim.playSound('random.orb', player.location, { volume: 1.0, pitch: 0.6 });
                         consumeMainhandDurability(player, 10);
                         break;
@@ -536,30 +596,41 @@ export function registerItemComponents(registry) {
                         // Exact 2.8.8: levitate for 7s + slow_falling 10s, then launch volley of small fireballs! (-10 durability)
                         if (!checkAndStartCooldown(player, 'blaze_sword', 20))
                             return;
+                        // 2.8.8 `on_use`: `effect @s levitation 7 0 true` and
+                        // `effect @s slow_falling 10 3 true`, i.e. 7 s and 10 s.
                         player.addEffect('levitation', 140, { amplifier: 0, showParticles: false });
                         player.addEffect('slow_falling', 200, { amplifier: 3, showParticles: false });
                         dim.playSound('mob.blaze.breathe', player.location, { volume: 1.0, pitch: 1.0 });
-                        for (let shot = 0; shot < 8; shot++) {
-                            system.runTimeout(() => {
-                                if (!player.isValid)
-                                    return;
-                                shootCustomProjectile(player, 'minecraft:small_fireball', 1.5, undefined, 1.7, 0.06);
-                                player.dimension.playSound('mob.blaze.shoot', player.location, { volume: 1.0, pitch: 1.0 });
-                            }, 30 + shot * 8);
-                        }
+                        // The volley is not immediate: `blaze_sword_skill` waits 6 s, then
+                        // `shoot_small_fireball` spawns FOUR `entity:fake_fireball` projectiles
+                        // (power 1.3, damage 5, sets fire) with a 0-1 tick stagger, and the
+                        // whole group is removed 2 s later. The remake fired 8 real small
+                        // fireballs starting after 1.5 s, which is a different move entirely.
+                        system.runTimeout(() => {
+                            if (!player.isValid)
+                                return;
+                            for (let shot = 0; shot < 4; shot++) {
+                                system.runTimeout(() => {
+                                    if (!player.isValid)
+                                        return;
+                                    shootCustomProjectile(player, 'entity:fake_fireball', 1.3, 'set_sound', 1.5, 0.06);
+                                }, shot);
+                            }
+                        }, 120);
                         consumeMainhandDurability(player, 10);
                         break;
                     }
                     case 'effect:ice_sword': {
-                        // Exact 2.8.8: encase entities within radius 8-12 in size-adapted Fake Ice cages! (-6 durability)
+                        // Exact 2.8.8 `ice_sword` `on_use`: for every entity from 2 to 12
+                        // blocks away the item runs ONE `fill ... effect99:fake_ice 0
+                        // replace air 0` whose box depends on the target's size, plus a few
+                        // carve-outs. Enclosing everything with one generic 3x3x4 shell was
+                        // wrong: tall mobs get a 3-high box, slimes medium/small and horses
+                        // get their ice carved back out, projectiles get a single block.
                         if (!checkAndStartCooldown(player, 'ice_sword', 5))
                             return;
-                        // `@e[...,rm=2,r=12]` — everything from 2 to 12 blocks away; the holder
-                        // and their mount are never caged, and no extra effect is applied.
                         const eye = player.location;
-                        const targets = dim
-                            .getEntities({ location: eye, maxDistance: 12 })
-                            .filter((e) => {
+                        const targets = dim.getEntities({ location: eye, maxDistance: 12 }).filter((e) => {
                             if (isProtectedEntity(e, player))
                                 return false;
                             const dx = e.location.x - eye.x;
@@ -567,19 +638,18 @@ export function registerItemComponents(registry) {
                             const dz = e.location.z - eye.z;
                             return Math.sqrt(dx * dx + dy * dy + dz * dz) >= 2;
                         });
-                        const buildIceCage = (cx, cy, cz, rx = 1, hy = 2) => {
-                            const bx = Math.floor(cx);
-                            const by = Math.floor(cy);
-                            const bz = Math.floor(cz);
-                            for (let dx = -rx; dx <= rx; dx++) {
-                                for (let dy = -1; dy <= hy; dy++) {
-                                    for (let dz = -rx; dz <= rx; dz++) {
-                                        const isShell = Math.abs(dx) === rx || Math.abs(dz) === rx || dy === -1 || dy === hy;
-                                        if (!isShell)
-                                            continue;
-                                        const b = dim.getBlock({ x: bx + dx, y: by + dy, z: bz + dz });
-                                        if (b && (b.isAir || b.typeId === 'minecraft:snow_layer' || b.typeId === 'minecraft:short_grass')) {
-                                            b.setPermutation(BlockPermutation.resolve('effect99:fake_ice', {
+                        // `fill <a> <b> effect99:fake_ice 0 replace air 0` — only empty
+                        // blocks are frozen, existing terrain is never overwritten.
+                        const iceFill = (centre, a, b) => {
+                            const x0 = Math.floor(centre.x);
+                            const y0 = Math.floor(centre.y);
+                            const z0 = Math.floor(centre.z);
+                            for (let dx = Math.min(a[0], b[0]); dx <= Math.max(a[0], b[0]); dx++) {
+                                for (let dy = Math.min(a[1], b[1]); dy <= Math.max(a[1], b[1]); dy++) {
+                                    for (let dz = Math.min(a[2], b[2]); dz <= Math.max(a[2], b[2]); dz++) {
+                                        const blk = dim.getBlock({ x: x0 + dx, y: y0 + dy, z: z0 + dz });
+                                        if (blk?.isAir) {
+                                            blk.setPermutation(BlockPermutation.resolve('effect99:fake_ice', {
                                                 'effect99:crack_stage': 0,
                                                 'effect99:from_water': false,
                                             }));
@@ -588,10 +658,75 @@ export function registerItemComponents(registry) {
                                 }
                             }
                         };
+                        // `fill ... air 0 replace effect99:fake_ice` — carve the cage back
+                        // open around the mob so it is not sealed inside its own ice.
+                        const carve = (centre, a, b) => {
+                            const x0 = Math.floor(centre.x);
+                            const y0 = Math.floor(centre.y);
+                            const z0 = Math.floor(centre.z);
+                            for (let dx = Math.min(a[0], b[0]); dx <= Math.max(a[0], b[0]); dx++) {
+                                for (let dy = Math.min(a[1], b[1]); dy <= Math.max(a[1], b[1]); dy++) {
+                                    for (let dz = Math.min(a[2], b[2]); dz <= Math.max(a[2], b[2]); dz++) {
+                                        const blk = dim.getBlock({ x: x0 + dx, y: y0 + dy, z: z0 + dz });
+                                        if (blk?.typeId === 'effect99:fake_ice')
+                                            blk.setType('minecraft:air');
+                                    }
+                                }
+                            }
+                        };
                         for (const t of targets) {
-                            const isTall = t.typeId === 'minecraft:enderman';
-                            const isHuge = t.typeId === 'minecraft:ghast' || t.typeId === 'entity:slime_king';
-                            buildIceCage(t.location.x, t.location.y, t.location.z, isHuge ? 3 : 1, isHuge ? 4 : isTall ? 3 : 2);
+                            const c = t.location;
+                            const id = t.typeId.replace('minecraft:', '');
+                            const slimeFamily = t.matches({ families: ['slime_large'] })
+                                ? 'large'
+                                : t.matches({ families: ['slime_medium'] })
+                                    ? 'medium'
+                                    : t.matches({ families: ['slime_small'] })
+                                        ? 'small'
+                                        : '';
+                            if (id === 'enderman') {
+                                iceFill(c, [1, -1, 1], [-1, 3, -1]);
+                            }
+                            else if (slimeFamily === 'large') {
+                                iceFill(c, [2, -1, 2], [-2, 3, -2]);
+                                // Second command runs from ~ ~1 ~: a 3x3x3 void carved one step up.
+                                carve({ x: c.x, y: c.y + 1, z: c.z }, [1, -1, 1], [-1, 1, -1]);
+                            }
+                            else if (slimeFamily === 'medium') {
+                                iceFill(c, [1, -1, 1], [-1, 1, -1]);
+                                carve(c, [0, 0, 0], [0, 0, 0]);
+                            }
+                            else if (slimeFamily === 'small') {
+                                iceFill(c, [1, 1, 1], [-1, -1, -1]);
+                                carve(c, [0, 0, 0], [0, 0, 0]);
+                            }
+                            else if (id === 'elder_guardian') {
+                                iceFill(c, [2, -1, 2], [-2, 3, -2]);
+                            }
+                            else if (id === 'ghast') {
+                                iceFill(c, [4, -3, 4], [-4, 4, -4]);
+                                carve(c, [3, -2, 3], [-3, 3, -3]);
+                            }
+                            else if (id === 'horse') {
+                                iceFill(c, [1, -1, 1], [-1, 1, -1]);
+                                carve(c, [0, 0, 0], [0, 0, 0]);
+                            }
+                            else if (id === 'player') {
+                                // `@e[type=player,rm=3,r=12]` — other players are caged from 3
+                                // blocks away, a 3x4x3 shell.
+                                if (Math.sqrt((c.x - eye.x) ** 2 + (c.y - eye.y) ** 2 + (c.z - eye.z) ** 2) < 3)
+                                    continue;
+                                iceFill(c, [1, -1, 1], [-1, 2, -1]);
+                            }
+                            else if (['silverfish', 'small_fireball', 'fireball', 'arrow', 'lingering_potion', 'dragon_fireball', 'thrown_trident'].includes(id)) {
+                                // Single-block cages for the small mobs and every projectile.
+                                iceFill(c, [0, 0, 0], [0, 0, 0]);
+                            }
+                            else {
+                                // Everything else in the sweep: spiders, animals, guardians,
+                                // bats, shulkers, phantoms, vexes, TNT, ... 3x3x3 shell.
+                                iceFill(c, [1, -1, 1], [-1, 1, -1]);
+                            }
                         }
                         player.onScreenDisplay.setActionBar('§l§bIce Skill');
                         dim.playSound('random.fizz', player.location, { volume: 1.0, pitch: 2.3 });
@@ -604,16 +739,19 @@ export function registerItemComponents(registry) {
                         break;
                     }
                     case 'effect:spider_sword': {
-                        // Exact 2.8.8: fire cobweb projectiles continuously for 2-3 seconds! (-8 durability)
+                        // 2.8.8 `spider_sword_skill`: a `minecraft:spawn_entity` with
+                        // min/max_wait_time 0 (one web per tick) held for 2 s by a
+                        // `minecraft:timer`, i.e. ~40 webs over 2 seconds. The remake fired
+                        // only 12 webs over 2.4 s, so the web wall was far too thin.
                         if (!checkAndStartCooldown(player, 'spider_sword', 28))
                             return;
-                        for (let i = 0; i < 12; i++) {
+                        for (let i = 0; i < 40; i++) {
                             system.runTimeout(() => {
                                 if (!player.isValid)
                                     return;
                                 shootCustomProjectile(player, 'entity:web', 1.35, undefined, 1.5, 0.08);
                                 player.dimension.playSound('mob.spider.step', player.location, { volume: 0.8, pitch: 1.4 });
-                            }, i * 4);
+                            }, i);
                         }
                         consumeMainhandDurability(player, 8);
                         break;
@@ -653,72 +791,26 @@ export function registerItemComponents(registry) {
                         }
                         for (const e of dim.getEntities({ location: player.location, maxDistance: 6.0 })) {
                             if (!isProtectedEntity(e, player)) {
-                                e.addEffect('levitation', 25, { amplifier: 18, showParticles: false });
+                                // 2.8.8: `effect @e[r=6] levitation 1 18 false` — exactly 1 second.
+                                e.addEffect('levitation', 20, { amplifier: 18, showParticles: false });
                             }
                         }
-                        dim.playSound('mob.shulker.shoot', player.location, { volume: 1.1, pitch: 0.9 });
+                        // 2.8.8 `shulker_sword` `on_use` is only the eight cauldron
+                        // particles and the `levitation 1 18` cast — it plays no sound of
+                        // its own, so the remake must not add one either.
                         consumeMainhandDurability(player, 8);
                         break;
                     }
                     case 'effect:ghost_sword': {
-                        // Exact 2.8.8: teleport in any direction the player is looking, including phasing through cave walls! (-6 durability)
+                        // Exact 2.8.8 `ghost_sword` `on_use`: it is a `shoot`, not a
+                        // teleport — `entity:ghost_projectile` at power 2.5, gravity 0,
+                        // damage -1, for 6 durability and a 2 second cooldown. The earlier
+                        // "phase through walls" behaviour was invented by the remake and
+                        // does not exist anywhere in the original item.
                         if (!checkAndStartCooldown(player, 'ghost_sword', 2))
                             return;
-                        const head = player.getHeadLocation();
-                        const dir = player.getViewDirection();
-                        const minY = dim.heightRange.min + 1;
-                        const maxY = dim.heightRange.max - 2;
-                        const isBreathableSpace = (bx, by, bz) => {
-                            if (by < minY || by > maxY)
-                                return false;
-                            const foot = dim.getBlock({ x: bx, y: by, z: bz });
-                            const upper = dim.getBlock({ x: bx, y: by + 1, z: bz });
-                            if (!foot || !upper)
-                                return false;
-                            const passable = (id, isAir) => isAir ||
-                                id === 'minecraft:short_grass' ||
-                                id === 'minecraft:snow_layer' ||
-                                id === 'minecraft:water' ||
-                                id === 'minecraft:flowing_water' ||
-                                id === 'effect99:lightblock' ||
-                                id === 'effect99:lightblock2';
-                            return passable(foot.typeId, foot.isAir) && passable(upper.typeId, upper.isAir);
-                        };
-                        let targetPos;
-                        let enteredWall = false;
-                        for (let d = 1; d <= 18; d++) {
-                            const cx = head.x + dir.x * d;
-                            const cy = Math.max(minY, Math.min(maxY, head.y + dir.y * d - 0.6));
-                            const cz = head.z + dir.z * d;
-                            const bx = Math.floor(cx);
-                            const by = Math.floor(cy);
-                            const bz = Math.floor(cz);
-                            if (isBreathableSpace(bx, by, bz)) {
-                                if (enteredWall) {
-                                    // Found the first cave / room pocket on the far side of the wall!
-                                    targetPos = { x: bx + 0.5, y: by, z: bz + 0.5 };
-                                    break;
-                                }
-                                if (d <= 12) {
-                                    targetPos = { x: cx, y: cy, z: cz };
-                                }
-                            }
-                            else {
-                                enteredWall = true;
-                            }
-                        }
-                        if (targetPos) {
-                            dim.spawnParticle('minecraft:ghost_spiral', player.location);
-                            player.teleport(targetPos);
-                            dim.spawnParticle('minecraft:ghost_spiral', targetPos);
-                            dim.spawnParticle('minecraft:egg_destroy_emitter', {
-                                x: targetPos.x,
-                                y: targetPos.y + 0.8,
-                                z: targetPos.z,
-                            });
-                            dim.playSound('mob.endermen.portal', targetPos, { volume: 0.9, pitch: 1.4 });
-                            consumeMainhandDurability(player, 6);
-                        }
+                        shootCustomProjectile(player, 'entity:ghost_projectile', 2.5);
+                        consumeMainhandDurability(player, 6);
                         break;
                     }
                     case 'effect:creeper_sword': {
@@ -732,6 +824,9 @@ export function registerItemComponents(registry) {
                         catch { }
                         player.addEffect('slowness', 32, { amplifier: 10, showParticles: false });
                         dim.playSound('random.fuse', player.location, { volume: 1.2, pitch: 1.0 });
+                        // 2.8.8 `start_player_explode_event` holds the player still with
+                        // `minecraft:movement: 0` and a 1.5 s (30 tick) timer, then summons
+                        // `entity:instant_creeper_explode` at the player's feet+1 and kills.
                         system.runTimeout(() => {
                             if (!player.isValid)
                                 return;
@@ -767,7 +862,9 @@ export function registerItemComponents(registry) {
                         }
                         dim.spawnParticle('minecraft:example_linearcurve', { x: loc.x, y: loc.y + 0.2, z: loc.z });
                         player.onScreenDisplay.setActionBar('§l§6Fire rain');
-                        dim.playSound('mob.blaze.breathe', loc, { volume: 1.2, pitch: 0.8 });
+                        // 2.8.8 `fire_sword` `on_use` summons the flames and the particle
+                        // and shows the actionbar — the remake had added a blaze sound the
+                        // original never plays here.
                         consumeMainhandDurability(player, 20);
                         break;
                     }
@@ -902,8 +999,7 @@ export function registerAirSwingEvents() {
                     case 'effect:creeper_sword': {
                         fired = true;
                         if (Math.random() < 0.2) {
-                            shootCustomProjectile(player, 'entity:minicreeper', 1.15);
-                            dim.playSound('random.fuse', player.location, { volume: 0.9, pitch: 1.4 });
+                            shootCustomProjectile(player, 'entity:minicreeper', 1.0, 'effect:minicreeper_projectile');
                         }
                         break;
                     }
@@ -1007,11 +1103,25 @@ export function registerAirSwingEvents() {
                         break;
                     }
                     case 'effect:quartz_sword': {
+                        // Exact 2.8.8 `weapon` step 2: `effect @a[r=1] instant_damage 1 99 true`
+                        // plus the roar particle, after the 10-point durability cost. It hits
+                        // everything within ONE block — the holder included — for instant
+                        // damage at amplifier 99, i.e. a 600-heart hit that no armour survives.
+                        // The remake only killed the swinging player and spawned the particle.
                         lastAirSwingTick.set(player.id, swingTick);
-                        dim.spawnParticle('minecraft:knockback_roar_particle', { x: player.location.x, y: player.location.y + 1, z: player.location.z });
+                        dim.spawnParticle('minecraft:knockback_roar_particle', {
+                            x: player.location.x,
+                            y: player.location.y + 1,
+                            z: player.location.z,
+                        });
                         if (player.getGameMode() !== GameMode.Creative) {
                             consumeMainhandDurability(player, 10);
-                            player.kill();
+                        }
+                        for (const victim of dim.getEntities({ location: player.location, maxDistance: 1.0 })) {
+                            try {
+                                victim.addEffect('instant_damage', 20, { amplifier: 99, showParticles: false });
+                            }
+                            catch { }
                         }
                         break;
                     }
