@@ -1134,10 +1134,10 @@ export function registerAirSwingEvents() {
                     }
                     case 'effect:quartz_sword': {
                         // Exact 2.8.8 `weapon` step 2: `effect @a[r=1] instant_damage 1 99 true`
-                        // plus the roar particle, after the 10-point durability cost. It hits
-                        // everything within ONE block — the holder included — for instant
-                        // damage at amplifier 99, i.e. a 600-heart hit that no armour survives.
-                        // The remake only killed the swinging player and spawned the particle.
+                        // plus the roar particle, after the 10-point durability cost. `@a` is
+                        // PLAYERS ONLY, so the blast kills every player within one block (the
+                        // holder included) for instant damage at amplifier 99 — a 600-heart hit
+                        // no armour survives — and leaves mobs untouched.
                         lastAirSwingTick.set(player.id, swingTick);
                         dim.spawnParticle('minecraft:knockback_roar_particle', {
                             x: player.location.x,
@@ -1148,6 +1148,8 @@ export function registerAirSwingEvents() {
                             consumeMainhandDurability(player, 10);
                         }
                         for (const victim of dim.getEntities({ location: player.location, maxDistance: 1.0 })) {
+                            if (!(victim instanceof Player))
+                                continue; // `@a`, not `@e`
                             try {
                                 victim.addEffect('instant_damage', 20, { amplifier: 99, showParticles: false });
                             }
