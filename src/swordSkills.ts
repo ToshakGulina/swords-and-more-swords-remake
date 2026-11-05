@@ -540,7 +540,16 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
                 const lf = shootCustomProjectile(attackingEntity, 'entity:living_flame', 1.0, 'hostile_entity');
                 lf?.addTag('player_summoned');
               } else {
-                shootCustomProjectile(attackingEntity, 'entity:fire', 1.3);
+                // 2.8.8 `entities/fire.json` swaps in its `fire_sword` component group
+                // when the SHOOTER holds the Fire Sword: `power` jumps from 1 to 10
+                // and the impact sets the target on fire. Without the spawn event the
+                // sword shoots the plain, slow fireball and never ignites anything.
+                shootCustomProjectile(
+                  attackingEntity,
+                  'entity:fire',
+                  1.3,
+                  getMainhandItem(attackingEntity)?.typeId === 'effect:fire_sword' ? 'minecraft:entity_spawned' : undefined
+                );
               }
             }
             break;
@@ -1073,7 +1082,14 @@ export function registerAirSwingEvents(): void {
               const lf = shootCustomProjectile(player, 'entity:living_flame', 1.0, 'hostile_entity');
               lf?.addTag('player_summoned');
             } else {
-              shootCustomProjectile(player, 'entity:fire', 1.3);
+              // Same swap as the melee branch: holding the Fire Sword makes the
+              // fireball a power-10 incendiary one.
+              shootCustomProjectile(
+                player,
+                'entity:fire',
+                1.3,
+                getMainhandItem(player)?.typeId === 'effect:fire_sword' ? 'minecraft:entity_spawned' : undefined
+              );
             }
             break;
           }
