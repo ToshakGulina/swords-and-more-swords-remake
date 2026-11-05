@@ -229,6 +229,17 @@ function findOverheadCrystal(player: Player, maxDistance = 4): Entity | undefine
   }
 }
 
+/** `summon entity:nether_star ^ ^20 ^-6` around the item holder. */
+function netherStarTurretAnchor(player: Player): { x: number; y: number; z: number } {
+  const dir = player.getViewDirection();
+  const flat = Math.hypot(dir.x, dir.z) || 1;
+  return {
+    x: player.location.x - (dir.x / flat) * 6,
+    y: Math.min(player.dimension.heightRange.max - 2, player.location.y + 20),
+    z: player.location.z - (dir.z / flat) * 6,
+  };
+}
+
 function explodeSpectralCrystal(player: Player): void {
   findOverheadCrystal(player)?.triggerEvent('minecraft:crystal_explode');
 }
@@ -424,17 +435,22 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
             ) {
               hitEntity.addTag('slain_by_nether_star_sword');
             }
-            // Exact 2.8.8: mark target with `entity:objective` + summon 1 (80%) or 2 (20%) sky `entity:nether_star` turrets
-            // that rain glowing `entity:nether_star_projectile` stars (6 dmg each + thunder sound + nether_star_hit particle)!
+            // Exact 2.8.8 `weapon`: the `randomize` block summons the sky turrets —
+            // `summon entity:nether_star ^ ^20 ^-6`, once on the 80 % branch and
+            // twice on the 20 % one. Caret coordinates are resolved around the
+            // ITEM HOLDER, not around the victim, so both turrets appear 20 blocks
+            // above the player and 6 blocks behind them; the remake had placed them
+            // above the victim, 18 blocks up and 2 apart.
+            // The victim is marked separately: `nether_star_projectile`'s `on_hit`
+            // runs `set_objective` -> `summon entity:objective`, and the turrets
+            // target only `objective` entities within 28 blocks.
             dim.spawnEntity('entity:objective', hitEntity.location);
-            const count = Math.random() < 0.2 ? 2 : 1;
-            for (let i = 0; i < count; i++) {
-              const skyY = Math.min(dim.heightRange.max - 2, hitEntity.location.y + 18 + i * 2);
-              dim.spawnEntity('entity:nether_star', {
-                x: hitEntity.location.x + (Math.random() - 0.5) * 1.5,
-                y: skyY,
-                z: hitEntity.location.z + (Math.random() - 0.5) * 1.5,
-              });
+            if (attackingEntity instanceof Player) {
+              const turretCount = Math.random() < 0.2 ? 2 : 1;
+              const origin = netherStarTurretAnchor(attackingEntity);
+              for (let i = 0; i < turretCount; i++) {
+                dim.spawnEntity('entity:nether_star', origin);
+              }
             }
             // Exact 2.8.8: 0.01% (1/10000) unstable bedrock-shattering explosion on attack!
             if (Math.random() < 0.0001) {
@@ -1121,16 +1137,13 @@ export function registerAirSwingEvents(): void {
           }
           case 'effect:nether_star_sword': {
             fired = true;
-            shootCustomProjectile(player, 'entity:nether_star_projectile', 2.2, 'effect:nether_star_tracer');
-            const dir = player.getViewDirection();
-            const count = Math.random() < 0.2 ? 2 : 1;
-            const skyY = Math.min(dim.heightRange.max - 2, player.location.y + 18);
-            for (let i = 0; i < count; i++) {
-              dim.spawnEntity('entity:nether_star', {
-                x: player.location.x + dir.x * 6 + (Math.random() - 0.5) * 1.5,
-                y: skyY + i * 2,
-                z: player.location.z + dir.z * 6 + (Math.random() - 0.5) * 1.5,
-              });
+            // `nether_star_projectile` is launched at its `nether_star_sword` group
+            // power, which is 5 — the remake used 2.2, i.e. less than half.
+            shootCustomProjectile(player, 'entity:nether_star_projectile', 5, 'effect:nether_star_tracer');
+            const turretCount = Math.random() < 0.2 ? 2 : 1;
+            const origin = netherStarTurretAnchor(player);
+            for (let i = 0; i < turretCount; i++) {
+              dim.spawnEntity('entity:nether_star', origin);
             }
             if (Math.random() < 0.0001) {
               dim.spawnEntity('entity:ultra_instinct_explode', player.location);

@@ -37,8 +37,9 @@ const GROUP_SPEED = {
   'entity:living_flame': 1.0,
   // `minicreeper` is spawned straight into the `projectile` group at power 1.
   'entity:minicreeper': 1.0,
-  // `nether_star_projectile` -> `nether_star_sword` group: power 5 in 2.8.8.
-  'entity:nether_star_projectile': undefined,
+  // `nether_star_projectile` -> `nether_star_sword` group: power 5 in 2.8.8
+  // (the base entity says 1, the group the sword adds says 5).
+  'entity:nether_star_projectile': 5,
   // `bee_sword` is a mob, not a projectile: 2.8.8 `shoot`s it at launch_power 1.
   'entity:bee_sword': 1.0,
   // `tnt` is spawned as a primed block, launched at launch_power 1.
