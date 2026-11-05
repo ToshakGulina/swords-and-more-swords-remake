@@ -352,11 +352,10 @@ export function registerWorldEvents(): void {
         }
 
         case 'minecraft:blaze': {
-          // Original loot table: a snow golem must be the killer. Its separate
-          // 0.5% event is defined but has no trigger in the original entity.
-          if (killer?.typeId === 'minecraft:snow_golem' && Math.random() < 0.025) {
-            dim.spawnItem(new ItemStack('effect:blaze_sword', 1), loc);
-          }
+          // The Blaze Sword comes from `loot_tables/entities/blaze.json`, which the
+          // remake ships restored verbatim: a snow golem kill and a 2.5 % roll.
+          // 2.8.8's separate `blaze_sword` entity event (5/995) has no trigger.
+          // Rolling it here as well handed out the sword twice from one kill.
           break;
         }
 
