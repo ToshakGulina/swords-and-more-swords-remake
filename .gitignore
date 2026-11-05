@@ -2,3 +2,4 @@ node_modules/
 google_drive/
 # scratch scripts used while cross-checking the 2.8.8 pack
 *.tmp.cjs
+.refs/

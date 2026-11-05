@@ -327,12 +327,16 @@ export function registerItemComponents(registry: ItemComponentRegistry): void {
       try {
         switch (id) {
           case 'effect:bee_sword': {
-            // Exact 2.8.8: 30% chance to release aggressive defending bee (entity:bee_sword)
+            // Exact 2.8.8: 30% chance to release an aggressive defending bee
+            // (`entity:bee_sword`). The sword itself carries no on-hit effect; the
+            // poison comes from the summoned bee's own `minecraft:attack`
+            // (`effect_name: fatal_poison`, 3). A direct `poison 80` on every hit
+            // was invented by the remake and made the sword poison twice over,
+            // with the wrong effect and without the bee even being involved.
             if (Math.random() < 0.3 && attackingEntity instanceof Player) {
               shootCustomProjectile(attackingEntity, 'entity:bee_sword', 1.0);
             }
             applyProjectileBranchDurability(id, attackingEntity);
-            hitEntity.addEffect('poison', 80, { amplifier: 0, showParticles: true });
             break;
           }
 
