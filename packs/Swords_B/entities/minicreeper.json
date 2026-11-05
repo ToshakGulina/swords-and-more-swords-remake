@@ -111,7 +111,7 @@
         }
       },
       "despawn": {
-        "minecraft:instant_despawn": {}
+        "minecraft:despawn": {}
       }
     },
     "components": {

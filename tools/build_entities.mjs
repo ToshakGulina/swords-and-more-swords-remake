@@ -759,7 +759,7 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
   // The 2.8.8 entity attacks for 3, not for the vanilla 2.
   ent.components['minecraft:attack'] = { damage: 3 };
   ent.component_groups['effect:instant_despawn'] = {
-    'minecraft:instant_despawn': {},
+    'minecraft:despawn': {},
   };
   // Same shape as 2.8.8: strip the hostile/neutral/default groups, then become a mount.
   // The 1.26.60 spider has no `minecraft:default_spider` group, so only the two
@@ -807,7 +807,7 @@ writeJson(path.join(BP, 'entities/player.json'), playerBP);
     },
   };
   ent.component_groups['effect:instant_despawn'] = {
-    'minecraft:instant_despawn': {},
+    'minecraft:despawn': {},
   };
 
   ent.events['minecraft:crystal_explode'] = {
@@ -970,7 +970,7 @@ for (const projFile of ['arrow.json', 'small_fireball.json']) {
     'minecraft:projectile': baseProj,
   };
   ent.component_groups['effect:instant_despawn'] = {
-    'minecraft:instant_despawn': {},
+    'minecraft:despawn': {},
   };
   ent.events = ent.events || {};
   ent.events['minecraft:inertia_disable'] = {
@@ -1149,8 +1149,18 @@ for (const f of customEntityFiles.sort()) {
   const raw = jsonc.parse(fs.readFileSync(path.join(SRC_288_BP, 'entities', f), 'utf8'));
   const ent = raw['minecraft:entity'];
   ent.component_groups = ent.component_groups || {};
-  ent.component_groups['despawn'] = { 'minecraft:instant_despawn': {} };
-  ent.component_groups['effect:instant_despawn'] = { 'minecraft:instant_despawn': {} };
+  // `minecraft:instant_despawn` in a component group is NOT applied on its own: the
+  // component only takes effect at spawn (documented Mojang behaviour, and the reason
+  // 2.8.8 could rely on it is gone — 1.26 dropped the old behaviour). The result was
+  // entities that were told to despawn and stayed alive forever. 2.8.8 uses plain
+  // `minecraft:despawn` with no filters here, which still removes the entity on the
+  // next tick, so keep the group name but use the component that actually works.
+  ent.component_groups['despawn'] = { 'minecraft:despawn': {} };
+  // 2.8.8 has no `effect:instant_despawn` group at all. The remake's own
+  // `effect:instant_despawn` event still points at it, so the group has to exist —
+  // but it must carry `minecraft:despawn`, never `minecraft:instant_despawn`, which
+  // is only honoured at spawn and silently leaves the entity alive.
+  ent.component_groups['effect:instant_despawn'] = { 'minecraft:despawn': {} };
   ent.events = ent.events || {};
   ent.events['effect:instant_despawn'] = { add: { component_groups: ['effect:instant_despawn'] } };
 
@@ -1474,7 +1484,10 @@ writeJson(path.join(BP, 'entities/minicreeper.json'), {
         },
       },
       despawn: {
-        'minecraft:instant_despawn': {},
+        // `minecraft:instant_despawn` is only honoured at spawn; a component group
+        // that adds it later never removes anything, so the mini creeper outlived
+        // its explosion window. Plain `minecraft:despawn` is what 2.8.8 relies on.
+        'minecraft:despawn': {},
       },
     },
     components: {

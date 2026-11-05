@@ -128,7 +128,7 @@
         }
       },
       "despawn": {
-        "minecraft:instant_despawn": {}
+        "minecraft:despawn": {}
       },
       "hostile_entity": {
         "minecraft:behavior.nearest_attackable_target": {
@@ -261,7 +261,7 @@
         }
       },
       "effect:instant_despawn": {
-        "minecraft:instant_despawn": {}
+        "minecraft:despawn": {}
       }
     },
     "components": {

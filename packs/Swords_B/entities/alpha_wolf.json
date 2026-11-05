@@ -10,7 +10,7 @@
     },
     "component_groups": {
       "despawn": {
-        "minecraft:instant_despawn": {}
+        "minecraft:despawn": {}
       },
       "health_bar": {
         "minecraft:boss": {
@@ -20,7 +20,7 @@
         }
       },
       "effect:instant_despawn": {
-        "minecraft:instant_despawn": {}
+        "minecraft:despawn": {}
       },
       "effect:natural_wolf": {
         "minecraft:is_sheared": {},

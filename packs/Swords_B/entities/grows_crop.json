@@ -10,7 +10,7 @@
     },
     "component_groups": {
       "despawn": {
-        "minecraft:instant_despawn": {}
+        "minecraft:despawn": {}
       },
       "grows_crop_event": {
         "minecraft:timer": {
@@ -26,7 +26,7 @@
         }
       },
       "effect:instant_despawn": {
-        "minecraft:instant_despawn": {}
+        "minecraft:despawn": {}
       }
     },
     "components": {

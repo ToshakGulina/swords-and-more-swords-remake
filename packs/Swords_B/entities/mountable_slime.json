@@ -20,7 +20,7 @@
     },
     "component_groups": {
       "despawn": {
-        "minecraft:instant_despawn": {}
+        "minecraft:despawn": {}
       },
       "minecraft:is_jumping": {
         "minecraft:is_baby": {}
@@ -254,7 +254,7 @@
         }
       },
       "effect:instant_despawn": {
-        "minecraft:instant_despawn": {}
+        "minecraft:despawn": {}
       }
     },
     "components": {

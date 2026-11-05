@@ -17,7 +17,7 @@
     },
     "component_groups": {
       "despawn": {
-        "minecraft:instant_despawn": {}
+        "minecraft:despawn": {}
       },
       "wither_sword": {
         "minecraft:boss": {
@@ -27,7 +27,7 @@
         }
       },
       "effect:instant_despawn": {
-        "minecraft:instant_despawn": {}
+        "minecraft:despawn": {}
       }
     },
     "components": {
