@@ -303,12 +303,14 @@ const SWORD_PLAYER_GROUPS = {
   },
 
   'effect:wolf_transformation': {
-    'minecraft:scale': { value: 1.05 },
-    'minecraft:health': { value: 40, max: 40 },
-    'minecraft:type_family': { family: ['monster', 'wolf_sword'] },
+    // Exact 2.8.8 `complete_wolf_transformation` + `wolf_movement`:
+    // `attack 15`, the `wolf`/`wolf_sword`/`monster` families, `movement 0.18` and
+    // the growl every 3-6 s. The original has NO `minecraft:health` here (the
+    // holder keeps their 20 hearts), no knockback resistance and no scale change —
+    // the remake used to hand out 40 HP, 0.4 knockback resistance and a 1.05 scale.
+    'minecraft:type_family': { family: ['monster', 'wolf', 'wolf_sword'] },
     'minecraft:attack': { damage: 15 },
-    'minecraft:movement': { value: 0.16 },
-    'minecraft:knockback_resistance': { value: 0.4 },
+    'minecraft:movement': { value: 0.18 },
   },
 
   'effect:ultra_instinct_sword': {

@@ -509,16 +509,10 @@
         }
       },
       "effect:wolf_transformation": {
-        "minecraft:scale": {
-          "value": 1.05
-        },
-        "minecraft:health": {
-          "value": 40,
-          "max": 40
-        },
         "minecraft:type_family": {
           "family": [
             "monster",
+            "wolf",
             "wolf_sword"
           ]
         },
@@ -526,10 +520,7 @@
           "damage": 15
         },
         "minecraft:movement": {
-          "value": 0.16
-        },
-        "minecraft:knockback_resistance": {
-          "value": 0.4
+          "value": 0.18
         }
       },
       "effect:ultra_instinct_sword": {

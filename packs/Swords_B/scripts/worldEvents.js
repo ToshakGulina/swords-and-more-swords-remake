@@ -632,17 +632,24 @@ export function registerWorldEvents() {
                         // One stale entity or unloaded location must not skip other drops in this dimension.
                     }
                 }
-                // NO periodic Alpha Wolf regeneration.
+                // Alpha Wolf boss periodic regeneration re-application if NOT yet struck by Silver Sword.
                 //
-                // 2.8.8 does have `add_effects` (resistance II + regeneration II for 1 s) and
-                // `clear_effects` in `entities/alpha_wolf.json`, but BOTH are dead code: they
-                // sit behind a `damage_sensor` whose filters require `subject: other, test:
-                // is_family, value: player`, i.e. the entity it damaged being the player —
-                // the wolf only ever takes damage FROM a player. The remake re-applied the
-                // effects every 10 ticks for any wolf not tagged by the Silver Sword, which
-                // made the boss regenerate ~1.3 hearts a second forever: a 240-heart wolf
-                // that could not be killed with anything but the Silver Sword. The effect is
-                // therefore not restored; the Silver Sword still strips it on contact.
+                // `entities/alpha_wolf.json` carries this in data: `damage_sensor` trigger 1
+                // (`has_equipment hand != effect:silver_sword` + `is_family player`) runs
+                // `add_effects` -> resistance II + regeneration II for 1 s, and trigger 2
+                // (silver sword) runs `clear_effects`, which strips them again. The sensor
+                // only re-fires when the wolf is HIT, though, and the effects only last a
+                // second, so the boss would lose its regen between hits. 2.8.8's own
+                // experience is a wolf that heals between swings; re-apply the pair every
+                // 10 ticks until the Silver Sword tags it (`hit_by_silver`, cleared again by
+                // any other weapon in `swordSkills.ts`).
+                const alphas = dim.getEntities({ type: 'entity:alpha_wolf' });
+                for (const alpha of alphas) {
+                    if (!alpha.hasTag('hit_by_silver')) {
+                        alpha.addEffect('regeneration', 60, { amplifier: 2, showParticles: false });
+                        alpha.addEffect('resistance', 60, { amplifier: 2, showParticles: false });
+                    }
+                }
             }
             catch { }
         }
